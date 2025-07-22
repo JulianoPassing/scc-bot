@@ -42,6 +42,24 @@ for (const mod of modules) {
   }
 }
 
+client.on('messageCreate', async (message) => {
+  if (message.author.bot) return;
+  if (!message.content.startsWith('!')) return;
+
+  const args = message.content.slice(1).trim().split(/ +/);
+  const commandName = args.shift().toLowerCase();
+
+  const command = client.commands.get(commandName);
+  if (command && typeof command.execute === 'function') {
+    try {
+      await command.execute(message, args, client);
+    } catch (error) {
+      console.error(error);
+      message.reply('❌ Ocorreu um erro ao executar o comando.');
+    }
+  }
+});
+
 client.once('ready', () => {
   console.log(`🤖 ${client.user.tag} está online!`);
 });

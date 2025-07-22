@@ -294,7 +294,7 @@ export default async function(client) {
                   new EmbedBuilder()
                     .setColor(0x00ff00)
                     .setTitle('✅ Whitelist Aprovada!')
-                    .setDescription('Parabéns! Você foi aprovado na whitelist e já pode jogar no servidor.')
+                    .setDescription('Parabéns! Você foi aprovado na whitelist e já pode enviar o nome e sobrenome do seu personagem.')
                     .setFooter({ text: 'Street Car Club • Sistema de Whitelist' })
                 ],
                 components: []

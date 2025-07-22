@@ -81,7 +81,8 @@ export default async function(client) {
           new ActionRowBuilder().addComponents(
             new TextInputBuilder()
               .setCustomId('historia')
-              .setLabel('4. Conte a história do seu personagem (mínimo 700 caracteres)')
+              .setLabel('4. História do personagem')
+              .setPlaceholder('Digite uma história com no mínimo 700 caracteres')
               .setStyle(TextInputStyle.Paragraph)
               .setRequired(true)
               .setMinLength(700)

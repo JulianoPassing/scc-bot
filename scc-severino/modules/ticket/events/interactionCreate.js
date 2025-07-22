@@ -115,9 +115,11 @@ export const execute = async function(interaction) {
             .setColor('#0099FF')
             .setTitle('🔔 Atualização do seu Ticket')
             .setDescription(
-              'Olá! A equipe foi avisada sobre o seu ticket e em breve alguém irá te atender.\n\n' +
-              `Acesse seu ticket diretamente aqui: <#${channel.id}>\n\n` +
-              'Se precisar de mais informações, aguarde a resposta da equipe no canal do ticket.'
+              'Olá! Esta é uma atualização sobre o seu ticket no Street CarClub.\n\n' +
+              `Acesse seu ticket aqui: <#${channel.id}>\n\n` +
+              'Se a equipe solicitou informações adicionais ou uma resposta, por favor, responda diretamente no canal do ticket para agilizar seu atendimento.\n\n' +
+              'Se não for necessário, aguarde o retorno da equipe.\n\n' +
+              'Atenciosamente,\nEquipe StreetCarClub'
             )
             .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
             .setTimestamp();

@@ -24,9 +24,7 @@ export const execute = async function(interaction) {
       const { customId, user, guild } = interaction;
       // Painel principal: abrir modal para assunto
       if (customId.startsWith('ticket_')) {
-        if (!interaction.member.permissions.has('ManageChannels')) {
-          return interaction.reply({ content: '❌ Apenas membros da equipe podem abrir tickets por aqui!', flags: 64 });
-        }
+        // (Removida a verificação de staff aqui para permitir todos abrirem tickets)
         const tipo = customId.replace('ticket_', '');
         const categoria = CATEGORY_INFO[tipo];
         if (!categoria) {

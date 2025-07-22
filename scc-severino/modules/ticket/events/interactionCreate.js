@@ -398,56 +398,100 @@ export const execute = async function(interaction) {
         lastId = messages.last().id;
       }
       const sorted = allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
-      let transcript = '';
+      // Identificar criador do ticket
+      const notifyMsg = sorted.find(m => m.content && m.content.includes('abriu um ticket!'));
+      let autorId = null;
+      let autorTag = null;
+      let autorAvatar = null;
+      if (notifyMsg) {
+        const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
+        if (match) {
+          autorId = match[1];
+          try {
+            const userObj = await interaction.client.users.fetch(autorId);
+            autorTag = userObj.tag;
+            autorAvatar = userObj.displayAvatarURL();
+          } catch {}
+        }
+      }
+      // Staff responsável
+      const staffTag = user.tag;
+      const staffAvatar = user.displayAvatarURL();
+      // HTML transcript
+      let html = `<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'><title>Transcript Ticket</title><style>
+      body{font-family:sans-serif;background:#18191c;color:#eee;margin:0;padding:0;}
+      .header{background:#23272a;padding:20px 30px;display:flex;align-items:center;gap:20px;}
+      .header img{border-radius:50%;width:64px;height:64px;}
+      .info{margin:20px 30px;}
+      .info strong{color:#fff;}
+      .msg{background:#23272a;margin:16px 30px;padding:16px 20px;border-radius:8px;box-shadow:0 2px 8px #0002;}
+      .msg.staff{border-left:4px solid #43b581;}
+      .msg .meta{font-size:13px;color:#aaa;margin-bottom:6px;}
+      .msg .content{font-size:15px;white-space:pre-wrap;word-break:break-word;}
+      .msg .attachments img{max-width:200px;max-height:120px;margin:4px 0;display:block;}
+      .msg .attachments a{color:#00b0f4;text-decoration:underline;display:block;}
+      .msg .embed{background:#2f3136;padding:8px 12px;border-radius:6px;margin:8px 0;}
+      .msg .reply{color:#faa61a;font-size:13px;}
+      .footer{margin:30px 0 0 0;text-align:center;color:#888;font-size:13px;}
+      </style></head><body>`;
+      html += `<div class='header'>`;
+      if (autorAvatar) html += `<img src='${autorAvatar}' alt='Criador'>`;
+      html += `<div><div><strong>Criador:</strong> ${autorTag ? autorTag : autorId || 'Desconhecido'}</div>`;
+      html += `<div><strong>Staff responsável:</strong> ${staffTag}</div>`;
+      html += `<div><strong>Motivo do fechamento:</strong> ${motivo}</div></div>`;
+      if (staffAvatar) html += `<img src='${staffAvatar}' alt='Staff' style='margin-left:auto;'>`;
+      html += `</div><div class='info'><strong>Canal:</strong> #${channel.name} | <strong>Data de Fechamento:</strong> ${new Date().toLocaleString('pt-BR')}</div>`;
       for (const msg of sorted) {
-        const time = `<t:${Math.floor(msg.createdTimestamp/1000)}:t>`;
-        let line = `**${msg.author.tag}** [${time}]: ${msg.content}`;
+        const isStaff = msg.member && msg.member.permissions.has('ManageChannels');
+        html += `<div class='msg${isStaff ? ' staff' : ''}'>`;
+        html += `<div class='meta'><img src='${msg.author.displayAvatarURL()}' alt='avatar' style='width:20px;height:20px;vertical-align:middle;border-radius:50%;margin-right:6px;'> <strong>${msg.author.tag}</strong> <span>(${msg.author.id})</span> • ${new Date(msg.createdTimestamp).toLocaleString('pt-BR')}</div>`;
+        if (msg.reference && msg.reference.messageId) {
+          html += `<div class='reply'>↪️ Em resposta a mensagem ID: ${msg.reference.messageId}</div>`;
+        }
+        html += `<div class='content'>${msg.content ? msg.content.replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''}</div>`;
         // Anexos
         if (msg.attachments && msg.attachments.size > 0) {
+          html += `<div class='attachments'>`;
           for (const att of msg.attachments.values()) {
-            line += `\n[Anexo: ${att.name}](${att.url})`;
+            if (att.contentType && att.contentType.startsWith('image/')) {
+              html += `<img src='${att.url}' alt='anexo'>`;
+            } else {
+              html += `<a href='${att.url}' target='_blank'>${att.name}</a>`;
+            }
           }
+          html += `</div>`;
         }
         // Embeds
         if (msg.embeds && msg.embeds.length > 0) {
           for (const emb of msg.embeds) {
-            if (emb.url) line += `\n[Embed: ${emb.url}]`;
-            if (emb.title) line += `\nTítulo do Embed: ${emb.title}`;
-            if (emb.description) line += `\nDescrição do Embed: ${emb.description}`;
+            html += `<div class='embed'>`;
+            if (emb.title) html += `<div><strong>${emb.title}</strong></div>`;
+            if (emb.description) html += `<div>${emb.description}</div>`;
+            if (emb.url) html += `<div><a href='${emb.url}' target='_blank'>${emb.url}</a></div>`;
+            html += `</div>`;
           }
         }
         // Stickers
         if (msg.stickers && msg.stickers.size > 0) {
           for (const sticker of msg.stickers.values()) {
-            line += `\n[Sticker: ${sticker.name}]`;
+            html += `<div class='sticker'>[Sticker: ${sticker.name}]</div>`;
           }
         }
-        // Reply
-        if (msg.reference && msg.reference.messageId) {
-          line += `\n↪️ Em resposta a mensagem ID: ${msg.reference.messageId}`;
-        }
-        transcript += line + '\n';
+        html += `</div>`;
       }
-      // Embed visual para o log
+      html += `<div class='footer'>Transcript gerado automaticamente pelo sistema de tickets StreetCarClub.</div></body></html>`;
+      // Enviar para canal de logs
       const embed = new EmbedBuilder()
         .setColor('#FFA500')
         .setTitle('📑 Ticket Fechado')
         .setDescription(`Ticket fechado por <@${user.id}>\n**Motivo:** ${motivo}`)
         .addFields({ name: 'Canal', value: `<#${channel.id}>`, inline: true })
         .setTimestamp();
-      // Enviar para canal de logs
       const logChannel = await interaction.guild.channels.fetch('1386491920313745418').catch(() => null);
       if (logChannel) {
-        await logChannel.send({ embeds: [embed] });
-        if (transcript.length > 1900) {
-          for (let i = 0; i < transcript.length; i += 1900) {
-            await logChannel.send('```markdown\n' + transcript.slice(i, i + 1900) + '\n```');
-          }
-        } else {
-          await logChannel.send('```markdown\n' + transcript + '\n```');
-        }
+        await logChannel.send({ embeds: [embed], files: [{ attachment: Buffer.from(html, 'utf-8'), name: `transcript-${channel.name}.html` }] });
       }
-      await interaction.reply({ content: '✅ Ticket fechado e transcript enviado para a staff!', flags: 64 });
+      await interaction.reply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!', flags: 64 });
       setTimeout(async () => {
         try {
           await channel.delete(`Ticket fechado por ${user.tag}`);

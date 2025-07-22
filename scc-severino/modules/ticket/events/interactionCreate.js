@@ -344,6 +344,9 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
+      if (!interaction.member.permissions.has('ManageChannels')) {
+        return interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
+      }
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
       const name = interaction.channel.name;
       const emoji = name.startsWith('📁suporte-') ? '📁' :

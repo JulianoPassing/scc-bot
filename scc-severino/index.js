@@ -29,7 +29,8 @@ const modules = [
   'sugestoes',
   'ticket',
   'ticket-s-wl',
-  'wl'
+  'wl',
+  'batebapo'
 ];
 
 for (const mod of modules) {

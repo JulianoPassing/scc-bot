@@ -279,7 +279,7 @@ export const execute = async function(interaction) {
     }
     // Avisar Membro
     if (customId === 'avisar_membro') {
-      await interaction.reply({ content: 'A equipe foi avisada sobre este ticket.', ephemeral: false });
+      await interaction.reply({ content: 'O usuário foi avisado sobre este ticket.', ephemeral: false });
       return;
     }
     // Renomear Ticket mantendo emoji da categoria

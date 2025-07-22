@@ -114,7 +114,11 @@ export const execute = async function(interaction) {
           const embed = new EmbedBuilder()
             .setColor('#0099FF')
             .setTitle('🔔 Atualização do seu Ticket')
-            .setDescription('Olá! A equipe foi avisada sobre o seu ticket e em breve alguém irá te atender. Fique atento às mensagens no canal do ticket!')
+            .setDescription(
+              'Olá! A equipe foi avisada sobre o seu ticket e em breve alguém irá te atender.\n\n' +
+              `Acesse seu ticket diretamente aqui: <#${channel.id}>\n\n` +
+              'Se precisar de mais informações, aguarde a resposta da equipe no canal do ticket.'
+            )
             .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
             .setTimestamp();
           try {

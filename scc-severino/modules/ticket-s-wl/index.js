@@ -23,6 +23,23 @@ const setupTicketSWLModule = async function(client) {
     }
   }
 
+  // Carregar eventos
+  const eventsPath = path.join(__dirname, 'events');
+  if (fs.existsSync(eventsPath)) {
+    const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+    for (const file of eventFiles) {
+      const filePath = path.join(eventsPath, file);
+      const event = await import(pathToFileURL(filePath).href);
+      if (event && event.name && typeof event.execute === 'function') {
+        if (event.once) {
+          client.once(event.name, (...args) => event.execute(...args));
+        } else {
+          client.on(event.name, (...args) => event.execute(...args));
+        }
+      }
+    }
+  }
+
   // Eventos são registrados diretamente no bot.js deste módulo, mas para integração, devem ser migrados para cá se necessário.
   // Se houver eventos customizados, adapte aqui.
 };

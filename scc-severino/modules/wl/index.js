@@ -22,7 +22,20 @@ function saveDB(db) {
   fs.writeFileSync(DATABASE_PATH, JSON.stringify(db, null, 2));
 }
 
-const setupWLModule = function(client) {
+const setupWLModule = async function(client) {
+  // Carregar comandos modulares
+  const commandsPath = path.join(__dirname, 'commands');
+  if (fs.existsSync(commandsPath)) {
+    const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
+    if (!client.commands) client.commands = new Collection();
+    for (const file of commandFiles) {
+      const filePath = path.join(commandsPath, file);
+      const command = await import(filePath);
+      if (command && command.data && command.data.name) {
+        client.commands.set(command.data.name, command);
+      }
+    }
+  }
   // Comando para criar painel de whitelist
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
@@ -80,89 +93,4 @@ const setupWLModule = function(client) {
     let color = info.aprovado ? 0x00ff00 : 0xff0000;
     const embed = new EmbedBuilder()
       .setTitle('📊 Status da Whitelist')
-      .setDescription(`**Usuário:** ${user}
-**Status:** ${status}
-**Tentativas:** ${info.tentativas}/${TENTATIVAS_MAXIMAS}`)
-      .setColor(color);
-    if (info.last_attempt) {
-      embed.addFields({ name: 'Última tentativa', value: `<t:${Math.floor(new Date(info.last_attempt).getTime()/1000)}:R>`, inline: false });
-    }
-    await message.reply({ embeds: [embed] });
-  });
-
-  // Comando para resetar whitelist
-  client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
-    if (!message.content.startsWith('!resetwl')) return;
-    if (!message.member.permissions.has('Administrator')) return message.reply('❌ Você não tem permissão!');
-    const user = message.mentions.members.first();
-    if (!user) return message.reply('❌ Mencione o usuário para resetar!');
-    const db = loadDB();
-    delete db[user.id];
-    saveDB(db);
-    // Remover cargo se tiver
-    try {
-      const role = message.guild.roles.cache.get(CARGO_APROVADO);
-      if (role && user.roles.cache.has(role.id)) {
-        await user.roles.remove(role);
-      }
-    } catch {}
-    await message.reply(`🔄 Whitelist de ${user} resetada!`);
-  });
-
-  // Handler do botão para iniciar whitelist
-  client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isButton() || interaction.customId !== 'iniciar_wl') return;
-    const { pode, tentativas } = podeTentar(interaction.user.id);
-    if (!pode) {
-      if (tentativas === -1) {
-        return interaction.reply({ content: '❌ Você já foi aprovado na whitelist!', ephemeral: true });
-      } else {
-        return interaction.reply({ content: `⏰ Cooldown ativo. Aguarde 24h para tentar novamente.`, ephemeral: true });
-      }
-    }
-    // Modal de whitelist simplificado
-    const modal = new ModalBuilder()
-      .setCustomId('modal_wl')
-      .setTitle('Whitelist Street Car Club');
-    modal.addComponents(
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId('nome').setLabel('Nome completo').setStyle(TextInputStyle.Short).setRequired(true)
-      ),
-      new ActionRowBuilder().addComponents(
-        new TextInputBuilder().setCustomId('motivo').setLabel('Por que quer jogar?').setStyle(TextInputStyle.Paragraph).setRequired(true)
-      )
-    );
-    await interaction.showModal(modal);
-  });
-
-  // Handler do modal de whitelist
-  client.on('interactionCreate', async (interaction) => {
-    if (!interaction.isModalSubmit() || interaction.customId !== 'modal_wl') return;
-    // Aqui você pode adicionar lógica de perguntas obrigatórias, validação, etc.
-    // Para simplificação, aprova automaticamente
-    registrarTentativa(interaction.user.id, true);
-    // Dar cargo
-    try {
-      const role = interaction.guild.roles.cache.get(CARGO_APROVADO);
-      if (role) await interaction.member.roles.add(role);
-    } catch {}
-    // Logar formulário
-    const canal = interaction.guild.channels.cache.get(CANAL_FORMULARIOS);
-    if (canal) {
-      const embed = new EmbedBuilder()
-        .setTitle('📋 Formulário de Whitelist Respondido')
-        .setColor(0x00ff00)
-        .addFields(
-          { name: '👤 Usuário', value: `${interaction.user} (ID: ${interaction.user.id})`, inline: false },
-          { name: '📝 Nome', value: interaction.fields.getTextInputValue('nome'), inline: false },
-          { name: '💭 Motivação', value: interaction.fields.getTextInputValue('motivo'), inline: false },
-          { name: 'Status', value: '✅ APROVADO', inline: true }
-        )
-        .setTimestamp();
-      await canal.send({ embeds: [embed] });
-    }
-    await interaction.reply({ content: '✅ Formulário enviado e aprovado! Você foi adicionado à whitelist.', ephemeral: true });
-  });
-};
-export default setupWLModule; 
+      .setDescription(`

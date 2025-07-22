@@ -105,7 +105,8 @@ export default async function(client) {
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
                 .setCustomId('q5')
-                .setLabel('5. O que é RDM?\nA) Matar após RP com motivo válido\nB) Matar aleatoriamente sem motivo\nC) Evento oficial de mata-mata\n(Responda apenas a letra)')
+                .setLabel('5. O que é RDM?')
+                .setPlaceholder('A) Matar após RP com motivo válido | B) Matar aleatoriamente sem motivo | C) Evento oficial de mata-mata | (Responda apenas a letra)')
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setMaxLength(1)
@@ -113,7 +114,8 @@ export default async function(client) {
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
                 .setCustomId('q6')
-                .setLabel('6. O que é VDM?\nA) Usar veículo para matar sem motivo RP\nB) Fugir da polícia em alta velocidade\nC) Participar de corridas de rua\n(Responda apenas a letra)')
+                .setLabel('6. O que é VDM?')
+                .setPlaceholder('A) Usar veículo para matar sem motivo RP | B) Fugir da polícia em alta velocidade | C) Participar de corridas de rua | (Responda apenas a letra)')
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setMaxLength(1)
@@ -121,7 +123,8 @@ export default async function(client) {
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
                 .setCustomId('q7')
-                .setLabel('7. O que é Dark RP?\nA) Interpretar apenas personagens policiais\nB) Atividades criminosas apenas à noite\nC) RP com temas pesados proibidos\n(Responda apenas a letra)')
+                .setLabel('7. O que é Dark RP?')
+                .setPlaceholder('A) Interpretar apenas personagens policiais | B) Atividades criminosas apenas à noite | C) RP com temas pesados proibidos | (Responda apenas a letra)')
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setMaxLength(1)
@@ -129,7 +132,8 @@ export default async function(client) {
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
                 .setCustomId('q8')
-                .setLabel('8. O que é Safe Zone?\nA) Locais onde crimes são proibidos\nB) Locais seguros\nC) Área só para administradores\n(Responda apenas a letra)')
+                .setLabel('8. O que é Safe Zone?')
+                .setPlaceholder('A) Locais onde crimes são proibidos | B) Locais seguros | C) Área só para administradores | (Responda apenas a letra)')
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setMaxLength(1)
@@ -137,7 +141,8 @@ export default async function(client) {
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
                 .setCustomId('q9')
-                .setLabel('9. O que é Powergaming?\nA) Usar conhecimento para ter vantagens\nB) Abusar de mecânicas para vencer\nC) Interpretar personagem muito forte\n(Responda apenas a letra)')
+                .setLabel('9. O que é Powergaming?')
+                .setPlaceholder('A) Usar conhecimento para ter vantagens | B) Abusar de mecânicas para vencer | C) Interpretar personagem muito forte | (Responda apenas a letra)')
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setMaxLength(1)
@@ -175,7 +180,8 @@ export default async function(client) {
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
                 .setCustomId('q10')
-                .setLabel('10. O que é Amor à Vida?\nA) Valorizar a vida evitando perigos\nB) Regra que proíbe namoro no jogo\nC) Obrigação de chamar ambulância\n(Responda apenas a letra)')
+                .setLabel('10. O que é Amor à Vida?')
+                .setPlaceholder('A) Valorizar a vida evitando perigos | B) Regra que proíbe namoro no jogo | C) Obrigação de chamar ambulância | (Responda apenas a letra)')
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setMaxLength(1)
@@ -183,7 +189,8 @@ export default async function(client) {
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
                 .setCustomId('q11')
-                .setLabel('11. Em qual situação você assaltaria uma pessoa?\nA) A partir das 22 horas\nB) Das 00 às 5 horas\nC) Não é permitido assalto\n(Responda apenas a letra)')
+                .setLabel('11. Em qual situação você assaltaria uma pessoa?')
+                .setPlaceholder('A) A partir das 22 horas | B) Das 00 às 5 horas | C) Não é permitido assalto | (Responda apenas a letra)')
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setMaxLength(1)
@@ -191,7 +198,8 @@ export default async function(client) {
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
                 .setCustomId('q12')
-                .setLabel('12. Você tem MICROFONE?\nA) SIM\nB) NÃO\n(Responda apenas a letra)')
+                .setLabel('12. Você tem MICROFONE?')
+                .setPlaceholder('A) SIM | B) NÃO | (Responda apenas a letra)')
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true)
                 .setMaxLength(1)

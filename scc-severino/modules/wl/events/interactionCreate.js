@@ -39,6 +39,8 @@ export default async function(client) {
       if (user && user.aprovado && member.roles.cache.has(cargoAprovado)) {
         return interaction.reply({ content: '✅ Você já foi aprovado na whitelist!', ephemeral: true });
       }
+      // Limite de tentativas/cooldown removido temporariamente
+      /*
       if (user && user.tentativas >= 2) {
         const last = new Date(user.last_attempt);
         const diff = (now - last) / (1000 * 60 * 60);
@@ -46,6 +48,7 @@ export default async function(client) {
           return interaction.reply({ content: `⏳ Você atingiu o limite de tentativas. Tente novamente em <t:${Math.floor((last.getTime() + 24*60*60*1000)/1000)}:R>.`, ephemeral: true });
         }
       }
+      */
       // Modal etapa 1: dados pessoais
       const modal = new ModalBuilder()
         .setCustomId('modal_wl_etapa1')
@@ -141,7 +144,7 @@ export default async function(client) {
             desc: '',
             alternativas: {
               a: 'Usar conhecimento para ter vantagens',
-              b: 'Abusar de mecânicas para vencer',
+              b: 'Abusar de mecânicas do jogo',
               c: 'Interpretar personagem muito forte'
             }
           },
@@ -168,8 +171,7 @@ export default async function(client) {
             desc: '',
             alternativas: {
               a: 'SIM',
-              b: 'NÃO',
-              c: ''
+              b: 'NÃO'
             }
           }
         ];

@@ -46,14 +46,12 @@ export const execute = async function(interaction) {
           name: `seg-${user.username.toLowerCase()}`,
           type: ChannelType.GuildText,
           parent: SEGURANCA_CATEGORY_ID,
-          topic: `Ticket de Segurança | ${user.tag} | ${motivo}`,
-          permissionOverwrites: [], // Vazio para herdar da categoria
-          // Herdar permissões da categoria
-          inheritPermissions: true
+          topic: `Ticket de Segurança | ${user.tag} | ${motivo}`
+          // Não passar permissionOverwrites nem inheritPermissions
         });
       } catch (err) {
         console.error('Erro ao criar canal do ticket de segurança:', err, 'Categoria:', SEGURANCA_CATEGORY_ID, 'Guild:', guild.id);
-        await interaction.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se a categoria existe, se o bot tem permissão e se o ID está correto.', flags: 64 });
+        await interaction.reply({ content: `❌ Erro ao criar o canal do ticket. Detalhe: ${err.message || err}`, flags: 64 });
         return;
       }
       // Notificação

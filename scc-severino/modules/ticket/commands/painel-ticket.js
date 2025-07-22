@@ -6,32 +6,59 @@ export const data = {
 };
 
 export async function execute(message, args, client) {
-  const panelEmbed = new EmbedBuilder()
-    .setColor('#5865F2')
-    .setTitle('🎫 Painel de Tickets')
+  const embed = new EmbedBuilder()
+    .setColor('#0099FF')
+    .setTitle('📑 Central de Atendimento - StreetCarClub')
     .setDescription(
-      '**Precisa de suporte ou quer falar com a staff?**\n\n' +
-      'Clique no botão abaixo para abrir um ticket privado com a equipe de atendimento.\n\n' +
-      '```\n✔️ Atendimento rápido\n🔒 Privacidade garantida\n📄 Você receberá um registro da conversa\n```'
+      'Bem-vindo à nossa Central de Atendimento!\n\n' +
+      'Abra um ticket para receber suporte personalizado da nossa equipe. Selecione a categoria que melhor se encaixa na sua necessidade no menu abaixo.\n\n' +
+      '❗ **Importante:** Evite marcar a equipe. Você será atendido o mais breve possível.\n\n' +
+      '📁 **Suporte**\nSuporte técnico e ajuda geral\n' +
+      '🦠 **Reportar Bugs**\nReportar erros e problemas técnicos\n' +
+      '⚠️ **Denúncias**\nReportar infrações e problemas de conduta\n' +
+      '💎 **Doações**\nAssuntos relacionados a doações\n' +
+      '🚀 **Boost**\nSuporte para membros boosters\n' +
+      '🏠 **Casas**\nQuestões relacionadas a casas e propriedades\n'
     )
-    .addFields(
-      { name: 'Como funciona?', value: '1️⃣ Clique em **"🎫 Abrir Ticket"**\n2️⃣ Descreva o motivo\n3️⃣ Aguarde o atendimento da equipe', inline: false },
-      { name: 'Atenção', value: '⚠️ **Abuso do sistema pode resultar em punição. Use apenas para assuntos sérios!**', inline: false }
-    )
-    .setFooter({ text: 'Sistema de Tickets', iconURL: 'https://cdn-icons-png.flaticon.com/512/3064/3064197.png' })
+    .setImage('https://i.imgur.com/ShgYL6s.png')
+    .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade | ™ Street CarClub © All rights reserved', iconURL: null })
     .setTimestamp();
 
-  const ticketButton = new ActionRowBuilder().addComponents(
+  const row1 = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
-      .setCustomId('create_ticket_panel')
-      .setLabel('🎫 Abrir Ticket')
+      .setCustomId('ticket_suporte')
+      .setLabel('Suporte')
       .setStyle(ButtonStyle.Primary)
-      .setEmoji('🎫')
+      .setEmoji('📁'),
+    new ButtonBuilder()
+      .setCustomId('ticket_bugs')
+      .setLabel('Reportar Bugs')
+      .setStyle(ButtonStyle.Success)
+      .setEmoji('🦠'),
+    new ButtonBuilder()
+      .setCustomId('ticket_denuncias')
+      .setLabel('Denúncias')
+      .setStyle(ButtonStyle.Danger)
+      .setEmoji('⚠️')
+  );
+  const row2 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('ticket_doacoes')
+      .setLabel('Doações')
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji('💎'),
+    new ButtonBuilder()
+      .setCustomId('ticket_boost')
+      .setLabel('Boost')
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji('🚀'),
+    new ButtonBuilder()
+      .setCustomId('ticket_casas')
+      .setLabel('Casas')
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji('🏠')
   );
 
-  await message.channel.send({
-    embeds: [panelEmbed],
-    components: [ticketButton]
-  });
-  await message.reply('✅ Painel de tickets criado com sucesso!');
+  await message.channel.send({ embeds: [embed], components: [row1, row2] });
+  await message.reply('✅ Painel de tickets criado!');
 } 

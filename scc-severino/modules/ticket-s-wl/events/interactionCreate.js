@@ -48,7 +48,21 @@ export const execute = async function(interaction) {
           name: `seg-${user.username.toLowerCase()}`,
           type: ChannelType.GuildText,
           parent: SEGURANCA_CATEGORY_ID,
-          topic: `Ticket de Segurança | ${user.tag} | ${motivo}`
+          topic: `Ticket de Segurança | ${user.tag} | ${motivo}`,
+          permissionOverwrites: [
+            {
+              id: guild.id, // everyone
+              deny: [PermissionFlagsBits.ViewChannel],
+            },
+            {
+              id: user.id, // criador
+              allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks],
+            },
+            {
+              id: config.staffRoleId, // staff
+              allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks],
+            },
+          ],
         });
         console.log('[DEBUG] Canal criado com sucesso:', ticketChannel.id);
       } catch (err) {

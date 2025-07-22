@@ -1,6 +1,6 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, Events, Collection } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, Events, Collection } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
 
 // IDs e configs fixos do bot original
 const CARGO_APROVADO = '1263487190575349892';

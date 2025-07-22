@@ -1,5 +1,6 @@
-require('dotenv').config();
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+import dotenv from 'dotenv';
+dotenv.config();
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 
 const SUGGESTION_CHANNEL_ID = '1395117926402756669';
 const VOTES_CHANNEL_ID = '1395118049115246825';

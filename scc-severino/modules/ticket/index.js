@@ -1,8 +1,8 @@
-const { Collection } = require('discord.js');
-const fs = require('fs');
-const path = require('path');
+import { Collection } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
 
-const setupTicketModule = function(client) {
+const setupTicketModule = async function(client) {
   // Coleção de comandos
   if (!client.commands) client.commands = new Collection();
 
@@ -12,7 +12,7 @@ const setupTicketModule = function(client) {
     const commandFiles = fs.readdirSync(commandsPath).filter(file => file.endsWith('.js'));
     for (const file of commandFiles) {
       const filePath = path.join(commandsPath, file);
-      const command = require(filePath);
+      const command = await import(filePath);
       if (command && command.data && command.data.name) {
         client.commands.set(command.data.name, command);
       }
@@ -25,7 +25,7 @@ const setupTicketModule = function(client) {
     const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
     for (const file of eventFiles) {
       const filePath = path.join(eventsPath, file);
-      const event = require(filePath);
+      const event = await import(filePath);
       if (event && event.name && typeof event.execute === 'function') {
         if (event.once) {
           client.once(event.name, (...args) => event.execute(...args));

@@ -22,7 +22,15 @@ export default async function(client) {
     const db = loadDB();
     const user = db[userId];
     const now = new Date();
-    if (user && user.aprovado) {
+    // Buscar membro atualizado
+    const member = await interaction.guild.members.fetch(userId);
+    // Se aprovado no JSON mas NÃO tem o cargo 1263487190575349892, libera para fazer WL de novo
+    const cargoAprovado = '1263487190575349892';
+    const cargoAntigo = '1046404063308288098';
+    if (member.roles.cache.has(cargoAntigo)) {
+      try { await member.roles.remove(cargoAntigo); } catch {}
+    }
+    if (user && user.aprovado && member.roles.cache.has(cargoAprovado)) {
       return interaction.reply({ content: '✅ Você já foi aprovado na whitelist!', ephemeral: true });
     }
     if (user && user.tentativas >= 2) {

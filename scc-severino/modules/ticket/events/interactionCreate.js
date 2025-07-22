@@ -51,18 +51,22 @@ export const execute = async function(interaction) {
         if (!interaction.member.permissions.has('ManageChannels')) {
           return interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets!', flags: 64 });
         }
-        const confirmEmbed = new EmbedBuilder()
-          .setColor('#FFA500')
-          .setTitle('🔒 Fechando Ticket')
-          .setDescription('Este ticket será deletado em 5 segundos...')
-          .setFooter({ text: `Fechado por ${user.tag}` })
-          .setTimestamp();
-        await interaction.reply({ embeds: [confirmEmbed], flags: 64 });
-        setTimeout(async () => {
-          try {
-            await interaction.channel.delete(`Ticket fechado por ${user.tag}`);
-          } catch (error) {}
-        }, 5000);
+        // Abrir modal para motivo do fechamento
+        await interaction.showModal(
+          new ModalBuilder()
+            .setCustomId('modal_motivo_fechamento')
+            .setTitle('Fechar Ticket - Motivo')
+            .addComponents(
+              new ActionRowBuilder().addComponents(
+                new TextInputBuilder()
+                  .setCustomId('motivo')
+                  .setLabel('Motivo do fechamento')
+                  .setStyle(TextInputStyle.Paragraph)
+                  .setRequired(true)
+                  .setMaxLength(200)
+              )
+            )
+        );
         return;
       }
       if (customId === 'assumir_ticket') {
@@ -260,6 +264,80 @@ export const execute = async function(interaction) {
       const userId = match[1];
       await interaction.channel.send(`🔔 <@${userId}>, você foi avisado neste ticket!`);
       await interaction.reply({ content: `🔔 <@${userId}> foi avisado.`, flags: 0 });
+      return;
+    }
+    // Handler do modal de motivo de fechamento
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento') {
+      const motivo = interaction.fields.getTextInputValue('motivo');
+      const user = interaction.user;
+      const channel = interaction.channel;
+      // Buscar todas as mensagens do canal (transcript completo)
+      let allMessages = [];
+      let lastId;
+      while (true) {
+        const options = { limit: 100 };
+        if (lastId) options.before = lastId;
+        const messages = await channel.messages.fetch(options);
+        allMessages = allMessages.concat(Array.from(messages.values()));
+        if (messages.size < 100) break;
+        lastId = messages.last().id;
+      }
+      const sorted = allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+      let transcript = '';
+      for (const msg of sorted) {
+        const time = `<t:${Math.floor(msg.createdTimestamp/1000)}:t>`;
+        let line = `**${msg.author.tag}** [${time}]: ${msg.content}`;
+        // Anexos
+        if (msg.attachments && msg.attachments.size > 0) {
+          for (const att of msg.attachments.values()) {
+            line += `\n[Anexo: ${att.name}](${att.url})`;
+          }
+        }
+        // Embeds
+        if (msg.embeds && msg.embeds.length > 0) {
+          for (const emb of msg.embeds) {
+            if (emb.url) line += `\n[Embed: ${emb.url}]`;
+            if (emb.title) line += `\nTítulo do Embed: ${emb.title}`;
+            if (emb.description) line += `\nDescrição do Embed: ${emb.description}`;
+          }
+        }
+        // Stickers
+        if (msg.stickers && msg.stickers.size > 0) {
+          for (const sticker of msg.stickers.values()) {
+            line += `\n[Sticker: ${sticker.name}]`;
+          }
+        }
+        // Reply
+        if (msg.reference && msg.reference.messageId) {
+          line += `\n↪️ Em resposta a mensagem ID: ${msg.reference.messageId}`;
+        }
+        transcript += line + '\n';
+      }
+      // Embed visual para o log
+      const embed = new EmbedBuilder()
+        .setColor('#FFA500')
+        .setTitle('📑 Ticket Fechado')
+        .setDescription(`Ticket fechado por <@${user.id}>\n**Motivo:** ${motivo}`)
+        .addFields({ name: 'Canal', value: `<#${channel.id}>`, inline: true })
+        .setTimestamp();
+      // Enviar para canal de logs
+      const logChannel = await interaction.guild.channels.fetch('1386491920313745418').catch(() => null);
+      if (logChannel) {
+        await logChannel.send({ embeds: [embed] });
+        if (transcript.length > 1900) {
+          for (let i = 0; i < transcript.length; i += 1900) {
+            await logChannel.send('```markdown\n' + transcript.slice(i, i + 1900) + '\n```');
+          }
+        } else {
+          await logChannel.send('```markdown\n' + transcript + '\n```');
+        }
+      }
+      await interaction.reply({ content: '✅ Ticket fechado e transcript enviado para a staff!', flags: 64 });
+      setTimeout(async () => {
+        try {
+          await channel.delete(`Ticket fechado por ${user.tag}`);
+        } catch (error) {}
+      }, 5000);
       return;
     }
   } catch (error) {

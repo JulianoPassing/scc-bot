@@ -7,10 +7,9 @@ const SEGURANCA_CATEGORY_ID = '1378778140528087191';
 export const name = 'interactionCreate';
 export const execute = async function(interaction) {
   try {
-    if (!interaction.isButton()) return;
     const { customId, user, guild } = interaction;
     // Painel de segurança: abrir modal para motivo
-    if (customId === 'create_ticket_panel') {
+    if (interaction.isButton() && customId === 'create_ticket_panel') {
       const modal = new ModalBuilder()
         .setCustomId('modal_ticket_seguranca_motivo')
         .setTitle('Abrir Ticket de Segurança')

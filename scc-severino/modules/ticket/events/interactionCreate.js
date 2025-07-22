@@ -101,13 +101,13 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'avisar_membro') {
-        // Envia embed bonito para o criador do ticket (sem menção)
+        // Busca a menção na mensagem de notificação de abertura do ticket
         const channel = interaction.channel;
         const messages = await channel.messages.fetch({ limit: 10 });
-        const firstMsg = messages.find(m => m.embeds.length);
+        const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket!'));
         let autorId = null;
-        if (firstMsg) {
-          const match = firstMsg.embeds[0].description?.match(/<@([0-9]+)>/);
+        if (notifyMsg) {
+          const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
           if (match) autorId = match[1];
         }
         if (autorId) {
@@ -117,7 +117,7 @@ export const execute = async function(interaction) {
             .setDescription('Olá! A equipe foi avisada sobre o seu ticket e em breve alguém irá te atender. Fique atento às mensagens neste canal!')
             .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
             .setTimestamp();
-          await channel.send({ embeds: [embed] });
+          await channel.send({ content: `<@${autorId}>`, embeds: [embed] });
           await interaction.reply({ content: '🔔 O criador do ticket foi avisado com uma mensagem profissional.', flags: 64 });
         } else {
           await interaction.reply({ content: '❌ Não foi possível identificar o criador do ticket.', flags: 64 });
@@ -240,6 +240,16 @@ export const execute = async function(interaction) {
         if (interaction.client.timers24h && interaction.client.timers24h[interaction.channel.id]) {
           clearTimeout(interaction.client.timers24h[interaction.channel.id]);
           delete interaction.client.timers24h[interaction.channel.id];
+          // Editar a mensagem do timer para mostrar cancelamento e remover botão
+          const msgs = await interaction.channel.messages.fetch({ limit: 10 });
+          const timerMsg = msgs.find(m => m.embeds.length && m.embeds[0].title && m.embeds[0].title.includes('Timer de 24h Iniciado'));
+          if (timerMsg) {
+            const embed = EmbedBuilder.from(timerMsg.embeds[0])
+              .setColor('#43B581')
+              .setTitle('⏹️ Timer de 24h Cancelado')
+              .setDescription('O timer de 24h foi cancelado para este ticket. O ticket não será fechado automaticamente.');
+            await timerMsg.edit({ embeds: [embed], components: [] });
+          }
           await interaction.reply({ content: '❌ Timer de 24h cancelado para este ticket.', flags: 64 });
         } else {
           await interaction.reply({ content: '❌ Não há timer ativo para este ticket.', flags: 64 });

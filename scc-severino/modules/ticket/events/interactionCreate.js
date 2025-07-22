@@ -485,7 +485,11 @@ export const execute = async function(interaction) {
         .setColor('#FFA500')
         .setTitle('📑 Ticket Fechado')
         .setDescription(`Ticket fechado por <@${user.id}>\n**Motivo:** ${motivo}`)
-        .addFields({ name: 'Canal', value: `<#${channel.id}>`, inline: true })
+        .addFields(
+          { name: 'Canal', value: `<#${channel.id}>`, inline: true },
+          { name: 'Criador', value: autorId ? `<@${autorId}>` : 'Desconhecido', inline: true },
+          { name: 'Fechado por', value: `<@${user.id}>`, inline: true }
+        )
         .setTimestamp();
       const logChannel = await interaction.guild.channels.fetch('1386491920313745418').catch(() => null);
       if (logChannel) {

@@ -79,7 +79,7 @@ function getMemberHierarchyLevel(member) {
     return ROLE_HIERARCHY.length;
 }
 
-module.exports = function setupAvaliacaoModule(client) {
+const setupAvaliacaoModule = function(client) {
     const votes = loadVotes();
 
     client.on('ready', () => { console.log(`[Avaliações] Módulo carregado!`); });
@@ -228,4 +228,5 @@ module.exports = function setupAvaliacaoModule(client) {
             await interaction.reply({ content: '✅ Sua avaliação foi enviada com sucesso!', ephemeral: true });
         }
     });
-} 
+};
+export default setupAvaliacaoModule; 

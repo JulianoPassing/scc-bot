@@ -18,7 +18,7 @@ function saveDB(db) {
   fs.writeFileSync(DATABASE_PATH, JSON.stringify(db, null, 2));
 }
 
-module.exports = function setupWLModule(client) {
+const setupWLModule = function(client) {
   // Comando para criar painel de whitelist
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
@@ -160,4 +160,5 @@ module.exports = function setupWLModule(client) {
     }
     await interaction.reply({ content: '✅ Formulário enviado e aprovado! Você foi adicionado à whitelist.', ephemeral: true });
   });
-} 
+};
+export default setupWLModule; 

@@ -2,7 +2,7 @@ const { Collection } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
-module.exports = function setupTicketSWLModule(client) {
+const setupTicketSWLModule = function(client) {
   // Coleção de comandos
   if (!client.commands) client.commands = new Collection();
 
@@ -21,4 +21,5 @@ module.exports = function setupTicketSWLModule(client) {
 
   // Eventos são registrados diretamente no bot.js deste módulo, mas para integração, devem ser migrados para cá se necessário.
   // Se houver eventos customizados, adapte aqui.
-} 
+};
+export default setupTicketSWLModule; 

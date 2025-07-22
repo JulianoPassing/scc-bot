@@ -1,4 +1,4 @@
-module.exports = function setupBoostModule(client) {
+const setupBoostModule = function(client) {
   // Dicionário para armazenar o status de boost dos membros
   const boostStatus = {};
 
@@ -23,4 +23,5 @@ module.exports = function setupBoostModule(client) {
     }
     boostStatus[after.id] = afterBoost;
   });
-} 
+};
+export default setupBoostModule; 

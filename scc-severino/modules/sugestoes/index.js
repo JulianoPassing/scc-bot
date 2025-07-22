@@ -4,7 +4,7 @@ const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('
 const SUGGESTION_CHANNEL_ID = '1395117926402756669';
 const VOTES_CHANNEL_ID = '1395118049115246825';
 
-module.exports = function setupSugestoesModule(client) {
+const setupSugestoesModule = function(client) {
   // Lógica de votação
   const votos = new Map(); // Map<messageId, {yes: Set<userId>, no: Set<userId>}>
   const logsMessages = new Map(); // Map<suggestionId, logMessageId>
@@ -135,4 +135,5 @@ module.exports = function setupSugestoesModule(client) {
       await interaction.reply({ content: 'Erro ao processar seu voto. Tente novamente.', ephemeral: true });
     }
   });
-} 
+};
+export default setupSugestoesModule; 

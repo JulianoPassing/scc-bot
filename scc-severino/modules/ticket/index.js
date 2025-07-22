@@ -2,7 +2,7 @@ const { Collection } = require('discord.js');
 const fs = require('fs');
 const path = require('path');
 
-module.exports = function setupTicketModule(client) {
+const setupTicketModule = function(client) {
   // Coleção de comandos
   if (!client.commands) client.commands = new Collection();
 
@@ -35,4 +35,5 @@ module.exports = function setupTicketModule(client) {
       }
     }
   }
-} 
+};
+export default setupTicketModule; 

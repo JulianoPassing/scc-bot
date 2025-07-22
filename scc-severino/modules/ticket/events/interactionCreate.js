@@ -24,6 +24,9 @@ export const execute = async function(interaction) {
       const { customId, user, guild } = interaction;
       // Painel principal: abrir modal para assunto
       if (customId.startsWith('ticket_')) {
+        if (!interaction.member.permissions.has('ManageChannels')) {
+          return interaction.reply({ content: '❌ Apenas membros da equipe podem abrir tickets por aqui!', flags: 64 });
+        }
         const tipo = customId.replace('ticket_', '');
         const categoria = CATEGORY_INFO[tipo];
         if (!categoria) {
@@ -47,6 +50,11 @@ export const execute = async function(interaction) {
         return;
       }
       // Botões do painel de ticket aberto
+      if (customId === 'fechar_ticket' || customId === 'assumir_ticket' || customId === 'adicionar_membro' || customId === 'avisar_membro' || customId === 'renomear_ticket' || customId === 'timer_24h' || customId === 'cancelar_timer_24h') {
+        if (!interaction.member.permissions.has('ManageChannels')) {
+          return interaction.reply({ content: '❌ Apenas membros da equipe podem usar esta função do painel!', flags: 64 });
+        }
+      }
       if (customId === 'fechar_ticket') {
         if (!interaction.member.permissions.has('ManageChannels')) {
           return interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets!', flags: 64 });

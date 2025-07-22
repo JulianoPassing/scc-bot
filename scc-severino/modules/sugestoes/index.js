@@ -1,23 +1,18 @@
-import dotenv from 'dotenv';
-dotenv.config();
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 
 const SUGGESTION_CHANNEL_ID = '1395117926402756669';
 const VOTES_CHANNEL_ID = '1395118049115246825';
 
-const setupSugestoesModule = function(client) {
-  // Lógica de votação
-  const votos = new Map(); // Map<messageId, {yes: Set<userId>, no: Set<userId>}>
-  const logsMessages = new Map(); // Map<suggestionId, logMessageId>
+const votos = new Map(); // Map<messageId, {yes: Set<userId>, no: Set<userId>}>
+const logsMessages = new Map(); // Map<suggestionId, logMessageId>
 
+const setupSugestoesModule = function(client) {
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
     if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
-
     try {
       const conteudo = message.content;
       await message.delete();
-
       const embed = new EmbedBuilder()
         .setColor('#0099FF')
         .setAuthor({
@@ -25,7 +20,9 @@ const setupSugestoesModule = function(client) {
           iconURL: message.author.displayAvatarURL({ dynamic: true, size: 64 })
         })
         .setTitle('💡 Sugestão')
-        .setDescription(`\n${conteudo}\n`)
+        .setDescription(`
+${conteudo}
+`)
         .addFields(
           { name: '👤 Autor', value: `<@${message.author.id}>`, inline: true },
           { name: '📅 Data', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
@@ -35,7 +32,6 @@ const setupSugestoesModule = function(client) {
           iconURL: message.guild.iconURL({ dynamic: true }) 
         })
         .setTimestamp();
-
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('vote_yes')
@@ -48,7 +44,6 @@ const setupSugestoesModule = function(client) {
           .setStyle(ButtonStyle.Danger)
           .setEmoji('❌')
       );
-
       const sentMessage = await message.channel.send({ embeds: [embed], components: [row] });
       votos.set(sentMessage.id, { yes: new Set(), no: new Set() });
       try {
@@ -57,14 +52,9 @@ const setupSugestoesModule = function(client) {
           autoArchiveDuration: 60,
           reason: 'Tópico de debate criado automaticamente para a sugestão'
         });
-      } catch (threadError) {
-        console.error('Erro ao criar tópico de debate:', threadError);
-      }
-    } catch (error) {
-      console.error('Erro ao processar sugestão:', error);
-    }
+      } catch (threadError) {}
+    } catch (error) {}
   });
-
   client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
     const { customId, message, user } = interaction;
@@ -132,7 +122,6 @@ const setupSugestoesModule = function(client) {
         }
       }
     } catch (error) {
-      console.error('Erro ao processar voto:', error);
       await interaction.reply({ content: 'Erro ao processar seu voto. Tente novamente.', ephemeral: true });
     }
   });

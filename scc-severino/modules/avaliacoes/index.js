@@ -14,15 +14,11 @@ import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-
-// --- CONFIGURAÇÃO ---
 const STAFF_ROLE_ID = '1046404063673192546';
 const ADMIN_ROLE_ID = '1046404063522197521';
 const PANEL_CHANNEL_ID = '1394724080187473950s';
 const AUDIT_CHANNEL_ID = '1394724041671053332';
 const FORBIDDEN_ROLE_ID = '1046404063673192546';
-
-// --- CONFIGURAÇÃO DE HIERARQUIA ---
 const ROLE_HIERARCHY = [
     { name: 'CEO', id: '1385675559325008105' },
     { name: 'CEO', id: '1046404063689977986' },
@@ -33,14 +29,13 @@ const ROLE_HIERARCHY = [
     { name: 'SUP', id: '1046404063673192542' },
     { name: 'AJD', id: '1204393192284229692' }
 ];
-
 const FILE_PATH = path.join(__dirname, 'avaliacoes.json');
 const COOLDOWN = 6 * 60 * 60 * 1000;
-
 const userCooldown = new Map();
 
-function saveVotes(votes) { try { const data = Object.fromEntries(votes); fs.writeFileSync(FILE_PATH, JSON.stringify(data, null, 2)); console.log('Avaliações salvas com sucesso!'); } catch (error) { console.error('ERRO CRÍTICO: Falha ao salvar o arquivo de avaliações.', error); } }
-function loadVotes() { try { if (fs.existsSync(FILE_PATH)) { const data = fs.readFileSync(FILE_PATH, 'utf-8'); if (data.length === 0) { console.log('Arquivo de avaliações encontrado, mas está vazio.'); return new Map(); } const jsonObject = JSON.parse(data); console.log('Arquivo de avaliações carregado com sucesso.'); return new Map(Object.entries(jsonObject)); } else { console.log('Arquivo de avaliações não encontrado.'); } } catch (error) { console.error('ERRO CRÍTICO: Falha ao carregar o arquivo avaliacoes.json.', error); } return new Map(); }
+function saveVotes(votes) { try { const data = Object.fromEntries(votes); fs.writeFileSync(FILE_PATH, JSON.stringify(data, null, 2)); } catch (error) { } }
+function loadVotes() { try { if (fs.existsSync(FILE_PATH)) { const data = fs.readFileSync(FILE_PATH, 'utf-8'); if (data.length === 0) { return new Map(); } const jsonObject = JSON.parse(data); return new Map(Object.entries(jsonObject)); } } catch (error) { } return new Map(); }
+const votes = loadVotes();
 
 function createStaffPanelEmbed(staffMember, ratingData) {
     let average = 0;
@@ -83,13 +78,8 @@ function getMemberHierarchyLevel(member) {
 }
 
 const setupAvaliacaoModule = function(client) {
-    const votes = loadVotes();
-
-    client.on('ready', () => { console.log(`[Avaliações] Módulo carregado!`); });
-
     client.on('messageCreate', async message => {
         if (message.author.bot) return;
-
         if (message.content === '!painel-avaliacao') {
             if (!message.member.roles.cache.has(ADMIN_ROLE_ID)) return message.reply('❌ Você não tem permissão.');
             const targetChannel = message.channel;
@@ -116,15 +106,12 @@ const setupAvaliacaoModule = function(client) {
                     ratingData.panelMessageId = newPanel.id;
                     ratingData.panelChannelId = targetChannel.id;
                     created++;
-                } catch (error) {
-                    console.error(`Falha ao criar painel para ${staffMember.displayName}:`, error);
-                }
+                } catch (error) {}
             }
             saveVotes(votes);
             await message.channel.send(`✅ ${created} painéis individuais criados na ordem de hierarquia!`);
             return;
         }
-
         if (message.content === '!gerenciar-paineis-staff') {
             if (!message.member.roles.cache.has(ADMIN_ROLE_ID)) return message.reply('❌ Você não tem permissão.');
             const msg = await message.reply('🔄 Iniciando gerenciamento dos painéis...');
@@ -142,7 +129,7 @@ const setupAvaliacaoModule = function(client) {
             }
             if (oldPanelIds.length > 0) {
                 await msg.edit(`🔄 Deletando ${oldPanelIds.length} painéis antigos para reorganizar...`);
-                await panelChannel.bulkDelete(oldPanelIds, true).catch(err => console.log("Não foi possível deletar todas as mensagens."));
+                await panelChannel.bulkDelete(oldPanelIds, true).catch(() => {});
             }
             await msg.edit('🔄 Ordenando a equipe por hierarquia...');
             let staffArray = Array.from(staffMembers.values());
@@ -160,15 +147,12 @@ const setupAvaliacaoModule = function(client) {
                     const newPanel = await panelChannel.send({ embeds: [panelEmbed] });
                     ratingData.panelMessageId = newPanel.id;
                     created++;
-                } catch (error) {
-                    console.error(`Falha ao criar painel para ${staffMember.displayName}:`, error);
-                }
+                } catch (error) {}
             }
             saveVotes(votes);
             await msg.edit(`✅ **Gerenciamento concluído!**\n- ${created} painéis foram criados na ordem correta.`);
         }
     });
-
     client.on('interactionCreate', async interaction => {
         if (interaction.isButton() && interaction.customId.startsWith('rate_')) {
             if (interaction.member.roles.cache.has(FORBIDDEN_ROLE_ID)) { return interaction.reply({ content: '❌ Você não tem permissão para avaliar.', ephemeral: true }); }
@@ -218,7 +202,7 @@ const setupAvaliacaoModule = function(client) {
                     const auditEmbed = new EmbedBuilder().setColor(0x3498DB).setTitle('📝 Nova Avaliação Recebida').addFields({ name: '👤 Avaliador', value: `<@${interaction.user.id}> (ID: ${interaction.user.id})`, inline: false }, { name: '👥 Staff Avaliado', value: `<@${staffId}> (ID: ${staffId})`, inline: false }, { name: '⭐ Nota', value: '⭐'.repeat(rate) + ` (${rate} estrelas)`, inline: false }, { name: '🔧 Tipo de Atendimento', value: serviceTypeText, inline: false }, { name: '💬 Justificativa', value: `\n${justificativa}\n`, inline: false }).setTimestamp().setFooter({ text: 'Sistema de Avaliação', iconURL: client.user.displayAvatarURL() });
                     await auditChannel.send({ embeds: [auditEmbed] });
                 }
-            } catch (error) { console.error('Erro ao enviar a mensagem de auditoria:', error); }
+            } catch (error) { }
             if (ratingData.panelMessageId && ratingData.panelChannelId) {
                 try {
                     const panelChannel = await client.channels.fetch(ratingData.panelChannelId);
@@ -226,7 +210,7 @@ const setupAvaliacaoModule = function(client) {
                     const staffMember = await interaction.guild.members.fetch(staffId);
                     const updatedEmbed = createStaffPanelEmbed(staffMember, ratingData);
                     await panelToUpdate.edit({ embeds: [updatedEmbed] });
-                } catch (error) { console.error(`Falha ao atualizar painel individual para ${staffId} em tempo real:`, error); }
+                } catch (error) { }
             }
             await interaction.reply({ content: '✅ Sua avaliação foi enviada com sucesso!', ephemeral: true });
         }

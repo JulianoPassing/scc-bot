@@ -1,7 +1,7 @@
 import { ChannelType, PermissionFlagsBits, EmbedBuilder } from 'discord.js';
 import fs from 'fs/promises';
 import path from 'path';
-import config from '../config.json' assert { type: 'json' };
+import config from '../config.json' with { type: 'json' };
 
 const ticketCounterFile = path.join(path.dirname(new URL(import.meta.url).pathname), '..', 'ticket-counter.json');
 

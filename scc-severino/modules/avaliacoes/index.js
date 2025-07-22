@@ -1,4 +1,4 @@
-const {
+import {
     ActionRowBuilder,
     ButtonBuilder,
     ButtonStyle,
@@ -7,10 +7,13 @@ const {
     ModalBuilder,
     TextInputBuilder,
     TextInputStyle
-} = require('discord.js');
-require('dotenv').config();
-const fs = require('fs');
-const path = require('path');
+} from 'discord.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // --- CONFIGURAÇÃO ---
 const STAFF_ROLE_ID = '1046404063673192546';

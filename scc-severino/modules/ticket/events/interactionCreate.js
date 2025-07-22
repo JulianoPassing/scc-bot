@@ -24,6 +24,7 @@ export const execute = async function(interaction) {
       const { customId, user, guild } = interaction;
       // Painel principal: abrir modal para assunto
       if (customId.startsWith('ticket_')) {
+        // (Removida a verificação de staff aqui para permitir todos abrirem tickets)
         const tipo = customId.replace('ticket_', '');
         const categoria = CATEGORY_INFO[tipo];
         if (!categoria) {
@@ -47,10 +48,21 @@ export const execute = async function(interaction) {
         return;
       }
       // Botões do painel de ticket aberto
-      if (customId === 'fechar_ticket') {
+      const painelTicketBotoes = [
+        'fechar_ticket',
+        'assumir_ticket',
+        'adicionar_membro',
+        'avisar_membro',
+        'renomear_ticket',
+        'timer_24h',
+        'cancelar_timer_24h'
+      ];
+      if (painelTicketBotoes.includes(customId)) {
         if (!interaction.member.permissions.has('ManageChannels')) {
-          return interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets!', flags: 64 });
+          return interaction.reply({ content: '❌ Apenas membros da equipe podem usar esta função do painel!', flags: 64 });
         }
+      }
+      if (customId === 'fechar_ticket') {
         // Abrir modal para motivo do fechamento
         await interaction.showModal(
           new ModalBuilder()
@@ -70,9 +82,6 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'assumir_ticket') {
-        if (!interaction.member.permissions.has('ManageChannels')) {
-          return interaction.reply({ content: '❌ Apenas membros da equipe podem assumir tickets!', flags: 64 });
-        }
         // Atualiza embed para status 'Assumido'
         const msg = await interaction.channel.messages.fetch({ limit: 10 }).then(msgs => msgs.find(m => m.embeds.length));
         if (msg) {
@@ -338,6 +347,9 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
+      if (!interaction.member.permissions.has('ManageChannels')) {
+        return interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
+      }
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
       const name = interaction.channel.name;
       const emoji = name.startsWith('📁suporte-') ? '📁' :

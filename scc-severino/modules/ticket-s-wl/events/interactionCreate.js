@@ -29,6 +29,9 @@ export default async function(client) {
       }
       // Handler do modal de motivo
       if (interaction.isModalSubmit() && interaction.customId === 'modal_ticket_seguranca_motivo') {
+        console.log('Handler do modal_ticket_seguranca_motivo chamado para', interaction.user.tag);
+        await interaction.reply({ content: 'Diagnóstico: handler do modal chamado.', flags: 64 });
+        return;
         const motivo = interaction.fields.getTextInputValue('motivo');
         // Verifica se já existe ticket
         const existing = guild.channels.cache.find(

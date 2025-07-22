@@ -94,7 +94,9 @@ export default async function(client) {
                 .setMaxLength(400)
             )
           );
+        console.log('[WL][DEBUG] Antes de mostrar modal_wl_historia para', interaction.user.tag);
         await interaction.showModal(modal);
+        console.log('[WL][DEBUG] Modal_wl_historia mostrado para', interaction.user.tag);
       } catch (err) {
         console.error('[WL][ERRO modal_wl_nome]', err);
         try {

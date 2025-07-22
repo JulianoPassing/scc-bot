@@ -1,0 +1,16 @@
+{
+  "name": "scc-severino",
+  "version": "1.0.0",
+  "description": "Bot unificado com todas as funções dos bots SCC antigos.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "SCC",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.4.5"
+  }
+} 

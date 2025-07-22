@@ -38,18 +38,18 @@ export const execute = async function(interaction) {
         await interaction.reply({ content: '❌ Você já possui um ticket aberto: ' + existing.toString(), flags: 64 });
         return;
       }
-      // Cria o canal na categoria correta
+      // Cria o canal na categoria correta, herdando permissões
       let ticketChannel;
       try {
+        const ticketNumber = await getNextTicketNumber();
         ticketChannel = await guild.channels.create({
           name: `seg-${user.username.toLowerCase()}`,
           type: ChannelType.GuildText,
           parent: SEGURANCA_CATEGORY_ID,
           topic: `Ticket de Segurança | ${user.tag} | ${motivo}`,
-          permissionOverwrites: [
-            { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
-            { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks] }
-          ]
+          permissionOverwrites: [], // Vazio para herdar da categoria
+          // Herdar permissões da categoria
+          inheritPermissions: true
         });
       } catch (err) {
         console.error('Erro ao criar canal do ticket de segurança:', err, 'Categoria:', SEGURANCA_CATEGORY_ID, 'Guild:', guild.id);

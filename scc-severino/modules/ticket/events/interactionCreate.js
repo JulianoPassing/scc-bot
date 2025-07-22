@@ -27,6 +27,7 @@ export default async function(client) {
       const categoria = CATEGORY_INFO[tipo];
       const categoriaId = CATEGORY_IDS[tipo];
       if (!categoria || !categoriaId) {
+        console.error('Categoria inválida:', tipo, categoria, categoriaId);
         await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', ephemeral: true });
         return;
       }
@@ -45,8 +46,10 @@ export default async function(client) {
           ]
         });
       } catch (err) {
-        await interaction.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se a categoria existe e se o bot tem permissão.', ephemeral: true });
-        console.error('Erro ao criar canal do ticket:', err);
+        console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se a categoria existe, se o bot tem permissão e se o ID está correto.', ephemeral: true });
+        }
         return;
       }
       // Notificação

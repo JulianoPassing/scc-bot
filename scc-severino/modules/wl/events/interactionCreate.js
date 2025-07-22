@@ -39,16 +39,16 @@ export default async function(client) {
       if (user && user.aprovado && member.roles.cache.has(cargoAprovado)) {
         return interaction.reply({ content: '✅ Você já foi aprovado na whitelist!', ephemeral: true });
       }
-      // Limite de tentativas/cooldown removido temporariamente
-      /*
-      if (user && user.tentativas >= 2) {
-        const last = new Date(user.last_attempt);
-        const diff = (now - last) / (1000 * 60 * 60);
-        if (diff < 24) {
-          return interaction.reply({ content: `⏳ Você atingiu o limite de tentativas. Tente novamente em <t:${Math.floor((last.getTime() + 24*60*60*1000)/1000)}:R>.`, ephemeral: true });
+      // Limite de tentativas/cooldown restaurado, mas sem limite para quem tem o cargo especial
+      if (!member.roles.cache.has('1046404063689977984')) {
+        if (user && user.tentativas >= 2) {
+          const last = new Date(user.last_attempt);
+          const diff = (now - last) / (1000 * 60 * 60);
+          if (diff < 24) {
+            return interaction.reply({ content: `⏳ Você atingiu o limite de tentativas. Tente novamente em <t:${Math.floor((last.getTime() + 24*60*60*1000)/1000)}:R>.`, ephemeral: true });
+          }
         }
       }
-      */
       // Modal etapa 1: dados pessoais
       const modal = new ModalBuilder()
         .setCustomId('modal_wl_etapa1')

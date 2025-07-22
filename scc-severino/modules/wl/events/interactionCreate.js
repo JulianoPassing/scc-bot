@@ -64,8 +64,17 @@ export default async function(client) {
           ),
           new ActionRowBuilder().addComponents(
             new TextInputBuilder()
+              .setCustomId('idade')
+              .setLabel('2. Qual sua idade?')
+              .setStyle(TextInputStyle.Short)
+              .setRequired(true)
+              .setMaxLength(2)
+              .setPlaceholder('Digite apenas números, ex: 18')
+          ),
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
               .setCustomId('motivo')
-              .setLabel('2. Por que quer jogar no Street Car Club?')
+              .setLabel('3. Por que quer jogar no Street Car Club?')
               .setStyle(TextInputStyle.Paragraph)
               .setRequired(true)
               .setMaxLength(300)
@@ -73,7 +82,7 @@ export default async function(client) {
           new ActionRowBuilder().addComponents(
             new TextInputBuilder()
               .setCustomId('conheceu')
-              .setLabel('3. Como conheceu o servidor?')
+              .setLabel('4. Como conheceu o servidor?')
               .setStyle(TextInputStyle.Short)
               .setRequired(true)
               .setMaxLength(100)
@@ -81,7 +90,7 @@ export default async function(client) {
           new ActionRowBuilder().addComponents(
             new TextInputBuilder()
               .setCustomId('historia')
-              .setLabel('4. História do personagem')
+              .setLabel('5. História do personagem')
               .setPlaceholder('Digite uma história com no mínimo 700 caracteres')
               .setStyle(TextInputStyle.Paragraph)
               .setRequired(true)
@@ -97,11 +106,12 @@ export default async function(client) {
     if (interaction.isModalSubmit() && interaction.customId === 'modal_wl_etapa1') {
       try {
         const nome = interaction.fields.getTextInputValue('nome');
+        const idade = interaction.fields.getTextInputValue('idade');
         const motivo = interaction.fields.getTextInputValue('motivo');
         const conheceu = interaction.fields.getTextInputValue('conheceu');
         const historia = interaction.fields.getTextInputValue('historia');
         if (!client.wlCache) client.wlCache = {};
-        client.wlCache[interaction.user.id] = { nome, motivo, conheceu, historia, respostas: [], questaoAtual: 0 };
+        client.wlCache[interaction.user.id] = { nome, idade, motivo, conheceu, historia, respostas: [], questaoAtual: 0 };
         // Iniciar perguntas obrigatórias (5 a 12) via botões
         const questoes = [
           {
@@ -243,7 +253,18 @@ export default async function(client) {
               corretas++;
             }
           }
-          const aprovado = corretas === GABARITO.length;
+          // Verificar idade
+          let aprovado = corretas === GABARITO.length;
+          let idadeNum = parseInt(cache.idade);
+          let cargoMenor16 = '1146863002864332873';
+          let cargo16a18 = '1150870237596622868';
+          let cargoAprovado = '1263487190575349892';
+          let cargoAntigo = '1046404063308288098';
+          let motivoReprovado = '';
+          if (isNaN(idadeNum) || idadeNum < 16) {
+            aprovado = false;
+            motivoReprovado = 'Idade menor que 16 anos';
+          }
           // Atualizar tentativas e status no JSON
           const db = loadDB();
           const userId = interaction.user.id;
@@ -252,35 +273,48 @@ export default async function(client) {
           db[userId].last_attempt = new Date().toISOString();
           if (aprovado) db[userId].aprovado = true;
           saveDB(db);
-          // Mensagem final ao usuário
-          if (aprovado) {
-            // Adicionar cargo aprovado
-            try {
-              const member = await interaction.guild.members.fetch(interaction.user.id);
-              await member.roles.add('1263487190575349892');
-            } catch (e) {}
-            await interaction.update({
-              embeds: [
-                new EmbedBuilder()
-                  .setColor(0x00ff00)
-                  .setTitle('✅ Whitelist Aprovada!')
-                  .setDescription('Parabéns! Você foi aprovado na whitelist e já pode jogar no servidor.')
-                  .setFooter({ text: 'Street Car Club • Sistema de Whitelist' })
-              ],
-              components: []
-            });
-          } else {
-            await interaction.update({
-              embeds: [
-                new EmbedBuilder()
-                  .setColor(0xff0000)
-                  .setTitle('❌ Whitelist Reprovada')
-                  .setDescription(`Você acertou ${corretas}/${GABARITO.length} questões obrigatórias.\nVocê pode tentar novamente após o cooldown.`)
-                  .setFooter({ text: 'Street Car Club • Sistema de Whitelist' })
-              ],
-              components: []
-            });
-          }
+          // Mensagem final ao usuário e manipulação de cargos
+          try {
+            const member = await interaction.guild.members.fetch(interaction.user.id);
+            if (aprovado) {
+              // Remover cargo antigo se aprovado
+              if (member.roles.cache.has(cargoAntigo)) {
+                try { await member.roles.remove(cargoAntigo); } catch {}
+              }
+              // 16-18 anos: dois cargos
+              if (idadeNum >= 16 && idadeNum < 18) {
+                await member.roles.add(cargoAprovado);
+                await member.roles.add(cargo16a18);
+              } else if (idadeNum >= 18) {
+                await member.roles.add(cargoAprovado);
+              }
+              await interaction.update({
+                embeds: [
+                  new EmbedBuilder()
+                    .setColor(0x00ff00)
+                    .setTitle('✅ Whitelist Aprovada!')
+                    .setDescription('Parabéns! Você foi aprovado na whitelist e já pode jogar no servidor.')
+                    .setFooter({ text: 'Street Car Club • Sistema de Whitelist' })
+                ],
+                components: []
+              });
+            } else {
+              // Menor de 16: cargo de reprovado
+              if (idadeNum < 16) {
+                await member.roles.add(cargoMenor16);
+              }
+              await interaction.update({
+                embeds: [
+                  new EmbedBuilder()
+                    .setColor(0xff0000)
+                    .setTitle('❌ Whitelist Reprovada')
+                    .setDescription(`Você acertou ${corretas}/${GABARITO.length} questões obrigatórias.\n${motivoReprovado ? 'Motivo: ' + motivoReprovado : 'Você pode tentar novamente após o cooldown.'}`)
+                    .setFooter({ text: 'Street Car Club • Sistema de Whitelist' })
+                ],
+                components: []
+              });
+            }
+          } catch (e) {}
           // Enviar formulário para canal de logs
           try {
             const logChannel = interaction.guild.channels.cache.get('1396911720835973160');
@@ -302,7 +336,8 @@ export default async function(client) {
                   { name: 'História', value: cache?.historia || 'N/A', inline: false },
                   { name: 'Respostas', value: respostasDetalhadas, inline: false },
                   { name: 'Acertos', value: `${corretas}/${GABARITO.length}`, inline: true },
-                  { name: 'Aprovado', value: aprovado ? 'Sim' : 'Não', inline: true }
+                  { name: 'Aprovado', value: aprovado ? 'Sim' : 'Não', inline: true },
+                  { name: 'Idade', value: cache?.idade || 'N/A', inline: false }
                 )
                 .setTimestamp();
               await logChannel.send({ embeds: [embed] });

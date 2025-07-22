@@ -101,20 +101,27 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'avisar_membro') {
-        await interaction.showModal(
-          new ModalBuilder()
-            .setCustomId('modal_avisar_membro')
-            .setTitle('Avisar Membro')
-            .addComponents(
-              new ActionRowBuilder().addComponents(
-                new TextInputBuilder()
-                  .setCustomId('membro')
-                  .setLabel('Mencione o usuário (@usuario)')
-                  .setStyle(TextInputStyle.Short)
-                  .setRequired(true)
-              )
-            )
-        );
+        // Envia embed bonito para o criador do ticket (sem menção)
+        const channel = interaction.channel;
+        const messages = await channel.messages.fetch({ limit: 10 });
+        const firstMsg = messages.find(m => m.embeds.length);
+        let autorId = null;
+        if (firstMsg) {
+          const match = firstMsg.embeds[0].description?.match(/<@([0-9]+)>/);
+          if (match) autorId = match[1];
+        }
+        if (autorId) {
+          const embed = new EmbedBuilder()
+            .setColor('#0099FF')
+            .setTitle('🔔 Atualização do seu Ticket')
+            .setDescription('Olá! A equipe foi avisada sobre o seu ticket e em breve alguém irá te atender. Fique atento às mensagens neste canal!')
+            .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
+            .setTimestamp();
+          await channel.send({ embeds: [embed] });
+          await interaction.reply({ content: '🔔 O criador do ticket foi avisado com uma mensagem profissional.', flags: 64 });
+        } else {
+          await interaction.reply({ content: '❌ Não foi possível identificar o criador do ticket.', flags: 64 });
+        }
         return;
       }
       if (customId === 'renomear_ticket') {
@@ -144,12 +151,99 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'timer_24h') {
-        await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket. Você será avisado ao final do período.', flags: 0 });
-        setTimeout(async () => {
+        // Cria embed com botão de cancelar
+        const embed = new EmbedBuilder()
+          .setColor('#FFA500')
+          .setTitle('⏰ Timer de 24h Iniciado')
+          .setDescription('Um timer de 24h foi iniciado para este ticket. Se não for cancelado, o ticket será fechado automaticamente com o motivo "Timer esgotado".')
+          .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
+          .setTimestamp();
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder().setCustomId('cancelar_timer_24h').setLabel('Cancelar Timer').setStyle(ButtonStyle.Danger).setEmoji('❌')
+        );
+        await interaction.channel.send({ embeds: [embed], components: [row] });
+        await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket.', flags: 64 });
+        // Salva o timer no client para poder cancelar
+        if (!interaction.client.timers24h) interaction.client.timers24h = {};
+        const timerKey = interaction.channel.id;
+        if (interaction.client.timers24h[timerKey]) clearTimeout(interaction.client.timers24h[timerKey]);
+        interaction.client.timers24h[timerKey] = setTimeout(async () => {
           try {
-            await interaction.channel.send('⏰ 24h se passaram desde o início do timer neste ticket!');
+            // Fecha o ticket automaticamente
+            const motivo = 'Timer esgotado';
+            // Gerar transcript visual
+            let allMessages = [];
+            let lastId;
+            while (true) {
+              const options = { limit: 100 };
+              if (lastId) options.before = lastId;
+              const messages = await interaction.channel.messages.fetch(options);
+              allMessages = allMessages.concat(Array.from(messages.values()));
+              if (messages.size < 100) break;
+              lastId = messages.last().id;
+            }
+            const sorted = allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+            let transcript = '';
+            for (const msg of sorted) {
+              const time = `<t:${Math.floor(msg.createdTimestamp/1000)}:t>`;
+              let line = `**${msg.author.tag}** [${time}]: ${msg.content}`;
+              if (msg.attachments && msg.attachments.size > 0) {
+                for (const att of msg.attachments.values()) {
+                  line += `\n[Anexo: ${att.name}](${att.url})`;
+                }
+              }
+              if (msg.embeds && msg.embeds.length > 0) {
+                for (const emb of msg.embeds) {
+                  if (emb.url) line += `\n[Embed: ${emb.url}]`;
+                  if (emb.title) line += `\nTítulo do Embed: ${emb.title}`;
+                  if (emb.description) line += `\nDescrição do Embed: ${emb.description}`;
+                }
+              }
+              if (msg.stickers && msg.stickers.size > 0) {
+                for (const sticker of msg.stickers.values()) {
+                  line += `\n[Sticker: ${sticker.name}]`;
+                }
+              }
+              if (msg.reference && msg.reference.messageId) {
+                line += `\n↪️ Em resposta a mensagem ID: ${msg.reference.messageId}`;
+              }
+              transcript += line + '\n';
+            }
+            const embedLog = new EmbedBuilder()
+              .setColor('#FFA500')
+              .setTitle('📑 Ticket Fechado (Timer)')
+              .setDescription(`Ticket fechado automaticamente após 24h.\n**Motivo:** ${motivo}`)
+              .addFields({ name: 'Canal', value: `<#${interaction.channel.id}>`, inline: true })
+              .setTimestamp();
+            const logChannel = await interaction.guild.channels.fetch('1386491920313745418').catch(() => null);
+            if (logChannel) {
+              await logChannel.send({ embeds: [embedLog] });
+              if (transcript.length > 1900) {
+                for (let i = 0; i < transcript.length; i += 1900) {
+                  await logChannel.send('```markdown\n' + transcript.slice(i, i + 1900) + '\n```');
+                }
+              } else {
+                await logChannel.send('```markdown\n' + transcript + '\n```');
+              }
+            }
+            await interaction.channel.send('⏰ Timer de 24h esgotado. O ticket será fechado automaticamente.');
+            setTimeout(async () => {
+              try {
+                await interaction.channel.delete('Ticket fechado automaticamente (Timer esgotado)');
+              } catch (error) {}
+            }, 5000);
           } catch (e) {}
         }, 24 * 60 * 60 * 1000);
+        return;
+      }
+      if (customId === 'cancelar_timer_24h') {
+        if (interaction.client.timers24h && interaction.client.timers24h[interaction.channel.id]) {
+          clearTimeout(interaction.client.timers24h[interaction.channel.id]);
+          delete interaction.client.timers24h[interaction.channel.id];
+          await interaction.reply({ content: '❌ Timer de 24h cancelado para este ticket.', flags: 64 });
+        } else {
+          await interaction.reply({ content: '❌ Não há timer ativo para este ticket.', flags: 64 });
+        }
         return;
       }
     }

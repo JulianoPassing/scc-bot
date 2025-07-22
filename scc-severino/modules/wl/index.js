@@ -1,6 +1,10 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ModalBuilder, TextInputBuilder, TextInputStyle, Events, Collection } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // IDs e configs fixos do bot original
 const CARGO_APROVADO = '1263487190575349892';

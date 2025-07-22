@@ -114,11 +114,16 @@ export const execute = async function(interaction) {
           const embed = new EmbedBuilder()
             .setColor('#0099FF')
             .setTitle('🔔 Atualização do seu Ticket')
-            .setDescription('Olá! A equipe foi avisada sobre o seu ticket e em breve alguém irá te atender. Fique atento às mensagens neste canal!')
+            .setDescription('Olá! A equipe foi avisada sobre o seu ticket e em breve alguém irá te atender. Fique atento às mensagens no canal do ticket!')
             .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
             .setTimestamp();
-          await channel.send({ content: `<@${autorId}>`, embeds: [embed] });
-          await interaction.reply({ content: '🔔 O criador do ticket foi avisado com uma mensagem profissional.', flags: 64 });
+          try {
+            const userObj = await interaction.client.users.fetch(autorId);
+            await userObj.send({ embeds: [embed] });
+            await interaction.reply({ content: '🔔 O criador do ticket foi avisado com uma mensagem profissional no privado.', flags: 64 });
+          } catch (e) {
+            await interaction.reply({ content: '❌ Não foi possível enviar DM para o criador do ticket.', flags: 64 });
+          }
         } else {
           await interaction.reply({ content: '❌ Não foi possível identificar o criador do ticket.', flags: 64 });
         }

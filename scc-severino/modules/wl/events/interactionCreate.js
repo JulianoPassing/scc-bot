@@ -17,6 +17,12 @@ function saveDB(db) {
 
 export default async function(client) {
   client.on('interactionCreate', async (interaction) => {
+    console.log('[WL][DEBUG] interactionCreate recebida:', {
+      type: interaction.type,
+      isButton: interaction.isButton && interaction.isButton(),
+      isModalSubmit: interaction.isModalSubmit && interaction.isModalSubmit(),
+      customId: interaction.customId
+    });
     if (!interaction.isButton() || interaction.customId !== 'iniciar_wl') return;
     const userId = interaction.user.id;
     const db = loadDB();

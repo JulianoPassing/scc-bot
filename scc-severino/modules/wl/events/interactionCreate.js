@@ -78,10 +78,11 @@ export default async function(client) {
           new ActionRowBuilder().addComponents(
             new TextInputBuilder()
               .setCustomId('historia')
-              .setLabel('4. Conte a história do seu personagem')
+              .setLabel('4. Conte a história do seu personagem (mínimo 700 caracteres)')
               .setStyle(TextInputStyle.Paragraph)
               .setRequired(true)
-              .setMaxLength(400)
+              .setMinLength(700)
+              .setMaxLength(2000)
           )
         );
       await interaction.showModal(modal);
@@ -112,7 +113,7 @@ export default async function(client) {
             titulo: '6. O que é VDM?',
             desc: 'Vehicle Deathmatch',
             alternativas: {
-              a: 'Usar veículo para matar sem motivo RP',
+              a: 'Usar veículo para matar sem motivo',
               b: 'Fugir da polícia em alta velocidade',
               c: 'Participar de corridas de rua'
             }
@@ -123,7 +124,7 @@ export default async function(client) {
             alternativas: {
               a: 'Interpretar apenas personagens policiais',
               b: 'Atividades criminosas apenas à noite',
-              c: 'RP com temas pesados proibidos'
+              c: 'RP com temas pesados ou proibidos'
             }
           },
           {
@@ -177,17 +178,16 @@ export default async function(client) {
         const q = questoes[0];
         const row = new ActionRowBuilder().addComponents(
           new ButtonBuilder().setCustomId('wl_a').setLabel('A').setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId('wl_b').setLabel('B').setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId('wl_c').setLabel('C').setStyle(ButtonStyle.Primary)
+          new ButtonBuilder().setCustomId('wl_b').setLabel('B').setStyle(ButtonStyle.Primary)
         );
+        if (q.alternativas.c && q.alternativas.c.trim()) {
+          row.addComponents(new ButtonBuilder().setCustomId('wl_c').setLabel('C').setStyle(ButtonStyle.Primary));
+        }
         const embed = new EmbedBuilder()
           .setTitle(q.titulo)
           .setDescription(
-            (q.desc ? `*${q.desc}*
-` : '') +
-            `A) ${q.alternativas.a}
-B) ${q.alternativas.b}
-C) ${q.alternativas.c}`
+            (q.desc ? `*${q.desc}*\n` : '') +
+            `A) ${q.alternativas.a}\nB) ${q.alternativas.b}` + (q.alternativas.c && q.alternativas.c.trim() ? `\nC) ${q.alternativas.c}` : '')
           )
           .setColor(0x0099ff);
         await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
@@ -218,17 +218,16 @@ C) ${q.alternativas.c}`
           const q = cache.questoes[cache.questaoAtual];
           const row = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('wl_a').setLabel('A').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('wl_b').setLabel('B').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('wl_c').setLabel('C').setStyle(ButtonStyle.Primary)
+            new ButtonBuilder().setCustomId('wl_b').setLabel('B').setStyle(ButtonStyle.Primary)
           );
+          if (q.alternativas.c && q.alternativas.c.trim()) {
+            row.addComponents(new ButtonBuilder().setCustomId('wl_c').setLabel('C').setStyle(ButtonStyle.Primary));
+          }
           const embed = new EmbedBuilder()
             .setTitle(q.titulo)
             .setDescription(
-              (q.desc ? `*${q.desc}*
-` : '') +
-              `A) ${q.alternativas.a}
-B) ${q.alternativas.b}
-C) ${q.alternativas.c}`
+              (q.desc ? `*${q.desc}*\n` : '') +
+              `A) ${q.alternativas.a}\nB) ${q.alternativas.b}` + (q.alternativas.c && q.alternativas.c.trim() ? `\nC) ${q.alternativas.c}` : '')
             )
             .setColor(0x0099ff);
           await interaction.update({ embeds: [embed], components: [row] });
@@ -283,6 +282,12 @@ C) ${q.alternativas.c}`
           try {
             const logChannel = interaction.guild.channels.cache.get('1396911720835973160');
             if (logChannel) {
+              const GABARITO = ['b', 'a', 'c', 'b', 'b', 'a', 'c', 'a'];
+              const respostasDetalhadas = cache.respostas.map((r, idx) => {
+                const correta = GABARITO[idx];
+                const status = (r && r.trim().toLowerCase() === correta) ? '✅' : '❌';
+                return `Q${5+idx}: ${r ? r.toUpperCase() : '-'} (Correta: ${correta.toUpperCase()}) ${status}`;
+              }).join('\n');
               const embed = new EmbedBuilder()
                 .setColor(aprovado ? 0x00ff00 : 0xff0000)
                 .setTitle(aprovado ? '✅ Whitelist Aprovada' : '❌ Whitelist Reprovada')
@@ -292,7 +297,7 @@ C) ${q.alternativas.c}`
                   { name: 'Motivo', value: cache?.motivo || 'N/A', inline: false },
                   { name: 'Como conheceu', value: cache?.conheceu || 'N/A', inline: false },
                   { name: 'História', value: cache?.historia || 'N/A', inline: false },
-                  { name: 'Respostas', value: cache.respostas.map((r, idx) => `Q${5+idx}: ${r || '-'}`).join('\n'), inline: false },
+                  { name: 'Respostas', value: respostasDetalhadas, inline: false },
                   { name: 'Acertos', value: `${corretas}/${GABARITO.length}`, inline: true },
                   { name: 'Aprovado', value: aprovado ? 'Sim' : 'Não', inline: true }
                 )

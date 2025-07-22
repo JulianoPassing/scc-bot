@@ -1,6 +1,10 @@
 import { Collection } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const setupTicketSWLModule = async function(client) {
   // Coleção de comandos

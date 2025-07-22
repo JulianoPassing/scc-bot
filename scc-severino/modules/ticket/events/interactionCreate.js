@@ -289,11 +289,16 @@ export const execute = async function(interaction) {
           name: channelName,
           type: ChannelType.GuildText,
           parent: categoriaId,
-          topic: `Ticket de ${categoria.nome} | ${user.tag}`,
-          permissionOverwrites: [
-            { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
-            { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks] }
-          ]
+          topic: `Ticket de ${categoria.nome} | ${user.tag}`
+          // Não define permissionOverwrites aqui para herdar da categoria
+        });
+        // Garante que o criador do ticket tenha acesso
+        await ticketChannel.permissionOverwrites.create(user.id, {
+          ViewChannel: true,
+          SendMessages: true,
+          ReadMessageHistory: true,
+          AttachFiles: true,
+          EmbedLinks: true
         });
       } catch (err) {
         console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
@@ -360,7 +365,9 @@ export const execute = async function(interaction) {
         await interaction.channel.permissionOverwrites.create(userId, {
           ViewChannel: true,
           SendMessages: true,
-          ReadMessageHistory: true
+          ReadMessageHistory: true,
+          AttachFiles: true,
+          EmbedLinks: true
         });
         await interaction.reply({ content: `➕ <@${userId}> adicionado ao ticket!`, flags: 0 });
       } catch (e) {

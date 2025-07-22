@@ -70,7 +70,8 @@ export const execute = async function(interaction) {
         .setFooter({ text: 'Sistema de Segurança • Confidencialidade garantida' })
         .setTimestamp();
       const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder().setCustomId('close_ticket').setLabel('Fechar Ticket').setStyle(ButtonStyle.Danger).setEmoji('🔒')
+        new ButtonBuilder().setCustomId('close_ticket').setLabel('Fechar Ticket').setStyle(ButtonStyle.Danger).setEmoji('🔒'),
+        new ButtonBuilder().setCustomId('avisar_membro_seguranca').setLabel('Avisar Membro').setStyle(ButtonStyle.Primary).setEmoji('🔔')
       );
       await ticketChannel.send({ embeds: [embed], components: [row] });
       await interaction.reply({ content: `✅ Ticket de segurança criado em <#${ticketChannel.id}>!`, flags: 64 });
@@ -225,6 +226,42 @@ export const execute = async function(interaction) {
       setTimeout(async () => {
         try { await channel.delete(`Ticket fechado por ${interaction.user.tag}`); } catch (e) {}
       }, 5000);
+      return;
+    }
+    // Handler do botão Avisar Membro (segurança)
+    if (interaction.isButton() && customId === 'avisar_membro_seguranca') {
+      // Buscar criador do ticket pela mensagem de notificação
+      const channel = interaction.channel;
+      const messages = await channel.messages.fetch({ limit: 10 });
+      const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket de segurança!'));
+      let autorId = null;
+      if (notifyMsg) {
+        const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
+        if (match) autorId = match[1];
+      }
+      if (autorId) {
+        const embed = new EmbedBuilder()
+          .setColor('#0099FF')
+          .setTitle('🔔 Atualização do seu Ticket de Segurança')
+          .setDescription(
+            'Olá! Esta é uma atualização sobre o seu ticket de segurança no Street CarClub.\n\n' +
+            `Acesse seu ticket aqui: <#${channel.id}>\n\n` +
+            'Se a equipe solicitou informações adicionais ou uma resposta, por favor, responda diretamente no canal do ticket para agilizar seu atendimento.\n\n' +
+            'Se não for necessário, aguarde o retorno da equipe.\n\n' +
+            'Atenciosamente,\nEquipe de Segurança StreetCarClub'
+          )
+          .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
+          .setTimestamp();
+        try {
+          const userObj = await interaction.client.users.fetch(autorId);
+          await userObj.send({ embeds: [embed] });
+          await interaction.reply({ content: '🔔 O criador do ticket foi avisado com uma mensagem profissional no privado.', flags: 64 });
+        } catch (e) {
+          await interaction.reply({ content: '❌ Não foi possível enviar DM para o criador do ticket.', flags: 64 });
+        }
+      } else {
+        await interaction.reply({ content: '❌ Não foi possível identificar o criador do ticket.', flags: 64 });
+      }
       return;
     }
     // Assumir Ticket

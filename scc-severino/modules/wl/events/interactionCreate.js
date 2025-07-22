@@ -66,34 +66,43 @@ export default async function(client) {
 
     // Handler do primeiro modal (nome e motivo)
     if (interaction.isModalSubmit() && interaction.customId === 'modal_wl_nome') {
-      const nome = interaction.fields.getTextInputValue('nome');
-      const motivo = interaction.fields.getTextInputValue('motivo');
-      // Salva temporariamente no cache do usuário (poderia ser em memória ou DB, aqui simplificado)
-      if (!client.wlCache) client.wlCache = {};
-      client.wlCache[interaction.user.id] = { nome, motivo };
-      // Modal de história
-      const modal = new ModalBuilder()
-        .setCustomId('modal_wl_historia')
-        .setTitle('Whitelist Street Car Club - Parte 2')
-        .addComponents(
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId('conheceu')
-              .setLabel('3. Como conheceu o servidor?')
-              .setStyle(TextInputStyle.Short)
-              .setRequired(true)
-              .setMaxLength(100)
-          ),
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId('historia')
-              .setLabel('4. Conte a história do seu personagem')
-              .setStyle(TextInputStyle.Paragraph)
-              .setRequired(true)
-              .setMaxLength(400)
-          )
-        );
-      await interaction.showModal(modal);
+      try {
+        const nome = interaction.fields.getTextInputValue('nome');
+        const motivo = interaction.fields.getTextInputValue('motivo');
+        // Salva temporariamente no cache do usuário (poderia ser em memória ou DB, aqui simplificado)
+        if (!client.wlCache) client.wlCache = {};
+        client.wlCache[interaction.user.id] = { nome, motivo };
+        // Modal de história
+        const modal = new ModalBuilder()
+          .setCustomId('modal_wl_historia')
+          .setTitle('Whitelist Street Car Club - Parte 2')
+          .addComponents(
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder()
+                .setCustomId('conheceu')
+                .setLabel('3. Como conheceu o servidor?')
+                .setStyle(TextInputStyle.Short)
+                .setRequired(true)
+                .setMaxLength(100)
+            ),
+            new ActionRowBuilder().addComponents(
+              new TextInputBuilder()
+                .setCustomId('historia')
+                .setLabel('4. Conte a história do seu personagem')
+                .setStyle(TextInputStyle.Paragraph)
+                .setRequired(true)
+                .setMaxLength(400)
+            )
+          );
+        await interaction.showModal(modal);
+      } catch (err) {
+        console.error('[WL][ERRO modal_wl_nome]', err);
+        try {
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: '❌ Erro interno ao processar o formulário. Detalhe: ' + (err?.message || err), ephemeral: true });
+          }
+        } catch {}
+      }
       return;
     }
 

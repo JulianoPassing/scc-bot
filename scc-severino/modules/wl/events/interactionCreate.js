@@ -33,9 +33,10 @@ export default async function(client) {
       const member = await interaction.guild.members.fetch(userId);
       const cargoAprovado = '1263487190575349892';
       const cargoAntigo = '1046404063308288098';
-      if (member.roles.cache.has(cargoAntigo)) {
-        try { await member.roles.remove(cargoAntigo); } catch {}
-      }
+      // Remover cargo antigo SOMENTE SE APROVADO (não aqui)
+      // if (member.roles.cache.has(cargoAntigo)) {
+      //   try { await member.roles.remove(cargoAntigo); } catch {}
+      // }
       if (user && user.aprovado && member.roles.cache.has(cargoAprovado)) {
         return interaction.reply({ content: '✅ Você já foi aprovado na whitelist!', ephemeral: true });
       }

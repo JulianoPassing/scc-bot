@@ -28,7 +28,9 @@ export const execute = async function(interaction) {
         const tipo = customId.replace('ticket_', '');
         const categoria = CATEGORY_INFO[tipo];
         if (!categoria) {
-          await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
+          }
           return;
         }
         const modal = new ModalBuilder()
@@ -44,7 +46,9 @@ export const execute = async function(interaction) {
                 .setMaxLength(64)
             )
           );
-        await interaction.showModal(modal);
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.showModal(modal);
+        }
         return;
       }
       // Botões do painel de ticket aberto
@@ -59,26 +63,31 @@ export const execute = async function(interaction) {
       ];
       if (painelTicketBotoes.includes(customId)) {
         if (!interaction.member.permissions.has('ManageChannels')) {
-          return interaction.reply({ content: '❌ Apenas membros da equipe podem usar esta função do painel!', flags: 64 });
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: '❌ Apenas membros da equipe podem usar esta função do painel!', flags: 64 });
+          }
+          return;
         }
       }
       if (customId === 'fechar_ticket') {
         // Abrir modal para motivo do fechamento
-        await interaction.showModal(
-          new ModalBuilder()
-            .setCustomId('modal_motivo_fechamento')
-            .setTitle('Fechar Ticket - Motivo')
-            .addComponents(
-              new ActionRowBuilder().addComponents(
-                new TextInputBuilder()
-                  .setCustomId('motivo')
-                  .setLabel('Motivo do fechamento')
-                  .setStyle(TextInputStyle.Paragraph)
-                  .setRequired(true)
-                  .setMaxLength(200)
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.showModal(
+            new ModalBuilder()
+              .setCustomId('modal_motivo_fechamento')
+              .setTitle('Fechar Ticket - Motivo')
+              .addComponents(
+                new ActionRowBuilder().addComponents(
+                  new TextInputBuilder()
+                    .setCustomId('motivo')
+                    .setLabel('Motivo do fechamento')
+                    .setStyle(TextInputStyle.Paragraph)
+                    .setRequired(true)
+                    .setMaxLength(200)
+                )
               )
-            )
-        );
+          );
+        }
         return;
       }
       if (customId === 'assumir_ticket') {
@@ -89,24 +98,28 @@ export const execute = async function(interaction) {
           embed.spliceFields(1, 1, { name: 'Status', value: `🫡 Assumido por <@${user.id}>`, inline: true });
           await msg.edit({ embeds: [embed] });
         }
-        await interaction.reply({ content: `🫡 <@${user.id}> assumiu o ticket!`, flags: 0 });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: `🫡 <@${user.id}> assumiu o ticket!`, flags: 0 });
+        }
         return;
       }
       if (customId === 'adicionar_membro') {
-        await interaction.showModal(
-          new ModalBuilder()
-            .setCustomId('modal_adicionar_membro')
-            .setTitle('Adicionar Membro ao Ticket')
-            .addComponents(
-              new ActionRowBuilder().addComponents(
-                new TextInputBuilder()
-                  .setCustomId('membro')
-                  .setLabel('Mencione o usuário (@usuario)')
-                  .setStyle(TextInputStyle.Short)
-                  .setRequired(true)
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.showModal(
+            new ModalBuilder()
+              .setCustomId('modal_adicionar_membro')
+              .setTitle('Adicionar Membro ao Ticket')
+              .addComponents(
+                new ActionRowBuilder().addComponents(
+                  new TextInputBuilder()
+                    .setCustomId('membro')
+                    .setLabel('Mencione o usuário (@usuario)')
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true)
+                )
               )
-            )
-        );
+          );
+        }
         return;
       }
       if (customId === 'avisar_membro') {
@@ -135,12 +148,18 @@ export const execute = async function(interaction) {
           try {
             const userObj = await interaction.client.users.fetch(autorId);
             await userObj.send({ embeds: [embed] });
-            await interaction.reply({ content: '🔔 O criador do ticket foi avisado com uma mensagem profissional no privado.', flags: 64 });
+            if (!interaction.replied && !interaction.deferred) {
+              await interaction.reply({ content: '🔔 O criador do ticket foi avisado com uma mensagem profissional no privado.', flags: 64 });
+            }
           } catch (e) {
-            await interaction.reply({ content: '❌ Não foi possível enviar DM para o criador do ticket.', flags: 64 });
+            if (!interaction.replied && !interaction.deferred) {
+              await interaction.reply({ content: '❌ Não foi possível enviar DM para o criador do ticket.', flags: 64 });
+            }
           }
         } else {
-          await interaction.reply({ content: '❌ Não foi possível identificar o criador do ticket.', flags: 64 });
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: '❌ Não foi possível identificar o criador do ticket.', flags: 64 });
+          }
         }
         return;
       }
@@ -152,22 +171,24 @@ export const execute = async function(interaction) {
           name.startsWith('🏠casas-') ? '🏠' :
           name.startsWith('💎doacoes-') ? '💎' :
           name.startsWith('⚠️denuncias-') ? '⚠️' : '';
-        await interaction.showModal(
-          new ModalBuilder()
-            .setCustomId('modal_renomear_ticket')
-            .setTitle('Renomear Ticket')
-            .addComponents(
-              new ActionRowBuilder().addComponents(
-                new TextInputBuilder()
-                  .setCustomId('novo_nome')
-                  .setLabel('Novo nome do ticket')
-                  .setStyle(TextInputStyle.Short)
-                  .setMinLength(1)
-                  .setMaxLength(32)
-                  .setRequired(true)
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.showModal(
+            new ModalBuilder()
+              .setCustomId('modal_renomear_ticket')
+              .setTitle('Renomear Ticket')
+              .addComponents(
+                new ActionRowBuilder().addComponents(
+                  new TextInputBuilder()
+                    .setCustomId('novo_nome')
+                    .setLabel('Novo nome do ticket')
+                    .setStyle(TextInputStyle.Short)
+                    .setMinLength(1)
+                    .setMaxLength(32)
+                    .setRequired(true)
+                )
               )
-            )
-        );
+          );
+        }
         return;
       }
       if (customId === 'timer_24h') {
@@ -182,7 +203,9 @@ export const execute = async function(interaction) {
           new ButtonBuilder().setCustomId('cancelar_timer_24h').setLabel('Cancelar Timer').setStyle(ButtonStyle.Danger).setEmoji('❌')
         );
         await interaction.channel.send({ embeds: [embed], components: [row] });
-        await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket.', flags: 64 });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket.', flags: 64 });
+        }
         // Salva o timer no client para poder cancelar
         if (!interaction.client.timers24h) interaction.client.timers24h = {};
         const timerKey = interaction.channel.id;
@@ -270,9 +293,13 @@ export const execute = async function(interaction) {
               .setDescription('O timer de 24h foi cancelado para este ticket. O ticket não será fechado automaticamente.');
             await timerMsg.edit({ embeds: [embed], components: [] });
           }
-          await interaction.reply({ content: '❌ Timer de 24h cancelado para este ticket.', flags: 64 });
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: '❌ Timer de 24h cancelado para este ticket.', flags: 64 });
+          }
         } else {
-          await interaction.reply({ content: '❌ Não há timer ativo para este ticket.', flags: 64 });
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: '❌ Não há timer ativo para este ticket.', flags: 64 });
+          }
         }
         return;
       }
@@ -283,7 +310,9 @@ export const execute = async function(interaction) {
       const categoria = CATEGORY_INFO[tipo];
       const categoriaId = CATEGORY_IDS[tipo];
       if (!categoria || !categoriaId) {
-        await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
+        }
         return;
       }
       const assunto = interaction.fields.getTextInputValue('assunto');
@@ -342,13 +371,18 @@ export const execute = async function(interaction) {
         new ButtonBuilder().setCustomId('timer_24h').setLabel('Timer 24h').setStyle(ButtonStyle.Primary).setEmoji('⏰')
       );
       await ticketChannel.send({ embeds: [embed], components: [row1, row2] });
-      await interaction.reply({ content: `✅ Ticket criado em <#${ticketChannel.id}>!`, flags: 64 });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: `✅ Ticket criado em <#${ticketChannel.id}>!`, flags: 64 });
+      }
       return;
     }
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
       if (!interaction.member.permissions.has('ManageChannels')) {
-        return interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
+        }
+        return;
       }
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
       const name = interaction.channel.name;
@@ -361,7 +395,9 @@ export const execute = async function(interaction) {
       let finalName = novoNome;
       if (!finalName.startsWith(emoji)) finalName = emoji + finalName;
       await interaction.channel.setName(finalName);
-      await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
+      }
       return;
     }
     // Handler do modal de adicionar membro
@@ -369,7 +405,9 @@ export const execute = async function(interaction) {
       const membro = interaction.fields.getTextInputValue('membro');
       const match = membro.match(/<@!?([0-9]+)>/);
       if (!match) {
-        await interaction.reply({ content: '❌ Mencione um usuário válido.', flags: 64 });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: '❌ Mencione um usuário válido.', flags: 64 });
+        }
         return;
       }
       const userId = match[1];
@@ -381,9 +419,13 @@ export const execute = async function(interaction) {
           AttachFiles: true,
           EmbedLinks: true
         });
-        await interaction.reply({ content: `➕ <@${userId}> adicionado ao ticket!`, flags: 0 });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: `➕ <@${userId}> adicionado ao ticket!`, flags: 0 });
+        }
       } catch (e) {
-        await interaction.reply({ content: '❌ Erro ao adicionar usuário ao ticket.', flags: 64 });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: '❌ Erro ao adicionar usuário ao ticket.', flags: 64 });
+        }
       }
       return;
     }
@@ -392,12 +434,16 @@ export const execute = async function(interaction) {
       const membro = interaction.fields.getTextInputValue('membro');
       const match = membro.match(/<@!?([0-9]+)>/);
       if (!match) {
-        await interaction.reply({ content: '❌ Mencione um usuário válido.', flags: 64 });
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: '❌ Mencione um usuário válido.', flags: 64 });
+        }
         return;
       }
       const userId = match[1];
       await interaction.channel.send(`🔔 <@${userId}>, você foi avisado neste ticket!`);
-      await interaction.reply({ content: `🔔 <@${userId}> foi avisado.`, flags: 0 });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: `🔔 <@${userId}> foi avisado.`, flags: 0 });
+      }
       return;
     }
     // Handler do modal de motivo de fechamento
@@ -514,7 +560,9 @@ export const execute = async function(interaction) {
       if (logChannel) {
         await logChannel.send({ embeds: [embed], files: [{ attachment: Buffer.from(html, 'utf-8'), name: `transcript-${channel.name}.html` }] });
       }
-      await interaction.reply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!', flags: 64 });
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.reply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!', flags: 64 });
+      }
       setTimeout(async () => {
         try {
           await channel.delete(`Ticket fechado por ${user.tag}`);

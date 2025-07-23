@@ -30,7 +30,8 @@ const modules = [
   'ticket',
   'ticket-s-wl',
   'wl',
-  'batebapo'
+  'batebapo',
+  'instagram'
 ];
 
 for (const mod of modules) {

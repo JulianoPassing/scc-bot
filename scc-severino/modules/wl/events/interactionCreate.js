@@ -299,6 +299,13 @@ export default async function(client) {
                 ],
                 components: []
               });
+              // Enviar mensagem de aprovação no canal de notificação
+              try {
+                const notifyChannel = interaction.guild.channels.cache.get('1046404064189091940');
+                if (notifyChannel) {
+                  await notifyChannel.send({ content: `<@${interaction.user.id}> aprovado!` });
+                }
+              } catch (e) { console.error('[WL][NOTIFY][APROVADO]', e); }
             } else {
               // Menor de 16: cargo de reprovado
               if (idadeNum < 16) {
@@ -314,6 +321,14 @@ export default async function(client) {
                 ],
                 components: []
               });
+              // Enviar mensagem de reprovação no canal de notificação
+              try {
+                const notifyChannel = interaction.guild.channels.cache.get('1046404064189091940');
+                if (notifyChannel) {
+                  let motivo = motivoReprovado && idadeNum < 16 ? 'Reprovado, não atinge idade mínima' : 'Reprovado';
+                  await notifyChannel.send({ content: `<@${interaction.user.id}> ${motivo} <@&1046404063673192541>` });
+                }
+              } catch (e) { console.error('[WL][NOTIFY][REPROVADO]', e); }
             }
           } catch (e) {}
           // Enviar formulário para canal de logs

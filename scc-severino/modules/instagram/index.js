@@ -9,7 +9,7 @@ const setupInstagramModule = function(client) {
     // Verifica se a mensagem NÃO tem link
     const temLink = /(https?:\/\/|discord\.gg|www\.)/i.test(message.content);
     if (!temAnexo && !temLink) {
-      await message.reply('Aqui não é Bate-bapo 👮🏻');
+      await message.reply('Aqui não é Bate-papo 👮🏻');
     }
   });
 };

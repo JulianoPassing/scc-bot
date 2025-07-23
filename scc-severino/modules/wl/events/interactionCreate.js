@@ -17,12 +17,13 @@ function saveDB(db) {
 
 export default async function(client) {
   client.on('interactionCreate', async (interaction) => {
-    console.log('[WL][DEBUG] interactionCreate recebida:', {
-      type: interaction.type,
-      isButton: interaction.isButton && interaction.isButton(),
-      isModalSubmit: interaction.isModalSubmit && interaction.isModalSubmit(),
-      customId: interaction.customId
-    });
+    // Remover debug
+    // console.log('[WL][DEBUG] interactionCreate recebida:', {
+    //   type: interaction.type,
+    //   isButton: interaction.isButton && interaction.isButton(),
+    //   isModalSubmit: interaction.isModalSubmit && interaction.isModalSubmit(),
+    //   customId: interaction.customId
+    // });
 
     // Botão para iniciar whitelist
     if (interaction.isButton() && interaction.customId === 'iniciar_wl') {

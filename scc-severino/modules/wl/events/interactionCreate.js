@@ -295,7 +295,7 @@ export default async function(client) {
                   new EmbedBuilder()
                     .setColor(0x00ff00)
                     .setTitle('✅ Whitelist Aprovada!')
-                    .setDescription('Parabéns! Você foi aprovado na whitelist e já pode enviar o nome e sobrenome do seu personagem.')
+                    .setDescription(`@${interaction.user.username.charAt(0).toUpperCase() + interaction.user.username.slice(1)} Aprovado, agora basta enviar um "Nome e Sobrenome" registrável em cartório (proibido nomes com duplo sentido) no canal <#1317096106844225586> e aguardar.`)
                     .setFooter({ text: 'Street Car Club • Sistema de Whitelist' })
                 ],
                 components: []
@@ -304,7 +304,7 @@ export default async function(client) {
               try {
                 const notifyChannel = interaction.guild.channels.cache.get('1046404064189091940');
                 if (notifyChannel) {
-                  await notifyChannel.send({ content: `<@${interaction.user.id}> aprovado!` });
+                  await notifyChannel.send({ content: `@${interaction.user.username.charAt(0).toUpperCase() + interaction.user.username.slice(1)} Aprovado, agora basta enviar um "Nome e Sobrenome" registrável em cartório (proibido nomes com duplo sentido) no canal <#1317096106844225586> e aguardar.` });
                 }
               } catch (e) { console.error('[WL][NOTIFY][APROVADO]', e); }
             } else {

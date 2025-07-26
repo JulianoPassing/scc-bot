@@ -98,6 +98,7 @@ Os cargos de staff recebem todas as permissões necessárias:
 - `!testar-permissoes` - Testa as permissões aplicadas no ticket atual
 - `!corrigir-permissoes` - Corrige as permissões de todos os tickets existentes
 - `!corrigir-ticket` - Corrige as permissões do ticket atual
+- `!forcar-permissoes` - Força a aplicação das permissões corretas (Admin)
 - `!status-categorias` - Verifica o status das categorias de tickets
 - `!debug-cargos` - Debuga os cargos e suas permissões (Admin)
 

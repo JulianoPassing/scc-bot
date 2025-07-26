@@ -329,36 +329,13 @@ export const execute = async function(interaction) {
           console.log(`Categoria ${categoria.nome} está cheia, criando ticket no topo do servidor`);
         }
 
-        let permissionOverwrites = undefined;
-        if (!parentId && categoriaChannel) {
-          // Se for fora da categoria, copiar as permissionOverwrites da categoria
-          permissionOverwrites = categoriaChannel.permissionOverwrites.cache.map(po => ({
-            id: po.id,
-            allow: po.allow.bitfield,
-            deny: po.deny.bitfield,
-            type: po.type
-          }));
-          // Garante que @everyone SEMPRE tenha ViewChannel negado
-          const everyoneId = guild.roles.everyone.id;
-          if (!permissionOverwrites.some(po => po.id === everyoneId)) {
-            permissionOverwrites.push({ id: everyoneId, deny: BigInt(1024), allow: BigInt(0), type: 0 }); // 1024 = ViewChannel
-          } else {
-            permissionOverwrites = permissionOverwrites.map(po =>
-              po.id === everyoneId
-                ? { ...po, deny: BigInt(po.deny) | BigInt(1024) } // Garante o bit de ViewChannel negado
-                : po
-            );
-          }
-        }
-
-        // Criar o canal do ticket
+        // Criar o canal do ticket SEM herdar permissões da categoria
         ticketChannel = await guild.channels.create({
           name: channelName,
           type: ChannelType.GuildText,
           parent: parentId,
           topic: `Ticket de ${categoria.nome} | ${user.tag} | ${assunto}`,
-          position: parentId ? undefined : 0, // Posicionar no topo se não estiver em categoria
-          permissionOverwrites
+          position: parentId ? undefined : 0 // Posicionar no topo se não estiver em categoria
         });
         
         // Configurar permissões usando o utilitário

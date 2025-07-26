@@ -14,6 +14,10 @@ export async function configurarPermissoesTicket(channel, categoriaTipo, userId)
 
   console.log(`Configurando permissões para ticket ${channel.name} da categoria ${categoriaTipo}`);
 
+  // Limpar todas as permissões existentes primeiro
+  await channel.permissionOverwrites.set([]);
+  console.log('Permissões existentes removidas');
+
   // Configurar permissões para @everyone (negar acesso - canal privado)
   await channel.permissionOverwrites.create(channel.guild.roles.everyone, {
     deny: ['ViewChannel']

@@ -49,6 +49,17 @@ export async function execute(message, args, client) {
     console.log(`Categoria ${categoria.nome} está cheia, criando ticket no topo do servidor`);
   }
   
+  let permissionOverwrites = undefined;
+  if (!parentId && categoriaChannel) {
+    // Se for fora da categoria, copiar as permissionOverwrites da categoria
+    permissionOverwrites = categoriaChannel.permissionOverwrites.cache.map(po => ({
+      id: po.id,
+      allow: po.allow.bitfield,
+      deny: po.deny.bitfield,
+      type: po.type
+    }));
+  }
+
   // Cria o canal do ticket
   const channelName = `📁suporte-${user.username.toLowerCase()}`;
   const ticketChannel = await guild.channels.create({
@@ -56,7 +67,8 @@ export async function execute(message, args, client) {
     type: 0, // GuildText
     parent: parentId,
     topic: `Ticket de Suporte | ${user.tag} | ${reason}`,
-    position: parentId ? undefined : 0 // Posicionar no topo se não estiver em categoria
+    position: parentId ? undefined : 0, // Posicionar no topo se não estiver em categoria
+    permissionOverwrites
   });
   
   // Configurar permissões usando o utilitário

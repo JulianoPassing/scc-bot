@@ -17,6 +17,18 @@ const CATEGORY_INFO = {
   denuncias: { emoji: '⚠️', nome: 'Denúncias', desc: 'Reportar infrações e problemas de conduta' }
 };
 
+// Função para garantir que @everyone não tenha acesso ao ticket
+async function ensureEveryoneDenied(channel, guild) {
+  try {
+    await channel.permissionOverwrites.create(guild.roles.everyone, {
+      ViewChannel: false
+    }, 'Garantir privacidade do ticket - @everyone não deve ver');
+    console.log(`[DEBUG] Permissão @everyone negada para ${channel.name}`);
+  } catch (error) {
+    console.error(`[ERRO] Falha ao negar permissão @everyone para ${channel.name}:`, error);
+  }
+}
+
 export const name = 'interactionCreate';
 export const execute = async function(interaction) {
   try {
@@ -361,12 +373,18 @@ export const execute = async function(interaction) {
             ]
           });
           
+          console.log(`[DEBUG] Ticket criado fora da categoria: ${ticketChannel.name}`);
+          console.log(`[DEBUG] Permissões iniciais:`, ticketChannel.permissionOverwrites.cache.map(p => `${p.id}: ${p.allow.toArray()}/${p.deny.toArray()}`));
+          
           // Aplicar permissões da categoria original (se existir)
           if (categoriaObj) {
             for (const [roleId, permissions] of categoriaObj.permissionOverwrites.cache) {
               await ticketChannel.permissionOverwrites.create(roleId, permissions.allow.toArray(), permissions.deny.toArray());
             }
           }
+          
+          // Garantir que @everyone sempre tenha ViewChannel negado
+          await ensureEveryoneDenied(ticketChannel, guild);
         } else {
           // Criar normalmente na categoria
           ticketChannel = await guild.channels.create({
@@ -391,6 +409,12 @@ export const execute = async function(interaction) {
               }
             ]
           });
+          
+          console.log(`[DEBUG] Ticket criado na categoria: ${ticketChannel.name}`);
+          console.log(`[DEBUG] Permissões iniciais:`, ticketChannel.permissionOverwrites.cache.map(p => `${p.id}: ${p.allow.toArray()}/${p.deny.toArray()}`));
+          
+          // Garantir que @everyone sempre tenha ViewChannel negado
+          await ensureEveryoneDenied(ticketChannel, guild);
         }
       } catch (err) {
         console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
@@ -399,6 +423,9 @@ export const execute = async function(interaction) {
         }
         return;
       }
+      // Verificação final das permissões
+      await ensureEveryoneDenied(ticketChannel, guild);
+      
       await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket! Equipe notificada:` });
       const embed = new EmbedBuilder()
         .setColor('#0099FF')

@@ -58,6 +58,17 @@ export async function execute(message, args, client) {
       deny: po.deny.bitfield,
       type: po.type
     }));
+    // Garante que @everyone SEMPRE tenha ViewChannel negado
+    const everyoneId = guild.roles.everyone.id;
+    if (!permissionOverwrites.some(po => po.id === everyoneId)) {
+      permissionOverwrites.push({ id: everyoneId, deny: BigInt(1024), allow: BigInt(0), type: 0 }); // 1024 = ViewChannel
+    } else {
+      permissionOverwrites = permissionOverwrites.map(po =>
+        po.id === everyoneId
+          ? { ...po, deny: BigInt(po.deny) | BigInt(1024) } // Garante o bit de ViewChannel negado
+          : po
+      );
+    }
   }
 
   // Cria o canal do ticket

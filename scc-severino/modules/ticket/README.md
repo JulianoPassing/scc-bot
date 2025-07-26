@@ -96,7 +96,9 @@ Os cargos de staff recebem todas as permissões necessárias:
 ### Comandos de Staff
 - `!verificar-permissoes` - Verifica as permissões do ticket atual
 - `!corrigir-permissoes` - Corrige as permissões de todos os tickets existentes
+- `!corrigir-ticket` - Corrige as permissões do ticket atual
 - `!status-categorias` - Verifica o status das categorias de tickets
+- `!debug-cargos` - Debuga os cargos e suas permissões (Admin)
 
 ### Botões do Painel
 - **Fechar Ticket** - Fecha o ticket com motivo

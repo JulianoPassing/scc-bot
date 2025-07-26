@@ -12,21 +12,30 @@ export async function configurarPermissoesTicket(channel, categoriaTipo, userId)
     throw new Error(`Categoria inválida: ${categoriaTipo}`);
   }
 
+  console.log(`Configurando permissões para ticket ${channel.name} da categoria ${categoriaTipo}`);
+
   // Configurar permissões para @everyone (negar acesso)
   await channel.permissionOverwrites.create(channel.guild.roles.everyone, {
     deny: ['ViewChannel']
   });
+  console.log('Permissão @everyone configurada');
 
   // Configurar permissões para o criador do ticket
   await channel.permissionOverwrites.create(userId, {
-    allow: Object.keys(CREATOR_PERMISSIONS).filter(perm => CREATOR_PERMISSIONS[perm])
+    allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'AttachFiles', 'EmbedLinks']
   });
+  console.log(`Permissões do criador configuradas para ${userId}`);
 
   // Configurar permissões para todos os cargos de staff da categoria
   for (const roleId of categoria.staffRoles) {
-    await channel.permissionOverwrites.create(roleId, {
-      allow: Object.keys(STAFF_PERMISSIONS).filter(perm => STAFF_PERMISSIONS[perm])
-    });
+    try {
+      await channel.permissionOverwrites.create(roleId, {
+        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'AttachFiles', 'EmbedLinks', 'ManageMessages', 'ManageChannels', 'UseExternalEmojis', 'AddReactions', 'MentionEveryone']
+      });
+      console.log(`Permissões aplicadas para cargo ${roleId} no ticket ${channel.name}`);
+    } catch (error) {
+      console.error(`Erro ao aplicar permissões para cargo ${roleId}:`, error);
+    }
   }
 }
 

@@ -306,12 +306,19 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de assunto ao abrir ticket
     if (interaction.isModalSubmit() && interaction.customId.startsWith('modal_ticket_assunto_')) {
+      // Defer a resposta imediatamente para evitar timeout
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.deferReply({ ephemeral: true });
+      }
+      
       const tipo = interaction.customId.replace('modal_ticket_assunto_', '');
       const categoria = CATEGORY_INFO[tipo];
       const categoriaId = CATEGORY_IDS[tipo];
       if (!categoria || !categoriaId) {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
+        } else {
+          await interaction.editReply({ content: '❌ Categoria inválida ou não configurada.' });
         }
         return;
       }
@@ -418,6 +425,8 @@ export const execute = async function(interaction) {
       await ticketChannel.send({ embeds: [embed], components: [row1, row2] });
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({ content: `✅ Ticket criado em <#${ticketChannel.id}>!`, flags: 64 });
+      } else {
+        await interaction.editReply({ content: `✅ Ticket criado em <#${ticketChannel.id}>!` });
       }
       return;
     }
@@ -442,11 +451,18 @@ export const execute = async function(interaction) {
       await interaction.channel.setName(finalName);
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
+      } else {
+        await interaction.editReply({ content: `✏️ Nome do ticket alterado para: ${finalName}` });
       }
       return;
     }
     // Handler do modal de adicionar membro
     if (interaction.isModalSubmit() && interaction.customId === 'modal_adicionar_membro') {
+      // Defer a resposta imediatamente para evitar timeout
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.deferReply({ ephemeral: true });
+      }
+      
       const membro = interaction.fields.getTextInputValue('membro');
       const match = membro.match(/<@!?([0-9]+)>/);
       if (!match) {
@@ -466,10 +482,14 @@ export const execute = async function(interaction) {
         });
         if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({ content: `➕ <@${userId}> adicionado ao ticket!`, flags: 0 });
+        } else {
+          await interaction.editReply({ content: `➕ <@${userId}> adicionado ao ticket!` });
         }
       } catch (e) {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({ content: '❌ Erro ao adicionar usuário ao ticket.', flags: 64 });
+        } else {
+          await interaction.editReply({ content: '❌ Erro ao adicionar usuário ao ticket.' });
         }
       }
       return;
@@ -488,11 +508,18 @@ export const execute = async function(interaction) {
       await interaction.channel.send(`🔔 <@${userId}>, você foi avisado neste ticket!`);
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({ content: `🔔 <@${userId}> foi avisado.`, flags: 0 });
+      } else {
+        await interaction.editReply({ content: `🔔 <@${userId}> foi avisado.` });
       }
       return;
     }
     // Handler do modal de motivo de fechamento
     if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento') {
+      // Defer a resposta imediatamente para evitar timeout
+      if (!interaction.replied && !interaction.deferred) {
+        await interaction.deferReply({ ephemeral: true });
+      }
+      
       const motivo = interaction.fields.getTextInputValue('motivo');
       const user = interaction.user;
       const channel = interaction.channel;
@@ -607,6 +634,8 @@ export const execute = async function(interaction) {
       }
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!', flags: 64 });
+      } else {
+        await interaction.editReply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!' });
       }
       setTimeout(async () => {
         try {
@@ -617,10 +646,19 @@ export const execute = async function(interaction) {
     }
   } catch (error) {
     try {
-      if (!interaction.replied && !interaction.deferred) {
+      // Verificar se é erro de interação expirada
+      if (error.code === 10062) {
+        console.log('Interação expirada - não foi possível responder a tempo');
+        return;
+      }
+      
+      // Verificar se a interação ainda é válida antes de tentar responder
+      if (!interaction.replied && !interaction.deferred && !interaction.isExpired()) {
         await interaction.reply({ content: '❌ Ocorreu um erro ao processar sua interação.', flags: 64 });
       }
-    } catch (e) {}
+    } catch (e) {
+      console.error('Erro ao tentar responder à interação:', e);
+    }
     console.error('Erro no handler de interactionCreate:', error);
   }
 }; 

@@ -322,22 +322,62 @@ export const execute = async function(interaction) {
       const tipoNome = tipo;
       const channelName = `${emoji}${tipoNome}-${user.username.toLowerCase()}`;
       let ticketChannel;
+      
+      // Verificar se a categoria está cheia (máximo 50 canais)
+      const categoriaObj = await guild.channels.fetch(categoriaId).catch(() => null);
+      const canaisNaCategoria = categoriaObj ? categoriaObj.children.cache.size : 0;
+      const categoriaCheia = canaisNaCategoria >= 50;
+      
       try {
-        ticketChannel = await guild.channels.create({
-          name: channelName,
-          type: ChannelType.GuildText,
-          parent: categoriaId,
-          topic: `Ticket de ${categoria.nome} | ${user.tag}`
-          // Não define permissionOverwrites aqui para herdar da categoria
-        });
-        // Garante que o criador do ticket tenha acesso
-        await ticketChannel.permissionOverwrites.create(user.id, {
-          ViewChannel: true,
-          SendMessages: true,
-          ReadMessageHistory: true,
-          AttachFiles: true,
-          EmbedLinks: true
-        });
+        // Se a categoria estiver cheia, criar o canal fora da categoria no topo
+        if (categoriaCheia) {
+          ticketChannel = await guild.channels.create({
+            name: channelName,
+            type: ChannelType.GuildText,
+            position: 0, // Posicionar no topo
+            topic: `Ticket de ${categoria.nome} | ${user.tag} | [CATEGORIA CHEIA]`,
+            permissionOverwrites: [
+              {
+                id: guild.roles.everyone,
+                deny: [PermissionFlagsBits.ViewChannel]
+              },
+              {
+                id: user.id,
+                allow: [
+                  PermissionFlagsBits.ViewChannel,
+                  PermissionFlagsBits.SendMessages,
+                  PermissionFlagsBits.ReadMessageHistory,
+                  PermissionFlagsBits.AttachFiles,
+                  PermissionFlagsBits.EmbedLinks
+                ]
+              }
+            ]
+          });
+          
+          // Aplicar permissões da categoria original (se existir)
+          if (categoriaObj) {
+            for (const [roleId, permissions] of categoriaObj.permissionOverwrites.cache) {
+              await ticketChannel.permissionOverwrites.create(roleId, permissions.allow.toArray(), permissions.deny.toArray());
+            }
+          }
+        } else {
+          // Criar normalmente na categoria
+          ticketChannel = await guild.channels.create({
+            name: channelName,
+            type: ChannelType.GuildText,
+            parent: categoriaId,
+            topic: `Ticket de ${categoria.nome} | ${user.tag}`
+          });
+          
+          // Garante que o criador do ticket tenha acesso
+          await ticketChannel.permissionOverwrites.create(user.id, {
+            ViewChannel: true,
+            SendMessages: true,
+            ReadMessageHistory: true,
+            AttachFiles: true,
+            EmbedLinks: true
+          });
+        }
       } catch (err) {
         console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
         if (!interaction.replied && !interaction.deferred) {
@@ -360,6 +400,15 @@ export const execute = async function(interaction) {
         .setImage('https://i.imgur.com/ShgYL6s.png')
         .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade | ™ Street CarClub © All rights reserved', iconURL: null })
         .setTimestamp();
+      
+      // Adicionar aviso se o ticket foi criado fora da categoria
+      if (categoriaCheia) {
+        embed.addFields({ 
+          name: '⚠️ Aviso', 
+          value: 'Este ticket foi criado fora da categoria original devido ao limite de canais ter sido atingido. Todas as permissões foram mantidas.', 
+          inline: false 
+        });
+      }
       const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('fechar_ticket').setLabel('Fechar Ticket').setStyle(ButtonStyle.Secondary).setEmoji('🔒'),
         new ButtonBuilder().setCustomId('assumir_ticket').setLabel('Assumir Ticket').setStyle(ButtonStyle.Primary).setEmoji('🫡'),

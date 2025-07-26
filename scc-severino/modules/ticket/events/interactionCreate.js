@@ -345,6 +345,10 @@ export const execute = async function(interaction) {
             topic: `Ticket de ${categoria.nome} | ${user.tag} | [CATEGORIA CHEIA]`,
             permissionOverwrites: [
               {
+                id: guild.roles.everyone,
+                deny: [PermissionFlagsBits.ViewChannel]
+              },
+              {
                 id: user.id,
                 allow: [
                   PermissionFlagsBits.ViewChannel,
@@ -369,16 +373,23 @@ export const execute = async function(interaction) {
             name: channelName,
             type: ChannelType.GuildText,
             parent: categoriaId,
-            topic: `Ticket de ${categoria.nome} | ${user.tag}`
-          });
-          
-          // Garante que o criador do ticket tenha acesso
-          await ticketChannel.permissionOverwrites.create(user.id, {
-            ViewChannel: true,
-            SendMessages: true,
-            ReadMessageHistory: true,
-            AttachFiles: true,
-            EmbedLinks: true
+            topic: `Ticket de ${categoria.nome} | ${user.tag}`,
+            permissionOverwrites: [
+              {
+                id: guild.roles.everyone,
+                deny: [PermissionFlagsBits.ViewChannel]
+              },
+              {
+                id: user.id,
+                allow: [
+                  PermissionFlagsBits.ViewChannel,
+                  PermissionFlagsBits.SendMessages,
+                  PermissionFlagsBits.ReadMessageHistory,
+                  PermissionFlagsBits.AttachFiles,
+                  PermissionFlagsBits.EmbedLinks
+                ]
+              }
+            ]
           });
         }
       } catch (err) {

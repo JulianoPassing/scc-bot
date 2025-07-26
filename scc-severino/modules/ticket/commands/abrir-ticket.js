@@ -1,4 +1,6 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { CATEGORY_CONFIG } from '../config.js';
+import { createTicketPermissions, getTicketCategory } from '../utils/ticketPermissions.js';
 
 export const data = {
   name: 'abrir-ticket',
@@ -18,41 +20,54 @@ export async function execute(message, args, client) {
     return message.reply('❌ Você já possui um ticket aberto: ' + existing.toString());
   }
 
-  // Cria o canal do ticket
-  const channelName = `ticket-${user.id}`;
-  const ticketChannel = await guild.channels.create({
-    name: channelName,
-    type: 0, // GuildText
-    topic: `Ticket de Suporte | ${user.tag} | ${reason}`,
-    permissionOverwrites: [
-      { id: guild.roles.everyone, deny: ['ViewChannel'] },
-      { id: user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'AttachFiles', 'EmbedLinks'] }
-    ]
-  });
+  // Usar categoria de suporte como padrão
+  const categoria = CATEGORY_CONFIG.suporte;
+  const emoji = categoria.emoji;
+  const channelName = `${emoji}suporte-${user.username.toLowerCase()}`;
 
-  const welcomeEmbed = new EmbedBuilder()
-    .setColor('#0099FF')
-    .setTitle(`🎫 Ticket de Suporte`)
-    .setDescription(`Olá ${user}, obrigado por abrir um ticket de suporte.`)
-    .addFields(
-      { name: 'Motivo', value: reason },
-      { name: 'Instruções', value: 'Descreva seu problema. A equipe irá te atender em breve.' }
-    )
-    .setFooter({ text: 'Use o botão abaixo para fechar este ticket quando resolvido.' })
-    .setTimestamp();
+  try {
+    // Obter categoria (ou null se estiver cheia)
+    const parentId = await getTicketCategory('suporte', guild);
+    
+    // Criar permissões personalizadas
+    const permissionOverwrites = createTicketPermissions('suporte', user.id);
+    
+    // Cria o canal do ticket
+    const ticketChannel = await guild.channels.create({
+      name: channelName,
+      type: 0, // GuildText
+      parent: parentId, // null = criar no topo do servidor
+      topic: `Ticket de Suporte | ${user.tag} | ${reason}`,
+      permissionOverwrites: permissionOverwrites
+    });
 
-  const closeButton = new ActionRowBuilder().addComponents(
-    new ButtonBuilder()
-      .setCustomId('close_ticket')
-      .setLabel('Fechar Ticket')
-      .setStyle(ButtonStyle.Danger)
-      .setEmoji('🔒')
-  );
+    const welcomeEmbed = new EmbedBuilder()
+      .setColor('#0099FF')
+      .setTitle(`🎫 Ticket de Suporte`)
+      .setDescription(`Olá ${user}, obrigado por abrir um ticket de suporte.`)
+      .addFields(
+        { name: 'Motivo', value: reason },
+        { name: 'Instruções', value: 'Descreva seu problema. A equipe irá te atender em breve.' }
+      )
+      .setFooter({ text: 'Use o botão abaixo para fechar este ticket quando resolvido.' })
+      .setTimestamp();
 
-  await ticketChannel.send({
-    content: `${user}`,
-    embeds: [welcomeEmbed],
-    components: [closeButton]
-  });
-  await message.reply('✅ Ticket criado com sucesso!');
+    const closeButton = new ActionRowBuilder().addComponents(
+      new ButtonBuilder()
+        .setCustomId('close_ticket')
+        .setLabel('Fechar Ticket')
+        .setStyle(ButtonStyle.Danger)
+        .setEmoji('🔒')
+    );
+
+    await ticketChannel.send({
+      content: `${user}`,
+      embeds: [welcomeEmbed],
+      components: [closeButton]
+    });
+    await message.reply('✅ Ticket criado com sucesso!');
+  } catch (error) {
+    console.error('Erro ao criar ticket:', error);
+    await message.reply('❌ Erro ao criar o ticket. Verifique se o bot tem permissões adequadas.');
+  }
 } 

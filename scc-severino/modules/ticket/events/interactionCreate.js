@@ -1,38 +1,25 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-
-const CATEGORY_IDS = {
-  suporte: '1386490182085382294',
-  bugs: '1386490279384846418',
-  boost: '1386490600353828884',
-  casas: '1386490752485294150',
-  doacoes: '1386490511606419578',
-  denuncias: '1386490428404138054'
-};
-const CATEGORY_INFO = {
-  suporte: { emoji: '📁', nome: 'Suporte', desc: 'Suporte técnico e ajuda geral' },
-  bugs: { emoji: '🦠', nome: 'Reportar Bugs', desc: 'Reportar erros e problemas técnicos' },
-  boost: { emoji: '🚀', nome: 'Boost', desc: 'Suporte para membros boosters' },
-  casas: { emoji: '🏠', nome: 'Casas', desc: 'Questões relacionadas a casas e propriedades' },
-  doacoes: { emoji: '💎', nome: 'Doações', desc: 'Assuntos relacionados a doações' },
-  denuncias: { emoji: '⚠️', nome: 'Denúncias', desc: 'Reportar infrações e problemas de conduta' }
-};
+import { CATEGORY_CONFIG, LOG_CHANNEL_ID } from '../config.js';
+import { createTicketPermissions, getTicketCategory } from '../utils/ticketPermissions.js';
 
 export const name = 'interactionCreate';
 export const execute = async function(interaction) {
   try {
     if (interaction.isButton()) {
       const { customId, user, guild } = interaction;
+      
       // Painel principal: abrir modal para assunto
       if (customId.startsWith('ticket_')) {
-        // (Removida a verificação de staff aqui para permitir todos abrirem tickets)
         const tipo = customId.replace('ticket_', '');
-        const categoria = CATEGORY_INFO[tipo];
+        const categoria = CATEGORY_CONFIG[tipo];
+        
         if (!categoria) {
           if (!interaction.replied && !interaction.deferred) {
             await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
           }
           return;
         }
+        
         const modal = new ModalBuilder()
           .setCustomId(`modal_ticket_assunto_${tipo}`)
           .setTitle(`Abrir Ticket - ${categoria.nome}`)
@@ -46,11 +33,13 @@ export const execute = async function(interaction) {
                 .setMaxLength(64)
             )
           );
+        
         if (!interaction.replied && !interaction.deferred) {
           await interaction.showModal(modal);
         }
         return;
       }
+      
       // Botões do painel de ticket aberto
       const painelTicketBotoes = [
         'fechar_ticket',
@@ -61,6 +50,7 @@ export const execute = async function(interaction) {
         'timer_24h',
         'cancelar_timer_24h'
       ];
+      
       if (painelTicketBotoes.includes(customId)) {
         if (!interaction.member.permissions.has('ManageChannels')) {
           if (!interaction.replied && !interaction.deferred) {
@@ -69,8 +59,8 @@ export const execute = async function(interaction) {
           return;
         }
       }
+      
       if (customId === 'fechar_ticket') {
-        // Abrir modal para motivo do fechamento
         if (!interaction.replied && !interaction.deferred) {
           await interaction.showModal(
             new ModalBuilder()
@@ -90,8 +80,8 @@ export const execute = async function(interaction) {
         }
         return;
       }
+      
       if (customId === 'assumir_ticket') {
-        // Atualiza embed para status 'Assumido'
         const msg = await interaction.channel.messages.fetch({ limit: 10 }).then(msgs => msgs.find(m => m.embeds.length));
         if (msg) {
           const embed = EmbedBuilder.from(msg.embeds[0]);
@@ -103,6 +93,7 @@ export const execute = async function(interaction) {
         }
         return;
       }
+      
       if (customId === 'adicionar_membro') {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.showModal(
@@ -122,8 +113,8 @@ export const execute = async function(interaction) {
         }
         return;
       }
+      
       if (customId === 'avisar_membro') {
-        // Busca a menção na mensagem de notificação de abertura do ticket
         const channel = interaction.channel;
         const messages = await channel.messages.fetch({ limit: 10 });
         const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket!'));
@@ -163,6 +154,7 @@ export const execute = async function(interaction) {
         }
         return;
       }
+      
       if (customId === 'renomear_ticket') {
         const name = interaction.channel.name;
         const emoji = name.startsWith('📁suporte-') ? '📁' :
@@ -191,8 +183,8 @@ export const execute = async function(interaction) {
         }
         return;
       }
+      
       if (customId === 'timer_24h') {
-        // Cria embed com botão de cancelar
         const embed = new EmbedBuilder()
           .setColor('#FFA500')
           .setTitle('⏰ Timer de 24h Iniciado')
@@ -206,15 +198,13 @@ export const execute = async function(interaction) {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket.', flags: 64 });
         }
-        // Salva o timer no client para poder cancelar
+        
         if (!interaction.client.timers24h) interaction.client.timers24h = {};
         const timerKey = interaction.channel.id;
         if (interaction.client.timers24h[timerKey]) clearTimeout(interaction.client.timers24h[timerKey]);
         interaction.client.timers24h[timerKey] = setTimeout(async () => {
           try {
-            // Fecha o ticket automaticamente
             const motivo = 'Timer esgotado';
-            // Gerar transcript visual
             let allMessages = [];
             let lastId;
             while (true) {
@@ -258,7 +248,7 @@ export const execute = async function(interaction) {
               .setDescription(`Ticket fechado automaticamente após 24h.\n**Motivo:** ${motivo}`)
               .addFields({ name: 'Canal', value: `<#${interaction.channel.id}>`, inline: true })
               .setTimestamp();
-            const logChannel = await interaction.guild.channels.fetch('1386491920313745418').catch(() => null);
+            const logChannel = await interaction.guild.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
             if (logChannel) {
               await logChannel.send({ embeds: [embedLog] });
               if (transcript.length > 1900) {
@@ -279,11 +269,11 @@ export const execute = async function(interaction) {
         }, 24 * 60 * 60 * 1000);
         return;
       }
+      
       if (customId === 'cancelar_timer_24h') {
         if (interaction.client.timers24h && interaction.client.timers24h[interaction.channel.id]) {
           clearTimeout(interaction.client.timers24h[interaction.channel.id]);
           delete interaction.client.timers24h[interaction.channel.id];
-          // Editar a mensagem do timer para mostrar cancelamento e remover botão
           const msgs = await interaction.channel.messages.fetch({ limit: 10 });
           const timerMsg = msgs.find(m => m.embeds.length && m.embeds[0].title && m.embeds[0].title.includes('Timer de 24h Iniciado'));
           if (timerMsg) {
@@ -304,48 +294,63 @@ export const execute = async function(interaction) {
         return;
       }
     }
+    
     // Handler do modal de assunto ao abrir ticket
     if (interaction.isModalSubmit() && interaction.customId.startsWith('modal_ticket_assunto_')) {
       const tipo = interaction.customId.replace('modal_ticket_assunto_', '');
-      const categoria = CATEGORY_INFO[tipo];
-      const categoriaId = CATEGORY_IDS[tipo];
-      if (!categoria || !categoriaId) {
+      const categoria = CATEGORY_CONFIG[tipo];
+      
+      if (!categoria) {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
         }
         return;
       }
+      
       const assunto = interaction.fields.getTextInputValue('assunto');
       const user = interaction.user;
       const guild = interaction.guild;
       const emoji = categoria.emoji;
       const tipoNome = tipo;
       const channelName = `${emoji}${tipoNome}-${user.username.toLowerCase()}`;
-      let ticketChannel;
-      try {
-        ticketChannel = await guild.channels.create({
-          name: channelName,
-          type: ChannelType.GuildText,
-          parent: categoriaId,
-          topic: `Ticket de ${categoria.nome} | ${user.tag}`
-          // Não define permissionOverwrites aqui para herdar da categoria
-        });
-        // Garante que o criador do ticket tenha acesso
-        await ticketChannel.permissionOverwrites.create(user.id, {
-          ViewChannel: true,
-          SendMessages: true,
-          ReadMessageHistory: true,
-          AttachFiles: true,
-          EmbedLinks: true
-        });
-      } catch (err) {
-        console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
+      
+      // Verificar se já existe ticket para este usuário
+      const existing = guild.channels.cache.find(
+        channel => channel.name === channelName
+      );
+      if (existing) {
         if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se a categoria existe, se o bot tem permissão e se o ID está correto.', flags: 64 });
+          await interaction.reply({ content: '❌ Você já possui um ticket aberto: ' + existing.toString(), flags: 64 });
         }
         return;
       }
+      
+      let ticketChannel;
+      try {
+        // Obter categoria (ou null se estiver cheia)
+        const parentId = await getTicketCategory(tipo, guild);
+        
+        // Criar permissões personalizadas
+        const permissionOverwrites = createTicketPermissions(tipo, user.id);
+        
+        ticketChannel = await guild.channels.create({
+          name: channelName,
+          type: ChannelType.GuildText,
+          parent: parentId, // null = criar no topo do servidor
+          topic: `Ticket de ${categoria.nome} | ${user.tag} | ${assunto}`,
+          permissionOverwrites: permissionOverwrites
+        });
+        
+      } catch (err) {
+        console.error('Erro ao criar canal do ticket:', err, 'Categoria:', tipo, 'Guild:', guild.id);
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se o bot tem permissões adequadas.', flags: 64 });
+        }
+        return;
+      }
+      
       await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket! Equipe notificada:` });
+      
       const embed = new EmbedBuilder()
         .setColor('#0099FF')
         .setTitle(`📑 Ticket Aberto - ${categoria.emoji} ${categoria.nome}`)
@@ -360,6 +365,7 @@ export const execute = async function(interaction) {
         .setImage('https://i.imgur.com/ShgYL6s.png')
         .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade | ™ Street CarClub © All rights reserved', iconURL: null })
         .setTimestamp();
+      
       const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('fechar_ticket').setLabel('Fechar Ticket').setStyle(ButtonStyle.Secondary).setEmoji('🔒'),
         new ButtonBuilder().setCustomId('assumir_ticket').setLabel('Assumir Ticket').setStyle(ButtonStyle.Primary).setEmoji('🫡'),
@@ -370,12 +376,15 @@ export const execute = async function(interaction) {
         new ButtonBuilder().setCustomId('renomear_ticket').setLabel('Renomear Ticket').setStyle(ButtonStyle.Primary).setEmoji('✏️'),
         new ButtonBuilder().setCustomId('timer_24h').setLabel('Timer 24h').setStyle(ButtonStyle.Primary).setEmoji('⏰')
       );
+      
       await ticketChannel.send({ embeds: [embed], components: [row1, row2] });
+      
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({ content: `✅ Ticket criado em <#${ticketChannel.id}>!`, flags: 64 });
       }
       return;
     }
+    
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
       if (!interaction.member.permissions.has('ManageChannels')) {
@@ -400,6 +409,7 @@ export const execute = async function(interaction) {
       }
       return;
     }
+    
     // Handler do modal de adicionar membro
     if (interaction.isModalSubmit() && interaction.customId === 'modal_adicionar_membro') {
       const membro = interaction.fields.getTextInputValue('membro');
@@ -429,28 +439,13 @@ export const execute = async function(interaction) {
       }
       return;
     }
-    // Handler do modal de avisar membro
-    if (interaction.isModalSubmit() && interaction.customId === 'modal_avisar_membro') {
-      const membro = interaction.fields.getTextInputValue('membro');
-      const match = membro.match(/<@!?([0-9]+)>/);
-      if (!match) {
-        if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({ content: '❌ Mencione um usuário válido.', flags: 64 });
-        }
-        return;
-      }
-      const userId = match[1];
-      await interaction.channel.send(`🔔 <@${userId}>, você foi avisado neste ticket!`);
-      if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: `🔔 <@${userId}> foi avisado.`, flags: 0 });
-      }
-      return;
-    }
+    
     // Handler do modal de motivo de fechamento
     if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento') {
       const motivo = interaction.fields.getTextInputValue('motivo');
       const user = interaction.user;
       const channel = interaction.channel;
+      
       // Buscar todas as mensagens do canal (transcript completo)
       let allMessages = [];
       let lastId;
@@ -463,6 +458,7 @@ export const execute = async function(interaction) {
         lastId = messages.last().id;
       }
       const sorted = allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
+      
       // Identificar criador do ticket
       const notifyMsg = sorted.find(m => m.content && m.content.includes('abriu um ticket!'));
       let autorId = null;
@@ -479,9 +475,11 @@ export const execute = async function(interaction) {
           } catch {}
         }
       }
+      
       // Staff responsável
       const staffTag = user.tag;
       const staffAvatar = user.displayAvatarURL();
+      
       // HTML transcript
       let html = `<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'><title>Transcript Ticket</title><style>
       body{font-family:sans-serif;background:#18191c;color:#eee;margin:0;padding:0;}
@@ -499,6 +497,7 @@ export const execute = async function(interaction) {
       .msg .reply{color:#faa61a;font-size:13px;}
       .footer{margin:30px 0 0 0;text-align:center;color:#888;font-size:13px;}
       </style></head><body>`;
+      
       html += `<div class='header'>`;
       if (autorAvatar) html += `<img src='${autorAvatar}' alt='Criador'>`;
       html += `<div><div><strong>Criador:</strong> ${autorTag ? autorTag : autorId || 'Desconhecido'}</div>`;
@@ -506,6 +505,7 @@ export const execute = async function(interaction) {
       html += `<div><strong>Motivo do fechamento:</strong> ${motivo}</div></div>`;
       if (staffAvatar) html += `<img src='${staffAvatar}' alt='Staff' style='margin-left:auto;'>`;
       html += `</div><div class='info'><strong>Canal:</strong> #${channel.name} | <strong>Data de Fechamento:</strong> ${new Date().toLocaleString('pt-BR')}</div>`;
+      
       for (const msg of sorted) {
         const isStaff = msg.member && msg.member.permissions.has('ManageChannels');
         html += `<div class='msg${isStaff ? ' staff' : ''}'>`;
@@ -514,6 +514,7 @@ export const execute = async function(interaction) {
           html += `<div class='reply'>↪️ Em resposta a mensagem ID: ${msg.reference.messageId}</div>`;
         }
         html += `<div class='content'>${msg.content ? msg.content.replace(/</g,'&lt;').replace(/>/g,'&gt;') : ''}</div>`;
+        
         // Anexos
         if (msg.attachments && msg.attachments.size > 0) {
           html += `<div class='attachments'>`;
@@ -526,6 +527,7 @@ export const execute = async function(interaction) {
           }
           html += `</div>`;
         }
+        
         // Embeds
         if (msg.embeds && msg.embeds.length > 0) {
           for (const emb of msg.embeds) {
@@ -536,6 +538,7 @@ export const execute = async function(interaction) {
             html += `</div>`;
           }
         }
+        
         // Stickers
         if (msg.stickers && msg.stickers.size > 0) {
           for (const sticker of msg.stickers.values()) {
@@ -544,7 +547,9 @@ export const execute = async function(interaction) {
         }
         html += `</div>`;
       }
+      
       html += `<div class='footer'>Transcript gerado automaticamente pelo sistema de tickets StreetCarClub.</div></body></html>`;
+      
       // Enviar para canal de logs
       const embed = new EmbedBuilder()
         .setColor('#FFA500')
@@ -556,13 +561,16 @@ export const execute = async function(interaction) {
           { name: 'Fechado por', value: `<@${user.id}>`, inline: true }
         )
         .setTimestamp();
-      const logChannel = await interaction.guild.channels.fetch('1386491920313745418').catch(() => null);
+      
+      const logChannel = await interaction.guild.channels.fetch(LOG_CHANNEL_ID).catch(() => null);
       if (logChannel) {
         await logChannel.send({ embeds: [embed], files: [{ attachment: Buffer.from(html, 'utf-8'), name: `transcript-${channel.name}.html` }] });
       }
+      
       if (!interaction.replied && !interaction.deferred) {
         await interaction.reply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!', flags: 64 });
       }
+      
       setTimeout(async () => {
         try {
           await channel.delete(`Ticket fechado por ${user.tag}`);

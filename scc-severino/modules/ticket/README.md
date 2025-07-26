@@ -95,6 +95,7 @@ Os cargos de staff recebem todas as permissões necessárias:
 
 ### Comandos de Staff
 - `!verificar-permissoes` - Verifica as permissões do ticket atual
+- `!testar-permissoes` - Testa as permissões aplicadas no ticket atual
 - `!corrigir-permissoes` - Corrige as permissões de todos os tickets existentes
 - `!corrigir-ticket` - Corrige as permissões do ticket atual
 - `!status-categorias` - Verifica o status das categorias de tickets

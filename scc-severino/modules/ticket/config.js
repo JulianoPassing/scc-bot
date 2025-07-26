@@ -88,25 +88,21 @@ export const TICKET_PERMISSIONS = {
   }
 };
 
-// Permissões do criador do ticket
+// Permissões do criador do ticket (conforme especificado)
 export const CREATOR_PERMISSIONS = {
-  ViewChannel: true,
-  SendMessages: true,
-  ReadMessageHistory: true,
-  AttachFiles: true,
-  EmbedLinks: true
+  ViewChannel: true,        // Ver canal
+  SendMessages: true,       // Enviar mensagens
+  ReadMessageHistory: true, // Ver histórico
+  AttachFiles: true,        // Enviar anexos
+  EmbedLinks: true          // Enviar links
 };
 
-// Permissões completas para staff
+// Permissões básicas para staff (apenas o necessário para trabalhar)
 export const STAFF_PERMISSIONS = {
-  ViewChannel: true,
-  SendMessages: true,
-  ReadMessageHistory: true,
-  AttachFiles: true,
-  EmbedLinks: true,
-  ManageMessages: true,
-  ManageChannels: true,
-  UseExternalEmojis: true,
-  AddReactions: true,
-  MentionEveryone: true
+  ViewChannel: true,        // Ver canal
+  SendMessages: true,       // Enviar mensagens
+  ReadMessageHistory: true, // Ver histórico
+  AttachFiles: true,        // Enviar anexos
+  EmbedLinks: true,         // Enviar links
+  ManageMessages: true      // Gerenciar mensagens (para deletar spam, etc.)
 }; 

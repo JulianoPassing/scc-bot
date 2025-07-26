@@ -14,11 +14,11 @@ export async function configurarPermissoesTicket(channel, categoriaTipo, userId)
 
   console.log(`Configurando permissões para ticket ${channel.name} da categoria ${categoriaTipo}`);
 
-  // Configurar permissões para @everyone (negar acesso)
+  // Configurar permissões para @everyone (negar acesso - canal privado)
   await channel.permissionOverwrites.create(channel.guild.roles.everyone, {
     deny: ['ViewChannel']
   });
-  console.log('Permissão @everyone configurada');
+  console.log('Permissão @everyone configurada (canal privado)');
 
   // Configurar permissões para o criador do ticket
   await channel.permissionOverwrites.create(userId, {
@@ -30,7 +30,7 @@ export async function configurarPermissoesTicket(channel, categoriaTipo, userId)
   for (const roleId of categoria.staffRoles) {
     try {
       await channel.permissionOverwrites.create(roleId, {
-        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'AttachFiles', 'EmbedLinks', 'ManageMessages', 'ManageChannels', 'UseExternalEmojis', 'AddReactions', 'MentionEveryone']
+        allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'AttachFiles', 'EmbedLinks', 'ManageMessages']
       });
       console.log(`Permissões aplicadas para cargo ${roleId} no ticket ${channel.name}`);
     } catch (error) {

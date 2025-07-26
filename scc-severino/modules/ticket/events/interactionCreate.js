@@ -1,6 +1,6 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { CATEGORY_CONFIG, LOG_CHANNEL_ID } from '../config.js';
-import { createTicketPermissions, getTicketCategory } from '../utils/ticketPermissions.js';
+import { createTicketPermissions, getTicketCategory, createTicketPermissionOverwrites } from '../utils/ticketPermissions.js';
 
 export const name = 'interactionCreate';
 export const execute = async function(interaction) {
@@ -330,8 +330,8 @@ export const execute = async function(interaction) {
         // Obter categoria (ou null se estiver cheia)
         const parentId = await getTicketCategory(tipo, guild);
         
-        // Criar permissões personalizadas
-        const permissionOverwrites = createTicketPermissions(tipo, user.id);
+        // Criar permissões personalizadas usando a nova função
+        const permissionOverwrites = await createTicketPermissionOverwrites(tipo, user.id, guild);
         
         ticketChannel = await guild.channels.create({
           name: channelName,

@@ -1,6 +1,6 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { CATEGORY_CONFIG } from '../config.js';
-import { createTicketPermissions, getTicketCategory } from '../utils/ticketPermissions.js';
+import { createTicketPermissions, getTicketCategory, createTicketPermissionOverwrites } from '../utils/ticketPermissions.js';
 
 export const data = {
   name: 'abrir-ticket',
@@ -29,8 +29,8 @@ export async function execute(message, args, client) {
     // Obter categoria (ou null se estiver cheia)
     const parentId = await getTicketCategory('suporte', guild);
     
-    // Criar permissões personalizadas
-    const permissionOverwrites = createTicketPermissions('suporte', user.id);
+    // Criar permissões personalizadas usando a nova função
+    const permissionOverwrites = await createTicketPermissionOverwrites('suporte', user.id, guild);
     
     // Cria o canal do ticket
     const ticketChannel = await guild.channels.create({

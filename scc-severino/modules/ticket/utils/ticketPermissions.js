@@ -97,4 +97,50 @@ export function getMemberCategories(member) {
   return Object.keys(CATEGORY_CONFIG).filter(categoria => 
     hasCategoryPermission(member, categoria)
   );
+}
+
+/**
+ * Cria as permissões para um ticket usando objetos PermissionOverwrites
+ * @param {string} categoria - Nome da categoria
+ * @param {string} creatorId - ID do criador do ticket
+ * @param {Guild} guild - Objeto guild do Discord
+ * @returns {Array} Array de PermissionOverwrites
+ */
+export async function createTicketPermissionOverwrites(categoria, creatorId, guild) {
+  const config = CATEGORY_CONFIG[categoria];
+  if (!config) {
+    throw new Error(`Categoria '${categoria}' não encontrada na configuração`);
+  }
+
+  const permissionOverwrites = [];
+
+  // Negar acesso para @everyone
+  const everyoneRole = guild.roles.everyone;
+  permissionOverwrites.push({
+    id: everyoneRole,
+    deny: ['ViewChannel']
+  });
+
+  // Permissões para o criador do ticket
+  permissionOverwrites.push({
+    id: creatorId,
+    allow: Object.keys(CREATOR_PERMISSIONS).filter(perm => CREATOR_PERMISSIONS[perm])
+  });
+
+  // Adicionar permissões para todos os cargos de staff da categoria
+  for (const roleId of config.staffRoles) {
+    try {
+      const role = await guild.roles.fetch(roleId);
+      if (role) {
+        permissionOverwrites.push({
+          id: role,
+          allow: Object.keys(STAFF_PERMISSIONS).filter(perm => STAFF_PERMISSIONS[perm])
+        });
+      }
+    } catch (error) {
+      console.warn(`Cargo não encontrado: ${roleId}`);
+    }
+  }
+
+  return permissionOverwrites;
 } 

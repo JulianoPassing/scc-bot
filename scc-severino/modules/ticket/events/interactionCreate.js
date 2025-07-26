@@ -338,10 +338,6 @@ export const execute = async function(interaction) {
             topic: `Ticket de ${categoria.nome} | ${user.tag} | [CATEGORIA CHEIA]`,
             permissionOverwrites: [
               {
-                id: guild.roles.everyone,
-                deny: [PermissionFlagsBits.ViewChannel]
-              },
-              {
                 id: user.id,
                 allow: [
                   PermissionFlagsBits.ViewChannel,

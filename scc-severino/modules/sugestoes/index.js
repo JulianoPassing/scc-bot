@@ -47,7 +47,7 @@ export default async function(client) {
         const db = loadDB();
         if (!db[messageId]) {
           db[messageId] = { yes: [], no: [] };
-      }
+        }
         
         // Verificar se já votou
         const hasVotedYes = db[messageId].yes.includes(userId);
@@ -90,7 +90,7 @@ export default async function(client) {
           const voteField = embed.data.fields?.find(field => field.name === 'Votos');
           if (voteField) {
             voteField.value = `👍 **${yesCount}** | 👎 **${noCount}** (Total: ${totalVotes})`;
-        }
+          }
           
           // Atualizar cor baseada no resultado
           if (yesCount > noCount) {

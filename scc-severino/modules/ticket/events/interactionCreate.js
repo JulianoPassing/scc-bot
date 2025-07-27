@@ -157,17 +157,36 @@ export const execute = async function(interaction) {
       
       if (customId === 'renomear_ticket') {
         const name = interaction.channel.name;
-        const emoji = name.startsWith('📁suporte-') ? '📁' :
-          name.startsWith('🦠bugs-') ? '🦠' :
-          name.startsWith('🚀boost-') ? '🚀' :
-          name.startsWith('🏠casas-') ? '🏠' :
-          name.startsWith('💎doacoes-') ? '💎' :
-          name.startsWith('⚠️denuncias-') ? '⚠️' : '';
+        // Detectar o emoji da categoria baseado no nome do canal
+        let emoji = '';
+        let categoriaTipo = '';
+        
+        if (name.startsWith('📁suporte-')) {
+          emoji = '📁';
+          categoriaTipo = 'suporte';
+        } else if (name.startsWith('🦠bugs-')) {
+          emoji = '🦠';
+          categoriaTipo = 'bugs';
+        } else if (name.startsWith('🚀boost-')) {
+          emoji = '🚀';
+          categoriaTipo = 'boost';
+        } else if (name.startsWith('🏠casas-')) {
+          emoji = '🏠';
+          categoriaTipo = 'casas';
+        } else if (name.startsWith('💎doacoes-')) {
+          emoji = '💎';
+          categoriaTipo = 'doacoes';
+        } else if (name.startsWith('⚠️denuncias-')) {
+          emoji = '⚠️';
+          categoriaTipo = 'denuncias';
+        }
+        
+        // Armazenar o emoji e tipo da categoria no modal para uso posterior
         if (!interaction.replied && !interaction.deferred) {
           await interaction.showModal(
             new ModalBuilder()
-              .setCustomId('modal_renomear_ticket')
-              .setTitle('Renomear Ticket')
+              .setCustomId(`modal_renomear_ticket_${categoriaTipo}`)
+              .setTitle(`Renomear Ticket - ${CATEGORY_CONFIG[categoriaTipo]?.nome || 'Ticket'}`)
               .addComponents(
                 new ActionRowBuilder().addComponents(
                   new TextInputBuilder()
@@ -177,6 +196,7 @@ export const execute = async function(interaction) {
                     .setMinLength(1)
                     .setMaxLength(32)
                     .setRequired(true)
+                    .setPlaceholder(`Ex: ${categoriaTipo}-usuario`)
                 )
               )
           );
@@ -386,30 +406,36 @@ export const execute = async function(interaction) {
     }
     
     // Handler do modal de renomear
-    if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
+    if (interaction.isModalSubmit() && interaction.customId.startsWith('modal_renomear_ticket_')) {
       if (!interaction.member.permissions.has('ManageChannels')) {
         if (!interaction.replied && !interaction.deferred) {
           await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
         }
         return;
       }
-      const novoNome = interaction.fields.getTextInputValue('novo_nome');
-      const name = interaction.channel.name;
       
-      // Detectar emoji da categoria atual usando a configuração
-      let emoji = '';
-      for (const [categoriaKey, config] of Object.entries(CATEGORY_CONFIG)) {
-        if (name.startsWith(config.emoji + categoriaKey + '-')) {
-          emoji = config.emoji;
-          break;
+      const categoriaTipo = interaction.customId.replace('modal_renomear_ticket_', '');
+      const categoria = CATEGORY_CONFIG[categoriaTipo];
+      
+      if (!categoria) {
+        if (!interaction.replied && !interaction.deferred) {
+          await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
         }
+        return;
       }
       
+      const novoNome = interaction.fields.getTextInputValue('novo_nome');
+      const emoji = categoria.emoji;
+      
+      // Garantir que o novo nome tenha o emoji da categoria
       let finalName = novoNome;
-      if (!finalName.startsWith(emoji)) finalName = emoji + finalName;
+      if (!finalName.startsWith(emoji)) {
+        finalName = emoji + finalName;
+      }
+      
       await interaction.channel.setName(finalName);
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
+        await interaction.reply({ content: `✏️ Nome do ticket alterado para: **${finalName}**`, flags: 64 });
       }
       return;
     }

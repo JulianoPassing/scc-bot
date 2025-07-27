@@ -6,8 +6,13 @@ export const CATEGORY_CONFIG = {
     emoji: '📁',
     description: 'Suporte técnico e ajuda geral',
     staffRoles: [
-      // Adicione aqui os IDs dos cargos que têm acesso aos tickets de suporte
-      // Exemplo: '1234567890123456789'
+      '1204393192284229692', // Cargo de Suporte
+      '1046404063673192542', // Cargo de Staff
+      '1277638402019430501', // Cargo de Moderador
+      '1226903187055972484', // Cargo de Admin
+      '1226907937117569128', // Cargo de Gerente
+      '1230131375965737044', // Cargo de Supervisor
+      '1046404063522197521'  // Cargo de Owner
     ]
   },
   bugs: {
@@ -16,7 +21,13 @@ export const CATEGORY_CONFIG = {
     emoji: '🦠',
     description: 'Reportar erros e problemas técnicos',
     staffRoles: [
-      // Adicione aqui os IDs dos cargos que têm acesso aos tickets de bugs
+      '1204393192284229692', // Cargo de Suporte
+      '1046404063673192542', // Cargo de Staff
+      '1277638402019430501', // Cargo de Moderador
+      '1226903187055972484', // Cargo de Admin
+      '1226907937117569128', // Cargo de Gerente
+      '1230131375965737044', // Cargo de Supervisor
+      '1046404063522197521'  // Cargo de Owner
     ]
   },
   boost: {
@@ -25,7 +36,13 @@ export const CATEGORY_CONFIG = {
     emoji: '🚀',
     description: 'Suporte para membros boosters',
     staffRoles: [
-      // Adicione aqui os IDs dos cargos que têm acesso aos tickets de boost
+      '1204393192284229692', // Cargo de Suporte
+      '1046404063673192542', // Cargo de Staff
+      '1277638402019430501', // Cargo de Moderador
+      '1226903187055972484', // Cargo de Admin
+      '1226907937117569128', // Cargo de Gerente
+      '1230131375965737044', // Cargo de Supervisor
+      '1046404063522197521'  // Cargo de Owner
     ]
   },
   casas: {
@@ -34,7 +51,8 @@ export const CATEGORY_CONFIG = {
     emoji: '🏠',
     description: 'Questões relacionadas a casas e propriedades',
     staffRoles: [
-      // Adicione aqui os IDs dos cargos que têm acesso aos tickets de casas
+      '1311023008495698081', // Cargo específico de Casas
+      '1046404063522197521'  // Cargo de Owner
     ]
   },
   doacoes: {
@@ -43,7 +61,7 @@ export const CATEGORY_CONFIG = {
     emoji: '💎',
     description: 'Assuntos relacionados a doações',
     staffRoles: [
-      // Adicione aqui os IDs dos cargos que têm acesso aos tickets de doações
+      '1046404063522197521'  // Cargo de Owner
     ]
   },
   denuncias: {
@@ -52,7 +70,9 @@ export const CATEGORY_CONFIG = {
     emoji: '⚠️',
     description: 'Reportar infrações e problemas de conduta',
     staffRoles: [
-      // Adicione aqui os IDs dos cargos que têm acesso aos tickets de denúncias
+      '1277638402019430501', // Cargo de Moderador
+      '1226903187055972484', // Cargo de Admin
+      '1046404063522197521'  // Cargo de Owner
     ]
   }
 };

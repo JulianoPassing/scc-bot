@@ -145,7 +145,7 @@ export default async function(client) {
             titulo: '8. O que é Safe Zone?',
             desc: 'Área Segura',
             alternativas: {
-              a: 'Locais onde crimes são proibidos',
+              a: 'Locais onde crimes são permitidos',
               b: 'Locais seguros',
               c: 'Área só para administradores'
             }

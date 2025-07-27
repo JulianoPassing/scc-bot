@@ -402,33 +402,31 @@ export const execute = async function(interaction) {
     
     // Renomear Ticket mantendo emoji da categoria
     if (customId === 'renomear_ticket') {
-      try {
-        const name = interaction.channel.name;
-        const emoji = name.startsWith('seg-') ? '🛡️' : '';
-        const modal = new ModalBuilder()
-          .setCustomId('modal_renomear_ticket_seguranca')
-          .setTitle('Renomear Ticket de Segurança')
-          .addComponents(
-            new ActionRowBuilder().addComponents(
-              new TextInputBuilder()
-                .setCustomId('novo_nome')
-                .setLabel('Novo nome do ticket')
-                .setStyle(TextInputStyle.Short)
-                .setMinLength(1)
-                .setMaxLength(32)
-                .setRequired(true)
-                .setPlaceholder(`Ex: ${emoji}seg-novo-nome`)
-            )
-          );
-        await interaction.showModal(modal);
-      } catch (error) {
-        console.error('[SEGURANCA][ERRO renomear_ticket]', error);
-        try {
-          if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: '❌ Erro ao abrir modal de renomeação.', flags: 64 });
-          }
-        } catch (e) {}
+      // Verificar permissões primeiro
+      if (!interaction.member.permissions.has('ManageChannels')) {
+        await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
+        return;
       }
+      
+      const name = interaction.channel.name;
+      const emoji = name.startsWith('seg-') ? '🛡️' : '';
+      const modal = new ModalBuilder()
+        .setCustomId('modal_renomear_ticket_seguranca')
+        .setTitle('Renomear Ticket de Segurança')
+        .addComponents(
+          new ActionRowBuilder().addComponents(
+            new TextInputBuilder()
+              .setCustomId('novo_nome')
+              .setLabel('Novo nome do ticket')
+              .setStyle(TextInputStyle.Short)
+              .setMinLength(1)
+              .setMaxLength(32)
+              .setRequired(true)
+              .setPlaceholder(`Ex: ${emoji}seg-novo-nome`)
+          )
+        );
+      
+      await interaction.showModal(modal);
       return;
     }
     

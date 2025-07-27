@@ -34,15 +34,26 @@ const modules = [
   'instagram'
 ];
 
-for (const mod of modules) {
-  const modPath = path.join(__dirname, 'modules', mod);
-  if (fs.existsSync(modPath)) {
-    const loader = path.join(modPath, 'loader.js');
-    if (fs.existsSync(loader)) {
-      import(loader).then(m => m.default(client));
+// Carregar módulos de forma assíncrona
+async function loadModules() {
+  for (const mod of modules) {
+    const modPath = path.join(__dirname, 'modules', mod);
+    if (fs.existsSync(modPath)) {
+      const loader = path.join(modPath, 'loader.js');
+      if (fs.existsSync(loader)) {
+        try {
+          const module = await import(loader);
+          await module.default(client);
+          console.log(`[LOADER] Módulo ${mod} carregado com sucesso!`);
+        } catch (error) {
+          console.error(`[LOADER] Erro ao carregar módulo ${mod}:`, error);
+        }
+      }
     }
   }
 }
+
+loadModules();
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;

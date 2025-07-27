@@ -395,12 +395,16 @@ export const execute = async function(interaction) {
       }
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
       const name = interaction.channel.name;
-      const emoji = name.startsWith('📁suporte-') ? '📁' :
-        name.startsWith('🦠bugs-') ? '🦠' :
-        name.startsWith('🚀boost-') ? '🚀' :
-        name.startsWith('🏠casas-') ? '🏠' :
-        name.startsWith('💎doacoes-') ? '💎' :
-        name.startsWith('⚠️denuncias-') ? '⚠️' : '';
+      
+      // Detectar emoji da categoria atual usando a configuração
+      let emoji = '';
+      for (const [categoriaKey, config] of Object.entries(CATEGORY_CONFIG)) {
+        if (name.startsWith(config.emoji + categoriaKey + '-')) {
+          emoji = config.emoji;
+          break;
+        }
+      }
+      
       let finalName = novoNome;
       if (!finalName.startsWith(emoji)) finalName = emoji + finalName;
       await interaction.channel.setName(finalName);

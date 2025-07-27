@@ -21,7 +21,9 @@ const setupSugestoesModule = function(client) {
         })
         .setTitle('💡 Sugestão')
         .setDescription(`
+\`\`\`sugestao
 ${conteudo}
+\`\`\`
 `)
         .addFields(
           { name: '👤 Autor', value: `<@${message.author.id}>`, inline: true },

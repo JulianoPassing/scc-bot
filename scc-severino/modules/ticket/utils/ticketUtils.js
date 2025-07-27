@@ -140,3 +140,76 @@ export function getMemberCategories(member) {
     hasCategoryPermission(member, categoria)
   );
 } 
+
+/**
+ * Verifica se uma categoria está cheia (máximo de 50 canais)
+ * @param {string} categoriaId - ID da categoria
+ * @param {Guild} guild - Objeto guild do Discord
+ * @returns {boolean} True se a categoria estiver cheia
+ */
+export async function isCategoryFull(categoriaId, guild) {
+  try {
+    const category = await guild.channels.fetch(categoriaId);
+    if (!category || category.type !== 4) return false; // 4 = CategoryChannel
+    
+    const channelsInCategory = guild.channels.cache.filter(
+      channel => channel.parentId === categoriaId
+    );
+    
+    return channelsInCategory.size >= 50; // Limite máximo do Discord
+  } catch (error) {
+    console.error('Erro ao verificar se categoria está cheia:', error);
+    return false;
+  }
+}
+
+/**
+ * Obtém a categoria correta para criar o ticket
+ * Se a categoria original estiver cheia, retorna null para criar no topo
+ * @param {string} categoria - Nome da categoria
+ * @param {Guild} guild - Objeto guild do Discord
+ * @returns {string|null} ID da categoria ou null para criar no topo
+ */
+export async function getTicketCategory(categoria, guild) {
+  const config = CATEGORY_CONFIG[categoria];
+  if (!config) return null;
+
+  const isFull = await isCategoryFull(config.id, guild);
+  return isFull ? null : config.id;
+}
+
+/**
+ * Cria um canal de ticket com verificação de categoria cheia
+ * @param {Guild} guild - Objeto guild do Discord
+ * @param {string} channelName - Nome do canal
+ * @param {string} categoriaId - ID da categoria
+ * @param {string} creatorId - ID do criador do ticket
+ * @param {string} topic - Tópico do canal
+ * @returns {Object} {channel: TextChannel, categoryFull: boolean}
+ */
+export async function createTicketChannelWithCategoryCheck(guild, channelName, categoriaId, creatorId, topic) {
+  try {
+    // Verificar se a categoria está cheia
+    const categoryFull = await isCategoryFull(categoriaId, guild);
+    
+    // Obter permissões com herança
+    const permissionOverwrites = await createTicketPermissionsWithInheritance(guild, categoriaId, creatorId);
+
+    // Criar o canal
+    const ticketChannel = await guild.channels.create({
+      name: channelName,
+      type: 0, // GuildText
+      parent: categoryFull ? null : categoriaId, // Se cheia, criar no topo
+      topic: topic,
+      permissionOverwrites: permissionOverwrites
+    });
+
+    return {
+      channel: ticketChannel,
+      categoryFull: categoryFull
+    };
+  } catch (error) {
+    console.error('Erro ao criar canal do ticket com verificação de categoria:', error);
+    throw error;
+  }
+} 

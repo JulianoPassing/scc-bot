@@ -1,5 +1,5 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
-import { createTicketChannelWithInheritance } from '../utils/ticketUtils.js';
+import { createTicketChannelWithCategoryCheck } from '../utils/ticketUtils.js';
 
 const CATEGORY_IDS = {
   suporte: '1386490182085382294',
@@ -284,10 +284,10 @@ export const execute = async function(interaction) {
       const emoji = categoria.emoji;
       const tipoNome = tipo;
       const channelName = `${emoji}${tipoNome}-${user.username.toLowerCase()}`;
-      let ticketChannel;
+      let ticketResult;
       try {
-        // Usar a nova função que herda permissões da categoria
-        ticketChannel = await createTicketChannelWithInheritance(
+        // Usar a nova função que verifica se a categoria está cheia
+        ticketResult = await createTicketChannelWithCategoryCheck(
           guild,
           channelName,
           categoriaId,
@@ -301,9 +301,12 @@ export const execute = async function(interaction) {
         }
         return;
       }
+      
+      const ticketChannel = ticketResult.channel;
+      const categoryFull = ticketResult.categoryFull;
       await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket! Equipe notificada:` });
       const embed = new EmbedBuilder()
-        .setColor('#0099FF')
+        .setColor(categoryFull ? '#FFA500' : '#0099FF')
         .setTitle(`📑 Ticket Aberto - ${categoria.emoji} ${categoria.nome}`)
         .setDescription(`Olá <@${user.id}>, obrigado por entrar em contato!\n\nSua solicitação foi registrada e nossa equipe irá te atender o mais breve possível. Acompanhe o status do seu ticket por aqui.`)
         .addFields(
@@ -316,6 +319,15 @@ export const execute = async function(interaction) {
         .setImage('https://i.imgur.com/ShgYL6s.png')
         .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade | ™ Street CarClub © All rights reserved', iconURL: null })
         .setTimestamp();
+
+      // Adicionar aviso se a categoria estiver cheia
+      if (categoryFull) {
+        embed.addFields({
+          name: '⚠️ Aviso',
+          value: 'A categoria está cheia. Este ticket foi criado fora da categoria organizacional.',
+          inline: false
+        });
+      }
       const row1 = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('fechar_ticket').setLabel('Fechar Ticket').setStyle(ButtonStyle.Secondary).setEmoji('🔒'),
         new ButtonBuilder().setCustomId('assumir_ticket').setLabel('Assumir Ticket').setStyle(ButtonStyle.Primary).setEmoji('🫡'),

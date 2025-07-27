@@ -1,5 +1,5 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { createTicketChannelWithInheritance } from '../utils/ticketUtils.js';
+import { createTicketChannelWithCategoryCheck } from '../utils/ticketUtils.js';
 
 export const data = {
   name: 'abrir-ticket',
@@ -19,22 +19,25 @@ export async function execute(message, args, client) {
     return message.reply('❌ Você já possui um ticket aberto: ' + existing.toString());
   }
 
-  // Cria o canal do ticket com herança de permissões
+  // Cria o canal do ticket com verificação de categoria cheia
   const channelName = `ticket-${user.id}`;
   
   // Usar categoria de suporte por padrão (você pode modificar conforme necessário)
   const categoriaId = '1386490182085382294'; // ID da categoria de suporte
   
-  const ticketChannel = await createTicketChannelWithInheritance(
+  const ticketResult = await createTicketChannelWithCategoryCheck(
     guild,
     channelName,
     categoriaId,
     user.id,
     `Ticket de Suporte | ${user.tag} | ${reason}`
   );
+  
+  const ticketChannel = ticketResult.channel;
+  const categoryFull = ticketResult.categoryFull;
 
   const welcomeEmbed = new EmbedBuilder()
-    .setColor('#0099FF')
+    .setColor(categoryFull ? '#FFA500' : '#0099FF')
     .setTitle(`🎫 Ticket de Suporte`)
     .setDescription(`Olá ${user}, obrigado por abrir um ticket de suporte.`)
     .addFields(
@@ -43,6 +46,14 @@ export async function execute(message, args, client) {
     )
     .setFooter({ text: 'Use o botão abaixo para fechar este ticket quando resolvido.' })
     .setTimestamp();
+
+  // Adicionar aviso se a categoria estiver cheia
+  if (categoryFull) {
+    welcomeEmbed.addFields({
+      name: '⚠️ Aviso',
+      value: 'A categoria de suporte está cheia. Este ticket foi criado fora da categoria organizacional.'
+    });
+  }
 
   const closeButton = new ActionRowBuilder().addComponents(
     new ButtonBuilder()

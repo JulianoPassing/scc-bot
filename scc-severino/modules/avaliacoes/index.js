@@ -153,66 +153,103 @@ const setupAvaliacaoModule = function(client) {
             await msg.edit(`✅ **Gerenciamento concluído!**\n- ${created} painéis foram criados na ordem correta.`);
         }
     });
+    
     client.on('interactionCreate', async interaction => {
-        if (interaction.isButton() && interaction.customId.startsWith('rate_')) {
-            if (interaction.member.roles.cache.has(FORBIDDEN_ROLE_ID)) { return interaction.reply({ content: '❌ Você não tem permissão para avaliar.', ephemeral: true }); }
-            const [, staffId, rateStr] = interaction.customId.split('_');
-            const key = `${interaction.user.id}_${staffId}`;
-            const now = Date.now();
-            if (userCooldown.has(key) && (now - userCooldown.get(key) < COOLDOWN)) {
-                const remainingTime = COOLDOWN - (now - userCooldown.get(key));
-                const remainingHours = (remainingTime / (1000 * 60 * 60)).toFixed(1);
-                return interaction.reply({ content: `Você só pode avaliar este membro a cada 6 horas. Aguarde ${remainingHours} horas.`, ephemeral: true });
+        try {
+            // Verificar se a interação já foi processada
+            if (interaction.replied || interaction.deferred) {
+                return;
             }
-            const modal = new ModalBuilder().setCustomId(`modal_avaliacao_${staffId}_${rateStr}`).setTitle('Avaliação do Atendimento');
-            const tipoInput = new TextInputBuilder()
-                .setCustomId('tipoAtendimentoInput')
-                .setLabel('Tipo de atendimento (ticket ou call)')
-                .setStyle(TextInputStyle.Short)
-                .setRequired(true)
-                .setPlaceholder('Digite: ticket ou call');
-            const justificativaInput = new TextInputBuilder()
-                .setCustomId('justificativaInput')
-                .setLabel('Por que você deu essa nota?')
-                .setStyle(TextInputStyle.Paragraph)
-                .setRequired(true)
-                .setPlaceholder('Ex: Atendimento rápido e resolveu meu problema com eficiência.');
-            modal.addComponents(
-                new ActionRowBuilder().addComponents(tipoInput),
-                new ActionRowBuilder().addComponents(justificativaInput)
-            );
-            await interaction.showModal(modal);
-        }
-        if (interaction.isModalSubmit() && interaction.customId.startsWith('modal_avaliacao_')) {
-            const [, , staffId, rateStr] = interaction.customId.split('_');
-            const key = `${interaction.user.id}_${staffId}`;
-            const rate = parseInt(rateStr, 10);
-            const tipoAtendimento = interaction.fields.getTextInputValue('tipoAtendimentoInput').toLowerCase();
-            const justificativa = interaction.fields.getTextInputValue('justificativaInput');
-            if (!votes.has(staffId)) { votes.set(staffId, { total: 0, count: 0, panelMessageId: null, panelChannelId: null }); }
-            const ratingData = votes.get(staffId);
-            ratingData.total += rate;
-            ratingData.count += 1;
-            userCooldown.set(key, Date.now());
-            saveVotes(votes);
-            try {
-                const auditChannel = await client.channels.fetch(AUDIT_CHANNEL_ID);
-                if (auditChannel && auditChannel.isTextBased()) {
-                    const serviceTypeText = tipoAtendimento === 'ticket' ? 'Atendimento via Ticket' : 'Atendimento via Call Suporte';
-                    const auditEmbed = new EmbedBuilder().setColor(0x3498DB).setTitle('📝 Nova Avaliação Recebida').addFields({ name: '👤 Avaliador', value: `<@${interaction.user.id}> (ID: ${interaction.user.id})`, inline: false }, { name: '👥 Staff Avaliado', value: `<@${staffId}> (ID: ${staffId})`, inline: false }, { name: '⭐ Nota', value: '⭐'.repeat(rate) + ` (${rate} estrelas)`, inline: false }, { name: '🔧 Tipo de Atendimento', value: serviceTypeText, inline: false }, { name: '💬 Justificativa', value: `\n${justificativa}\n`, inline: false }).setTimestamp().setFooter({ text: 'Sistema de Avaliação', iconURL: client.user.displayAvatarURL() });
-                    await auditChannel.send({ embeds: [auditEmbed] });
+
+            // Verificar se a interação pertence ao módulo de avaliações
+            const isAvaliacaoInteraction = (customId) => {
+                const avaliacaoPrefixes = [
+                    'rate_', // Botões de avaliação
+                    'modal_avaliacao_' // Modal de avaliação
+                ];
+                
+                return avaliacaoPrefixes.some(prefix => customId.startsWith(prefix));
+            };
+
+            // Se não for uma interação de avaliação, não processar
+            if (!isAvaliacaoInteraction(interaction.customId)) {
+                return;
+            }
+
+            if (interaction.isButton() && interaction.customId.startsWith('rate_')) {
+                if (interaction.member.roles.cache.has(FORBIDDEN_ROLE_ID)) { 
+                    await interaction.reply({ content: '❌ Você não tem permissão para avaliar.', ephemeral: true });
+                    return;
                 }
-            } catch (error) { }
-            if (ratingData.panelMessageId && ratingData.panelChannelId) {
-                try {
-                    const panelChannel = await client.channels.fetch(ratingData.panelChannelId);
-                    const panelToUpdate = await panelChannel.messages.fetch(ratingData.panelMessageId);
-                    const staffMember = await interaction.guild.members.fetch(staffId);
-                    const updatedEmbed = createStaffPanelEmbed(staffMember, ratingData);
-                    await panelToUpdate.edit({ embeds: [updatedEmbed] });
-                } catch (error) { }
+                const [, staffId, rateStr] = interaction.customId.split('_');
+                const key = `${interaction.user.id}_${staffId}`;
+                const now = Date.now();
+                if (userCooldown.has(key) && (now - userCooldown.get(key) < COOLDOWN)) {
+                    const remainingTime = COOLDOWN - (now - userCooldown.get(key));
+                    const remainingHours = (remainingTime / (1000 * 60 * 60)).toFixed(1);
+                    await interaction.reply({ content: `Você só pode avaliar este membro a cada 6 horas. Aguarde ${remainingHours} horas.`, ephemeral: true });
+                    return;
+                }
+                const modal = new ModalBuilder().setCustomId(`modal_avaliacao_${staffId}_${rateStr}`).setTitle('Avaliação do Atendimento');
+                const tipoInput = new TextInputBuilder()
+                    .setCustomId('tipoAtendimentoInput')
+                    .setLabel('Tipo de atendimento (ticket ou call)')
+                    .setStyle(TextInputStyle.Short)
+                    .setRequired(true)
+                    .setPlaceholder('Digite: ticket ou call');
+                const justificativaInput = new TextInputBuilder()
+                    .setCustomId('justificativaInput')
+                    .setLabel('Por que você deu essa nota?')
+                    .setStyle(TextInputStyle.Paragraph)
+                    .setRequired(true)
+                    .setPlaceholder('Ex: Atendimento rápido e resolveu meu problema com eficiência.');
+                modal.addComponents(
+                    new ActionRowBuilder().addComponents(tipoInput),
+                    new ActionRowBuilder().addComponents(justificativaInput)
+                );
+                await interaction.showModal(modal);
+                return;
             }
-            await interaction.reply({ content: '✅ Sua avaliação foi enviada com sucesso!', ephemeral: true });
+            
+            if (interaction.isModalSubmit() && interaction.customId.startsWith('modal_avaliacao_')) {
+                const [, , staffId, rateStr] = interaction.customId.split('_');
+                const key = `${interaction.user.id}_${staffId}`;
+                const rate = parseInt(rateStr, 10);
+                const tipoAtendimento = interaction.fields.getTextInputValue('tipoAtendimentoInput').toLowerCase();
+                const justificativa = interaction.fields.getTextInputValue('justificativaInput');
+                if (!votes.has(staffId)) { votes.set(staffId, { total: 0, count: 0, panelMessageId: null, panelChannelId: null }); }
+                const ratingData = votes.get(staffId);
+                ratingData.total += rate;
+                ratingData.count += 1;
+                userCooldown.set(key, Date.now());
+                saveVotes(votes);
+                try {
+                    const auditChannel = await client.channels.fetch(AUDIT_CHANNEL_ID);
+                    if (auditChannel && auditChannel.isTextBased()) {
+                        const serviceTypeText = tipoAtendimento === 'ticket' ? 'Atendimento via Ticket' : 'Atendimento via Call Suporte';
+                        const auditEmbed = new EmbedBuilder().setColor(0x3498DB).setTitle('📝 Nova Avaliação Recebida').addFields({ name: '👤 Avaliador', value: `<@${interaction.user.id}> (ID: ${interaction.user.id})`, inline: false }, { name: '👥 Staff Avaliado', value: `<@${staffId}> (ID: ${staffId})`, inline: false }, { name: '⭐ Nota', value: '⭐'.repeat(rate) + ` (${rate} estrelas)`, inline: false }, { name: '🔧 Tipo de Atendimento', value: serviceTypeText, inline: false }, { name: '💬 Justificativa', value: `\n${justificativa}\n`, inline: false }).setTimestamp().setFooter({ text: 'Sistema de Avaliação', iconURL: client.user.displayAvatarURL() });
+                        await auditChannel.send({ embeds: [auditEmbed] });
+                    }
+                } catch (error) { }
+                if (ratingData.panelMessageId && ratingData.panelChannelId) {
+                    try {
+                        const panelChannel = await client.channels.fetch(ratingData.panelChannelId);
+                        const panelToUpdate = await panelChannel.messages.fetch(ratingData.panelMessageId);
+                        const staffMember = await interaction.guild.members.fetch(staffId);
+                        const updatedEmbed = createStaffPanelEmbed(staffMember, ratingData);
+                        await panelToUpdate.edit({ embeds: [updatedEmbed] });
+                    } catch (error) { }
+                }
+                await interaction.reply({ content: '✅ Sua avaliação foi enviada com sucesso!', ephemeral: true });
+                return;
+            }
+        } catch (error) {
+            console.error('[AVALIACOES][ERRO]', error);
+            try {
+                if (!interaction.replied && !interaction.deferred) {
+                    await interaction.reply({ content: '❌ Ocorreu um erro ao processar sua interação.', ephemeral: true });
+                }
+            } catch (e) {}
         }
     });
 };

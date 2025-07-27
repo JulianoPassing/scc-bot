@@ -53,14 +53,12 @@ export const execute = async function(interaction) {
     // Handler do modal de motivo
     if (interaction.isModalSubmit() && interaction.customId === 'modal_ticket_seguranca_motivo') {
       try {
-        console.log('[DEBUG] Handler do modal_ticket_seguranca_motivo chamado para', interaction.user.tag, 'Guild:', interaction.guild.id);
         const motivo = interaction.fields.getTextInputValue('motivo');
         // Verifica se já existe ticket
         const existing = guild.channels.cache.find(
           c => c.name === `seg-${user.username.toLowerCase()}`
         );
         if (existing) {
-          console.log('[DEBUG] Usuário já possui ticket aberto:', existing.name);
           await interaction.reply({ content: '❌ Você já possui um ticket aberto: ' + existing.toString(), flags: 64 });
           return;
         }
@@ -68,7 +66,6 @@ export const execute = async function(interaction) {
         let ticketChannel;
         try {
           const ticketNumber = await getNextTicketNumber();
-          console.log('[DEBUG] Tentando criar canal:', `seg-${user.username.toLowerCase()}`, 'na categoria', SEGURANCA_CATEGORY_ID);
           ticketChannel = await guild.channels.create({
             name: `seg-${user.username.toLowerCase()}`,
             type: ChannelType.GuildText,
@@ -89,7 +86,6 @@ export const execute = async function(interaction) {
               },
             ],
           });
-          console.log('[DEBUG] Canal criado com sucesso:', ticketChannel.id);
         } catch (err) {
           console.error('[ERRO] Falha ao criar canal do ticket de segurança:', err, 'Categoria:', SEGURANCA_CATEGORY_ID, 'Guild:', guild.id);
           await interaction.reply({ content: `❌ Erro ao criar o canal do ticket. Detalhe: ${err && (err.stack || JSON.stringify(err))}`, flags: 64 });

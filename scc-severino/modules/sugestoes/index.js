@@ -1,60 +1,22 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-const SUGGESTION_CHANNEL_ID = '1395117926402756669';
-const VOTES_CHANNEL_ID = '1395118049115246825';
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const DATABASE_PATH = path.join(__dirname, 'sugestoes.json');
 
-const votos = new Map(); // Map<messageId, {yes: Set<userId>, no: Set<userId>}>
-const logsMessages = new Map(); // Map<suggestionId, logMessageId>
+function loadDB() {
+  if (!fs.existsSync(DATABASE_PATH)) return {};
+  return JSON.parse(fs.readFileSync(DATABASE_PATH, 'utf8'));
+}
+function saveDB(db) {
+  fs.writeFileSync(DATABASE_PATH, JSON.stringify(db, null, 2));
+}
 
-const setupSugestoesModule = function(client) {
-  client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
-    if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
-    try {
-      const conteudo = message.content;
-      await message.delete();
-      const embed = new EmbedBuilder()
-        .setColor('#0099FF')
-        .setAuthor({
-          name: `${message.author.username} - ${message.author.id}`,
-          iconURL: message.author.displayAvatarURL({ dynamic: true, size: 64 })
-        })
-        .setTitle('💡 Sugestão')
-        .setDescription(`\u0060\u0060\u0060\n${conteudo}\n\u0060\u0060\u0060`)
-        .addFields(
-          { name: '👤 Autor', value: `<@${message.author.id}>`, inline: true },
-          { name: '📅 Data', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
-        )
-        .setFooter({ 
-          text: 'Sistema de Sugestões • SCC', 
-          iconURL: message.guild.iconURL({ dynamic: true }) 
-        })
-        .setTimestamp();
-      const row = new ActionRowBuilder().addComponents(
-        new ButtonBuilder()
-          .setCustomId('vote_yes')
-          .setLabel('👍 (0) - 0%')
-          .setStyle(ButtonStyle.Success)
-          .setEmoji('✅'),
-        new ButtonBuilder()
-          .setCustomId('vote_no')
-          .setLabel('👎 (0) - 0%')
-          .setStyle(ButtonStyle.Danger)
-          .setEmoji('❌')
-      );
-      const sentMessage = await message.channel.send({ embeds: [embed], components: [row] });
-      votos.set(sentMessage.id, { yes: new Set(), no: new Set() });
-      try {
-        await sentMessage.startThread({
-          name: `💬 Debate: ${conteudo.substring(0, 50)}${conteudo.length > 50 ? '...' : ''}`,
-          autoArchiveDuration: 60,
-          reason: 'Tópico de debate criado automaticamente para a sugestão'
-        });
-      } catch (threadError) {}
-    } catch (error) {}
-  });
-  
-  client.on('interactionCreate', async (interaction) => {
+export default async function(client) {
+  client.on('interactionCreate', async interaction => {
     try {
       // Verificar se a interação já foi processada
       if (interaction.replied || interaction.deferred) {
@@ -64,11 +26,11 @@ const setupSugestoesModule = function(client) {
       // Verificar se a interação pertence ao módulo de sugestões
       const isSugestaoInteraction = (customId) => {
         const sugestaoPrefixes = [
-          'vote_yes', // Voto sim
-          'vote_no'   // Voto não
+          'vote_yes', // Voto positivo
+          'vote_no'   // Voto negativo
         ];
         
-        return sugestaoPrefixes.includes(customId);
+        return sugestaoPrefixes.some(prefix => customId === prefix || customId.startsWith(prefix));
       };
 
       // Se não for uma interação de sugestão, não processar
@@ -76,84 +38,83 @@ const setupSugestoesModule = function(client) {
         return;
       }
 
-      if (!interaction.isButton()) return;
-      
-      const { customId, message, user } = interaction;
-      if (!['vote_yes', 'vote_no'].includes(customId)) return;
-      
-      try {
-        if (!votos.has(message.id)) {
-          votos.set(message.id, { yes: new Set(), no: new Set() });
+      // Botões de votação
+      if (interaction.isButton() && (interaction.customId === 'vote_yes' || interaction.customId === 'vote_no')) {
+        const userId = interaction.user.id;
+        const messageId = interaction.message.id;
+        const vote = interaction.customId === 'vote_yes' ? 'yes' : 'no';
+        
+        const db = loadDB();
+        if (!db[messageId]) {
+          db[messageId] = { yes: [], no: [] };
         }
-        const voto = votos.get(message.id);
-        voto.yes.delete(user.id);
-        voto.no.delete(user.id);
-        if (customId === 'vote_yes') voto.yes.add(user.id);
-        if (customId === 'vote_no') voto.no.add(user.id);
-        const row = ActionRowBuilder.from(message.components[0]);
-        const totalVotos = voto.yes.size + voto.no.size;
-        const porcentagemSim = totalVotos > 0 ? Math.round((voto.yes.size / totalVotos) * 100) : 0;
-        const porcentagemNao = totalVotos > 0 ? Math.round((voto.no.size / totalVotos) * 100) : 0;
-        row.components[0].setLabel(`👍 (${voto.yes.size}) - ${porcentagemSim}%`);
-        row.components[1].setLabel(`👎 (${voto.no.size}) - ${porcentagemNao}%`);
-        await interaction.update({ components: [row] });
-        const votesChannel = interaction.guild.channels.cache.get(VOTES_CHANNEL_ID);
-        if (votesChannel) {
-          let logMessageId = logsMessages.get(message.id);
-          let logMessage = null;
-          if (logMessageId) {
-            try {
-              logMessage = await votesChannel.messages.fetch(logMessageId);
-            } catch (error) {
-              logsMessages.delete(message.id);
-              logMessageId = null;
-            }
-          }
-          const votesEmbed = new EmbedBuilder()
-            .setColor('#0099FF')
-            .setTitle('📊 Votação da Sugestão')
-            .setDescription(`**Sugestão:** ${message.embeds[0].description}`)
-            .addFields(
-              { name: '👤 Autor Original', value: message.embeds[0].fields.find(f => f.name.includes('Autor'))?.value || 'N/A', inline: true },
-              { name: '📅 Data', value: message.embeds[0].fields.find(f => f.name.includes('Data'))?.value || 'N/A', inline: true },
-              { name: '📈 Total de Votos', value: `${totalVotos}`, inline: true }
-            )
-            .setFooter({ text: `Sugestão ID: ${message.id}` })
-            .setTimestamp();
-          if (voto.yes.size > 0) {
-            const votantesSim = Array.from(voto.yes).map(id => `<@${id}>`).join(', ');
-            votesEmbed.addFields({ 
-              name: `✅ Votaram Sim (${voto.yes.size}) - ${porcentagemSim}%`, 
-              value: votantesSim, 
-              inline: false 
-            });
-          }
-          if (voto.no.size > 0) {
-            const votantesNao = Array.from(voto.no).map(id => `<@${id}>`).join(', ');
-            votesEmbed.addFields({ 
-              name: `❌ Votaram Não (${voto.no.size}) - ${porcentagemNao}%`, 
-              value: votantesNao, 
-              inline: false 
-            });
-          }
-          if (logMessage) {
-            await logMessage.edit({ embeds: [votesEmbed] });
+        
+        // Verificar se já votou
+        const hasVotedYes = db[messageId].yes.includes(userId);
+        const hasVotedNo = db[messageId].no.includes(userId);
+        
+        if (vote === 'yes') {
+          if (hasVotedYes) {
+            // Remover voto
+            db[messageId].yes = db[messageId].yes.filter(id => id !== userId);
+            await interaction.reply({ content: '❌ Voto positivo removido!', flags: 64 });
           } else {
-            const newLogMessage = await votesChannel.send({ embeds: [votesEmbed] });
-            logsMessages.set(message.id, newLogMessage.id);
+            // Adicionar voto positivo e remover negativo se existir
+            if (!hasVotedYes) db[messageId].yes.push(userId);
+            if (hasVotedNo) db[messageId].no = db[messageId].no.filter(id => id !== userId);
+            await interaction.reply({ content: '✅ Voto positivo registrado!', flags: 64 });
+          }
+        } else {
+          if (hasVotedNo) {
+            // Remover voto
+            db[messageId].no = db[messageId].no.filter(id => id !== userId);
+            await interaction.reply({ content: '❌ Voto negativo removido!', flags: 64 });
+          } else {
+            // Adicionar voto negativo e remover positivo se existir
+            if (!hasVotedNo) db[messageId].no.push(userId);
+            if (hasVotedYes) db[messageId].yes = db[messageId].yes.filter(id => id !== userId);
+            await interaction.reply({ content: '✅ Voto negativo registrado!', flags: 64 });
           }
         }
-      } catch (error) {
-        await interaction.reply({ content: 'Erro ao processar seu voto. Tente novamente.', ephemeral: true });
+        
+        saveDB(db);
+        
+        // Atualizar embed com novos votos
+        try {
+          const embed = EmbedBuilder.from(interaction.message.embeds[0]);
+          const yesCount = db[messageId].yes.length;
+          const noCount = db[messageId].no.length;
+          const totalVotes = yesCount + noCount;
+          
+          // Atualizar campo de votos
+          const voteField = embed.data.fields?.find(field => field.name === 'Votos');
+          if (voteField) {
+            voteField.value = `👍 **${yesCount}** | 👎 **${noCount}** (Total: ${totalVotes})`;
+          }
+          
+          // Atualizar cor baseada no resultado
+          if (yesCount > noCount) {
+            embed.setColor(0x00ff00); // Verde
+          } else if (noCount > yesCount) {
+            embed.setColor(0xff0000); // Vermelho
+          } else {
+            embed.setColor(0xffff00); // Amarelo
+          }
+          
+          await interaction.message.edit({ embeds: [embed] });
+        } catch (e) {
+          console.error('[SUGESTOES][UPDATE] Erro ao atualizar embed:', e);
+        }
+        
+        return;
       }
     } catch (error) {
       console.error('[SUGESTOES][ERRO]', error);
       try {
         if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({ content: '❌ Ocorreu um erro ao processar sua interação.', ephemeral: true });
+          await interaction.reply({ content: '❌ Ocorreu um erro ao processar seu voto.', flags: 64 });
         }
       } catch (e) {}
     }
   });
-};
-export default setupSugestoesModule; 
+} 

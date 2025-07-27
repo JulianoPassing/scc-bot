@@ -44,7 +44,7 @@ export const execute = async function(interaction) {
         const categoria = CATEGORY_CONFIG[tipo];
         
         if (!categoria) {
-          await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', ephemeral: true });
+          await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
           return;
         }
         
@@ -79,7 +79,7 @@ export const execute = async function(interaction) {
       
       if (painelTicketBotoes.includes(customId)) {
         if (!interaction.member.permissions.has('ManageChannels')) {
-          await interaction.reply({ content: '❌ Apenas membros da equipe podem usar esta função do painel!', ephemeral: true });
+          await interaction.reply({ content: '❌ Apenas membros da equipe podem usar esta função do painel!', flags: 64 });
           return;
         }
       }
@@ -110,7 +110,7 @@ export const execute = async function(interaction) {
           embed.spliceFields(1, 1, { name: 'Status', value: `🫡 Assumido por <@${user.id}>`, inline: true });
           await msg.edit({ embeds: [embed] });
         }
-        await interaction.reply({ content: `🫡 <@${user.id}> assumiu o ticket!`, ephemeral: false });
+        await interaction.reply({ content: `🫡 <@${user.id}> assumiu o ticket!`, flags: 0 });
         return;
       }
       
@@ -157,12 +157,12 @@ export const execute = async function(interaction) {
           try {
             const userObj = await interaction.client.users.fetch(autorId);
             await userObj.send({ embeds: [embed] });
-            await interaction.reply({ content: '🔔 O criador do ticket foi avisado com uma mensagem profissional no privado.', ephemeral: true });
+            await interaction.reply({ content: '🔔 O criador do ticket foi avisado com uma mensagem profissional no privado.', flags: 64 });
           } catch (e) {
-            await interaction.reply({ content: '❌ Não foi possível enviar DM para o criador do ticket.', ephemeral: true });
+            await interaction.reply({ content: '❌ Não foi possível enviar DM para o criador do ticket.', flags: 64 });
           }
         } else {
-          await interaction.reply({ content: '❌ Não foi possível identificar o criador do ticket.', ephemeral: true });
+          await interaction.reply({ content: '❌ Não foi possível identificar o criador do ticket.', flags: 64 });
         }
         return;
       }
@@ -205,7 +205,7 @@ export const execute = async function(interaction) {
           new ButtonBuilder().setCustomId('cancelar_timer_24h').setLabel('Cancelar Timer').setStyle(ButtonStyle.Danger).setEmoji('❌')
         );
         await interaction.channel.send({ embeds: [embed], components: [row] });
-        await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket.', ephemeral: true });
+        await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket.', flags: 64 });
         
         if (!interaction.client.timers24h) interaction.client.timers24h = {};
         const timerKey = interaction.channel.id;
@@ -291,9 +291,9 @@ export const execute = async function(interaction) {
               .setDescription('O timer de 24h foi cancelado para este ticket. O ticket não será fechado automaticamente.');
             await timerMsg.edit({ embeds: [embed], components: [] });
           }
-          await interaction.reply({ content: '❌ Timer de 24h cancelado para este ticket.', ephemeral: true });
+          await interaction.reply({ content: '❌ Timer de 24h cancelado para este ticket.', flags: 64 });
         } else {
-          await interaction.reply({ content: '❌ Não há timer ativo para este ticket.', ephemeral: true });
+          await interaction.reply({ content: '❌ Não há timer ativo para este ticket.', flags: 64 });
         }
         return;
       }
@@ -305,7 +305,7 @@ export const execute = async function(interaction) {
       const categoria = CATEGORY_CONFIG[tipo];
       
       if (!categoria) {
-        await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', ephemeral: true });
+        await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
         return;
       }
       
@@ -321,7 +321,7 @@ export const execute = async function(interaction) {
         channel => channel.name === channelName
       );
       if (existing) {
-        await interaction.reply({ content: '❌ Você já possui um ticket aberto: ' + existing.toString(), ephemeral: true });
+        await interaction.reply({ content: '❌ Você já possui um ticket aberto: ' + existing.toString(), flags: 64 });
         return;
       }
       
@@ -343,7 +343,7 @@ export const execute = async function(interaction) {
         
       } catch (err) {
         console.error('Erro ao criar canal do ticket:', err, 'Categoria:', tipo, 'Guild:', guild.id);
-        await interaction.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se o bot tem permissões adequadas.', ephemeral: true });
+        await interaction.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se o bot tem permissões adequadas.', flags: 64 });
         return;
       }
       
@@ -377,14 +377,14 @@ export const execute = async function(interaction) {
       
       await ticketChannel.send({ embeds: [embed], components: [row1, row2] });
       
-      await interaction.reply({ content: `✅ Ticket criado em <#${ticketChannel.id}>!`, ephemeral: true });
+      await interaction.reply({ content: `✅ Ticket criado em <#${ticketChannel.id}>!`, flags: 64 });
       return;
     }
     
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
       if (!interaction.member.permissions.has('ManageChannels')) {
-        await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', ephemeral: true });
+        await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
         return;
       }
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
@@ -398,7 +398,7 @@ export const execute = async function(interaction) {
       let finalName = novoNome;
       if (!finalName.startsWith(emoji)) finalName = emoji + finalName;
       await interaction.channel.setName(finalName);
-      await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, ephemeral: true });
+      await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
       return;
     }
     
@@ -407,7 +407,7 @@ export const execute = async function(interaction) {
       const membro = interaction.fields.getTextInputValue('membro');
       const match = membro.match(/<@!?([0-9]+)>/);
       if (!match) {
-        await interaction.reply({ content: '❌ Mencione um usuário válido.', ephemeral: true });
+        await interaction.reply({ content: '❌ Mencione um usuário válido.', flags: 64 });
         return;
       }
       const userId = match[1];
@@ -419,9 +419,9 @@ export const execute = async function(interaction) {
           AttachFiles: true,
           EmbedLinks: true
         });
-        await interaction.reply({ content: `➕ <@${userId}> adicionado ao ticket!`, ephemeral: false });
+        await interaction.reply({ content: `➕ <@${userId}> adicionado ao ticket!`, flags: 0 });
       } catch (e) {
-        await interaction.reply({ content: '❌ Erro ao adicionar usuário ao ticket.', ephemeral: true });
+        await interaction.reply({ content: '❌ Erro ao adicionar usuário ao ticket.', flags: 64 });
       }
       return;
     }
@@ -553,7 +553,7 @@ export const execute = async function(interaction) {
         await logChannel.send({ embeds: [embed], files: [{ attachment: Buffer.from(html, 'utf-8'), name: `transcript-${channel.name}.html` }] });
       }
       
-      await interaction.reply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!', ephemeral: true });
+      await interaction.reply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!', flags: 64 });
       
       setTimeout(async () => {
         try {
@@ -565,7 +565,7 @@ export const execute = async function(interaction) {
   } catch (error) {
     try {
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: '❌ Ocorreu um erro ao processar sua interação.', ephemeral: true });
+        await interaction.reply({ content: '❌ Ocorreu um erro ao processar sua interação.', flags: 64 });
       }
     } catch (e) {}
     console.error('Erro no handler de interactionCreate:', error);

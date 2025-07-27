@@ -55,7 +55,7 @@ export default async function(client) {
         //   try { await member.roles.remove(cargoAntigo); } catch {}
         // }
         if (user && user.aprovado && member.roles.cache.has(cargoAprovado)) {
-          await interaction.reply({ content: '✅ Você já foi aprovado na whitelist!', ephemeral: true });
+          await interaction.reply({ content: '✅ Você já foi aprovado na whitelist!', flags: 64 });
           return;
         }
         // Limite de tentativas/cooldown restaurado, mas sem limite para quem tem o cargo especial
@@ -64,7 +64,7 @@ export default async function(client) {
             const last = new Date(user.last_attempt);
             const diff = (now - last) / (1000 * 60 * 60);
             if (diff < 24) {
-              await interaction.reply({ content: `⏳ Você atingiu o limite de tentativas. Tente novamente em <t:${Math.floor((last.getTime() + 24*60*60*1000)/1000)}:R>.`, ephemeral: true });
+              await interaction.reply({ content: `⏳ Você atingiu o limite de tentativas. Tente novamente em <t:${Math.floor((last.getTime() + 24*60*60*1000)/1000)}:R>.`, flags: 64 });
               return;
             }
           }
@@ -223,13 +223,13 @@ export default async function(client) {
               `A) ${q.alternativas.a}\nB) ${q.alternativas.b}` + (q.alternativas.c && q.alternativas.c.trim() ? `\nC) ${q.alternativas.c}` : '')
             )
             .setColor(0x0099ff);
-          await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+          await interaction.reply({ embeds: [embed], components: [row], flags: 64 });
           return;
         } catch (err) {
           console.error('[WL][ERRO modal_wl_etapa1]', err);
           try {
             if (!interaction.replied && !interaction.deferred) {
-              await interaction.reply({ content: '❌ Erro interno ao processar o formulário. Detalhe: ' + (err?.message || err), ephemeral: true });
+              await interaction.reply({ content: '❌ Erro interno ao processar o formulário. Detalhe: ' + (err?.message || err), flags: 64 });
             }
           } catch {}
           return;
@@ -386,7 +386,7 @@ export default async function(client) {
           console.error('[WL][ERRO wl_questao]', err);
           try {
             if (!interaction.replied && !interaction.deferred) {
-              await interaction.reply({ content: '❌ Erro interno ao processar a questão. Detalhe: ' + (err?.message || err), ephemeral: true });
+              await interaction.reply({ content: '❌ Erro interno ao processar a questão. Detalhe: ' + (err?.message || err), flags: 64 });
             }
           } catch {}
           return;
@@ -396,7 +396,7 @@ export default async function(client) {
       console.error('[WL][ERRO GERAL]', error);
       try {
         if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({ content: '❌ Ocorreu um erro ao processar sua interação.', ephemeral: true });
+          await interaction.reply({ content: '❌ Ocorreu um erro ao processar sua interação.', flags: 64 });
         }
       } catch (e) {}
     }

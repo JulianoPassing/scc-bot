@@ -21,13 +21,7 @@ export const execute = async function(interaction) {
         'modal_ticket_seguranca_motivo', // Modal de motivo de segurança
         'close_ticket', // Fechar ticket de segurança
         'modal_motivo_fechamento_seguranca', // Modal de motivo de fechamento de segurança
-        'avisar_membro_seguranca', // Avisar membro de segurança
-        'assumir_ticket', // Assumir ticket (segurança)
-        'adicionar_membro', // Adicionar membro (segurança)
-        'avisar_membro', // Avisar membro (segurança)
-        'renomear_ticket', // Renomear ticket (segurança)
-        'timer_24h', // Timer 24h (segurança)
-        'modal_renomear_ticket_seguranca' // Modal de renomear (segurança)
+        'avisar_membro_seguranca' // Avisar membro de segurança
       ];
       
       return securityPrefixes.some(prefix => customId === prefix || customId.startsWith(prefix));
@@ -363,104 +357,6 @@ export const execute = async function(interaction) {
     // Verificar se é uma interação do módulo de segurança antes de processar os outros handlers
     if (!isSecurityInteraction(customId)) {
       return; // Não processar interações de outros módulos
-    }
-    
-    // Assumir Ticket
-    if (customId === 'assumir_ticket') {
-      try {
-        const member = guild.members.cache.get(user.id);
-        if (!member.roles.cache.has(config.staffRoleId)) {
-          await interaction.reply({ content: '❌ Apenas membros da equipe podem assumir tickets!', flags: 64 });
-          return;
-        }
-        await interaction.reply({ content: `🫡 <@${user.id}> assumiu o ticket!`, flags: 0 });
-      } catch (error) {
-        console.error('[SEGURANCA][ERRO assumir_ticket]', error);
-      }
-      return;
-    }
-    
-    // Adicionar Membro
-    if (customId === 'adicionar_membro') {
-      try {
-        await interaction.reply({ content: 'Mencione o usuário a ser adicionado ao ticket.', flags: 64 });
-      } catch (error) {
-        console.error('[SEGURANCA][ERRO adicionar_membro]', error);
-      }
-      return;
-    }
-    
-    // Avisar Membro
-    if (customId === 'avisar_membro') {
-      try {
-        await interaction.reply({ content: 'O usuário foi avisado sobre este ticket.', flags: 0 });
-      } catch (error) {
-        console.error('[SEGURANCA][ERRO avisar_membro]', error);
-      }
-      return;
-    }
-    
-    // Renomear Ticket mantendo emoji da categoria
-    if (customId === 'renomear_ticket') {
-      // Verificar permissões primeiro
-      if (!interaction.member.permissions.has('ManageChannels')) {
-        await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
-        return;
-      }
-      
-      const name = interaction.channel.name;
-      const emoji = name.startsWith('seg-') ? '🛡️' : '';
-      const modal = new ModalBuilder()
-        .setCustomId('modal_renomear_ticket_seguranca')
-        .setTitle('Renomear Ticket de Segurança')
-        .addComponents(
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId('novo_nome')
-              .setLabel('Novo nome do ticket')
-              .setStyle(TextInputStyle.Short)
-              .setMinLength(1)
-              .setMaxLength(32)
-              .setRequired(true)
-              .setPlaceholder(`Ex: ${emoji}seg-novo-nome`)
-          )
-        );
-      
-      await interaction.showModal(modal);
-      return;
-    }
-    
-    // Timer 24h
-    if (customId === 'timer_24h') {
-      try {
-        await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket.', flags: 0 });
-      } catch (error) {
-        console.error('[SEGURANCA][ERRO timer_24h]', error);
-      }
-      return;
-    }
-    
-    // Handler do modal de renomear
-    if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket_seguranca') {
-      try {
-        const novoNome = interaction.fields.getTextInputValue('novo_nome');
-        const name = interaction.channel.name;
-        const emoji = name.startsWith('seg-') ? '🛡️' : '';
-        let finalName = novoNome;
-        if (emoji && !finalName.startsWith(emoji)) {
-          finalName = emoji + finalName;
-        }
-        await interaction.channel.setName(finalName);
-        await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
-      } catch (error) {
-        console.error('[SEGURANCA][ERRO modal_renomear_ticket_seguranca]', error);
-        try {
-          if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: '❌ Erro ao renomear ticket.', flags: 64 });
-          }
-        } catch (e) {}
-      }
-      return;
     }
   } catch (error) {
     console.error('Erro no handler de interactionCreate (segurança):', error);

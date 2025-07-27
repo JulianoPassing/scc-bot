@@ -29,31 +29,18 @@ const modules = [
   'sugestoes',
   'ticket',
   'ticket-s-wl',
-  'wl',
-  'batebapo',
-  'instagram'
+  'wl'
 ];
 
-// Carregar módulos de forma assíncrona
-async function loadModules() {
-  for (const mod of modules) {
-    const modPath = path.join(__dirname, 'modules', mod);
-    if (fs.existsSync(modPath)) {
-      const loader = path.join(modPath, 'loader.js');
-      if (fs.existsSync(loader)) {
-        try {
-          const module = await import(loader);
-          await module.default(client);
-          console.log(`[LOADER] Módulo ${mod} carregado com sucesso!`);
-        } catch (error) {
-          console.error(`[LOADER] Erro ao carregar módulo ${mod}:`, error);
-        }
-      }
+for (const mod of modules) {
+  const modPath = path.join(__dirname, 'modules', mod);
+  if (fs.existsSync(modPath)) {
+    const loader = path.join(modPath, 'loader.js');
+    if (fs.existsSync(loader)) {
+      import(loader).then(m => m.default(client));
     }
   }
 }
-
-loadModules();
 
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;

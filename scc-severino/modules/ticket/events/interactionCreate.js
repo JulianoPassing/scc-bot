@@ -24,7 +24,7 @@ export const execute = async function(interaction) {
         'cancelar_timer_24h',
         'modal_motivo_fechamento',
         'modal_adicionar_membro',
-        'modal_renomear_ticket'
+        'modal_renomear_ticket_normal'
       ];
       
       return ticketPrefixes.some(prefix => customId.startsWith(prefix));
@@ -168,16 +168,19 @@ export const execute = async function(interaction) {
       }
       
       if (customId === 'renomear_ticket') {
-        const name = interaction.channel.name;
-        const emoji = name.startsWith('📁suporte-') ? '📁' :
-          name.startsWith('🦠bugs-') ? '🦠' :
-          name.startsWith('🚀boost-') ? '🚀' :
-          name.startsWith('🏠casas-') ? '🏠' :
-          name.startsWith('💎doacoes-') ? '💎' :
-          name.startsWith('⚠️denuncias-') ? '⚠️' : '';
-        await interaction.showModal(
-          new ModalBuilder()
-            .setCustomId('modal_renomear_ticket')
+        try {
+          const name = interaction.channel.name;
+          // Melhorar detecção de ícones para tickets normais
+          let emoji = '';
+          if (name.startsWith('📁suporte-')) emoji = '📁';
+          else if (name.startsWith('🦠bugs-')) emoji = '🦠';
+          else if (name.startsWith('🚀boost-')) emoji = '🚀';
+          else if (name.startsWith('🏠casas-')) emoji = '🏠';
+          else if (name.startsWith('💎doacoes-')) emoji = '💎';
+          else if (name.startsWith('⚠️denuncias-')) emoji = '⚠️';
+          
+          const modal = new ModalBuilder()
+            .setCustomId('modal_renomear_ticket_normal')
             .setTitle('Renomear Ticket')
             .addComponents(
               new ActionRowBuilder().addComponents(
@@ -188,9 +191,19 @@ export const execute = async function(interaction) {
                   .setMinLength(1)
                   .setMaxLength(32)
                   .setRequired(true)
+                  .setPlaceholder(`Ex: ${emoji}suporte-novo-nome`)
               )
-            )
-        );
+            );
+          
+          await interaction.showModal(modal);
+        } catch (error) {
+          console.error('[TICKET][ERRO renomear_ticket]', error);
+          try {
+            if (!interaction.replied && !interaction.deferred) {
+              await interaction.reply({ content: '❌ Erro ao abrir modal de renomeação.', flags: 64 });
+            }
+          } catch (e) {}
+        }
         return;
       }
       
@@ -382,23 +395,40 @@ export const execute = async function(interaction) {
     }
     
     // Handler do modal de renomear
-    if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
-      if (!interaction.member.permissions.has('ManageChannels')) {
-        await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
-        return;
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket_normal') {
+      try {
+        if (!interaction.member.permissions.has('ManageChannels')) {
+          await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
+          return;
+        }
+        
+        const novoNome = interaction.fields.getTextInputValue('novo_nome');
+        const name = interaction.channel.name;
+        
+        // Melhorar detecção de ícones para tickets normais
+        let emoji = '';
+        if (name.startsWith('📁suporte-')) emoji = '📁';
+        else if (name.startsWith('🦠bugs-')) emoji = '🦠';
+        else if (name.startsWith('🚀boost-')) emoji = '🚀';
+        else if (name.startsWith('🏠casas-')) emoji = '🏠';
+        else if (name.startsWith('💎doacoes-')) emoji = '💎';
+        else if (name.startsWith('⚠️denuncias-')) emoji = '⚠️';
+        
+        let finalName = novoNome;
+        if (emoji && !finalName.startsWith(emoji)) {
+          finalName = emoji + finalName;
+        }
+        
+        await interaction.channel.setName(finalName);
+        await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
+      } catch (error) {
+        console.error('[TICKET][ERRO modal_renomear_ticket_normal]', error);
+        try {
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: '❌ Erro ao renomear ticket.', flags: 64 });
+          }
+        } catch (e) {}
       }
-      const novoNome = interaction.fields.getTextInputValue('novo_nome');
-      const name = interaction.channel.name;
-      const emoji = name.startsWith('📁suporte-') ? '📁' :
-        name.startsWith('🦠bugs-') ? '🦠' :
-        name.startsWith('🚀boost-') ? '🚀' :
-        name.startsWith('🏠casas-') ? '🏠' :
-        name.startsWith('💎doacoes-') ? '💎' :
-        name.startsWith('⚠️denuncias-') ? '⚠️' : '';
-      let finalName = novoNome;
-      if (!finalName.startsWith(emoji)) finalName = emoji + finalName;
-      await interaction.channel.setName(finalName);
-      await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
       return;
     }
     

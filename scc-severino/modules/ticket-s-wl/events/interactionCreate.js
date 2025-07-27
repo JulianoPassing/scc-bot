@@ -27,7 +27,7 @@ export const execute = async function(interaction) {
         'avisar_membro', // Avisar membro (segurança)
         'renomear_ticket', // Renomear ticket (segurança)
         'timer_24h', // Timer 24h (segurança)
-        'modal_renomear_ticket' // Modal de renomear (segurança)
+        'modal_renomear_ticket_seguranca' // Modal de renomear (segurança)
       ];
       
       return securityPrefixes.some(prefix => customId === prefix || customId.startsWith(prefix));
@@ -406,8 +406,8 @@ export const execute = async function(interaction) {
         const name = interaction.channel.name;
         const emoji = name.startsWith('seg-') ? '🛡️' : '';
         const modal = new ModalBuilder()
-          .setCustomId('modal_renomear_ticket')
-          .setTitle('Renomear Ticket')
+          .setCustomId('modal_renomear_ticket_seguranca')
+          .setTitle('Renomear Ticket de Segurança')
           .addComponents(
             new ActionRowBuilder().addComponents(
               new TextInputBuilder()
@@ -417,11 +417,17 @@ export const execute = async function(interaction) {
                 .setMinLength(1)
                 .setMaxLength(32)
                 .setRequired(true)
+                .setPlaceholder(`Ex: ${emoji}seg-novo-nome`)
             )
           );
         await interaction.showModal(modal);
       } catch (error) {
         console.error('[SEGURANCA][ERRO renomear_ticket]', error);
+        try {
+          if (!interaction.replied && !interaction.deferred) {
+            await interaction.reply({ content: '❌ Erro ao abrir modal de renomeação.', flags: 64 });
+          }
+        } catch (e) {}
       }
       return;
     }
@@ -437,17 +443,19 @@ export const execute = async function(interaction) {
     }
     
     // Handler do modal de renomear
-    if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
+    if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket_seguranca') {
       try {
         const novoNome = interaction.fields.getTextInputValue('novo_nome');
         const name = interaction.channel.name;
         const emoji = name.startsWith('seg-') ? '🛡️' : '';
         let finalName = novoNome;
-        if (!finalName.startsWith(emoji)) finalName = emoji + finalName;
+        if (emoji && !finalName.startsWith(emoji)) {
+          finalName = emoji + finalName;
+        }
         await interaction.channel.setName(finalName);
         await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
       } catch (error) {
-        console.error('[SEGURANCA][ERRO modal_renomear_ticket]', error);
+        console.error('[SEGURANCA][ERRO modal_renomear_ticket_seguranca]', error);
         try {
           if (!interaction.replied && !interaction.deferred) {
             await interaction.reply({ content: '❌ Erro ao renomear ticket.', flags: 64 });

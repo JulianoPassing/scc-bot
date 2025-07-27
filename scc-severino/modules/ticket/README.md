@@ -1,128 +1,153 @@
-# Sistema de Tickets - StreetCarClub
+# Sistema de Tickets com Herança de Permissões
 
-## Visão Geral
+Este módulo implementa um sistema de tickets que herda automaticamente as permissões das categorias pai, garantindo que os cargos de staff tenham acesso aos tickets de suas respectivas áreas.
 
-Este módulo implementa um sistema completo de tickets com permissões personalizadas para cada categoria, seguindo as especificações do servidor StreetCarClub.
+## Funcionalidades
 
-## Configuração das Categorias
-
-### 📁 Suporte
-- **ID da Categoria:** 1386490182085382294
-- **Staff com Acesso:**
-  - 1204393192284229692
-  - 1046404063673192542
-  - 1277638402019430501
-  - 1226903187055972484
-  - 1226907937117569128
-  - 1230131375965737044
-  - 1046404063522197521
-
-### 🦠 Reportar Bugs
-- **ID da Categoria:** 1386490279384846418
-- **Staff com Acesso:** (mesmos cargos do Suporte)
-
-### 🚀 Boost
-- **ID da Categoria:** 1386490600353828884
-- **Staff com Acesso:** (mesmos cargos do Suporte)
-
-### 🏠 Casas
-- **ID da Categoria:** 1386490752485294150
-- **Staff com Acesso:**
-  - 1311023008495698081
-  - 1046404063522197521
-
-### 💎 Doações
-- **ID da Categoria:** 1386490511606419578
-- **Staff com Acesso:**
-  - 1046404063522197521
-
-### ⚠️ Denúncias
-- **ID da Categoria:** 1386490428404138054
-- **Staff com Acesso:**
-  - 1277638402019430501
-  - 1226903187055972484
-  - 1046404063522197521
-
-## Permissões
-
-### Criador do Ticket
-- ✅ Ver canal
-- ✅ Enviar mensagens
-- ✅ Enviar links
-- ✅ Enviar anexos
-- ✅ Ver histórico
-
-### Staff (Todos os cargos com permissão)
-- ✅ Ver canal
-- ✅ Enviar mensagens
-- ✅ Enviar links
-- ✅ Enviar anexos
-- ✅ Ver histórico
-- ✅ Gerenciar mensagens
-- ✅ Gerenciar canais
-
-## Funcionalidades Especiais
-
-### Categoria Cheia
-- Se uma categoria atingir o limite de 50 canais, novos tickets são criados no topo do servidor
-- As permissões são mantidas conforme a categoria original
-- Não há herança de permissões da categoria pai
-
-### Sistema de Nomenclatura
-- Tickets seguem o padrão: `{emoji}{categoria}-{username}`
-- Exemplo: `📁suporte-juliano`
-
-### Transcript Automático
-- Ao fechar um ticket, um transcript HTML é gerado automaticamente
-- Enviado para o canal de logs: 1386491920313745418
-
-## Comandos Disponíveis
-
-- `!painel-ticket` - Cria o painel principal de tickets
-- `!abrir-ticket` - Abre um ticket de suporte padrão
-- `!ticket-status` - Verifica o status das categorias (apenas staff)
-
-## Estrutura de Arquivos
-
-```
-ticket/
-├── config.js                 # Configuração das categorias e permissões
-├── utils/
-│   └── ticketPermissions.js  # Utilitários para gerenciar permissões
-├── commands/
-│   ├── painel-ticket.js      # Comando do painel principal
-│   ├── abrir-ticket.js       # Comando para abrir ticket
-│   └── ticket-status.js      # Status das categorias
-├── events/
-│   └── interactionCreate.js  # Handler de interações
-└── README.md                 # Esta documentação
-```
+- ✅ Herança automática de permissões da categoria
+- ✅ Permissões específicas para criadores de tickets
+- ✅ Sistema de categorias configurável
+- ✅ Verificação de permissões por categoria
+- ✅ Criação de tickets com permissões corretas
 
 ## Configuração
 
-Para modificar as permissões ou categorias, edite o arquivo `config.js`:
+### 1. Configurar IDs dos Cargos de Staff
+
+Edite o arquivo `config.js` e adicione os IDs dos cargos de staff para cada categoria:
 
 ```javascript
 export const CATEGORY_CONFIG = {
   suporte: {
-    id: 'ID_DA_CATEGORIA',
+    id: '1386490182085382294',
+    name: 'Suporte',
     emoji: '📁',
-    nome: 'Suporte',
-    desc: 'Descrição da categoria',
-    staffRoles: ['ID_ROLE_1', 'ID_ROLE_2']
-  }
+    description: 'Suporte técnico e ajuda geral',
+    staffRoles: [
+      '1234567890123456789', // ID do cargo de Suporte
+      '9876543210987654321'  // ID do cargo de Moderador
+    ]
+  },
+  bugs: {
+    id: '1386490279384846418',
+    name: 'Reportar Bugs',
+    emoji: '🦠',
+    description: 'Reportar erros e problemas técnicos',
+    staffRoles: [
+      '1111111111111111111', // ID do cargo de Desenvolvedor
+      '2222222222222222222'  // ID do cargo de QA
+    ]
+  },
   // ... outras categorias
 };
 ```
 
-## Logs
+### 2. Configurar Permissões da Categoria
 
-- Canal de logs: 1386491920313745418
-- Transcripts HTML são enviados automaticamente
-- Logs incluem informações sobre fechamento, timer e status
+Para que a herança funcione corretamente, configure as permissões da categoria no Discord:
 
-## Timer de 24h
+1. Acesse a categoria no Discord
+2. Clique com botão direito → "Editar Categoria"
+3. Vá na aba "Permissões"
+4. Adicione os cargos de staff com as permissões necessárias:
+   - **Ver Canal**: ✅
+   - **Enviar Mensagens**: ✅
+   - **Ler Histórico de Mensagens**: ✅
+   - **Anexar Arquivos**: ✅
+   - **Incorporar Links**: ✅
+   - **Gerenciar Mensagens**: ✅ (para staff)
+   - **Gerenciar Canais**: ✅ (para staff)
 
-- Staff pode iniciar um timer de 24h em qualquer ticket
-- Se não cancelado, o ticket é fechado automaticamente
-- Transcript é gerado antes do fechamento automático 
+### 3. Permissões Automáticas
+
+O sistema automaticamente:
+
+- **Herdará** todas as permissões da categoria pai
+- **Negará** acesso para @everyone
+- **Concederá** permissões específicas para o criador do ticket
+- **Mesclará** permissões conflitantes de forma inteligente
+
+## Como Funciona
+
+### Herança de Permissões
+
+1. **Busca da Categoria**: O sistema busca a categoria pai pelo ID
+2. **Extração de Permissões**: Copia todas as permissões configuradas na categoria
+3. **Mesclagem Inteligente**: Combina permissões da categoria com permissões específicas do ticket
+4. **Aplicação**: Cria o canal com todas as permissões corretas
+
+### Exemplo de Fluxo
+
+```
+Categoria "Suporte" tem:
+- Cargo "Suporte" com permissões completas
+- Cargo "Moderador" com permissões completas
+
+Ticket criado herda:
+- Todas as permissões da categoria
+- + Permissões específicas para o criador
+- + Negação para @everyone
+```
+
+## Comandos Disponíveis
+
+- `!abrir-ticket` - Abre um ticket de suporte básico
+- `!painel-ticket` - Mostra o painel de tickets (se implementado)
+
+## Eventos
+
+- **interactionCreate**: Gerencia botões e modais do sistema de tickets
+- **ready**: Inicialização do módulo
+
+## Utilitários
+
+### `ticketUtils.js`
+
+- `inheritCategoryPermissions()` - Herda permissões da categoria
+- `createTicketPermissionsWithInheritance()` - Cria permissões completas
+- `createTicketChannelWithInheritance()` - Cria canal com herança
+- `hasCategoryPermission()` - Verifica permissões por categoria
+- `getMemberCategories()` - Lista categorias do membro
+
+### `ticketPermissions.js`
+
+- Funções auxiliares para gerenciamento de permissões
+- Verificação de categorias cheias
+- Gerenciamento de cargos de staff
+
+## Troubleshooting
+
+### Erro: "Categoria não encontrada"
+- Verifique se o ID da categoria está correto no `config.js`
+- Confirme se a categoria existe no servidor
+
+### Erro: "Sem permissão para criar canal"
+- Verifique se o bot tem permissão "Gerenciar Canais"
+- Confirme se o bot tem permissão na categoria pai
+
+### Permissões não estão sendo herdadas
+- Verifique se as permissões estão configuradas na categoria
+- Confirme se os IDs dos cargos estão corretos no `config.js`
+
+## Personalização
+
+### Adicionar Nova Categoria
+
+1. Adicione a configuração no `config.js`:
+```javascript
+nova_categoria: {
+  id: 'SEU_ID_DA_CATEGORIA',
+  name: 'Nova Categoria',
+  emoji: '🔧',
+  description: 'Descrição da categoria',
+  staffRoles: ['ID_DO_CARGO_1', 'ID_DO_CARGO_2']
+}
+```
+
+2. Adicione o botão no painel de tickets (se aplicável)
+
+### Modificar Permissões
+
+Edite as constantes no `config.js`:
+- `CREATOR_PERMISSIONS` - Permissões para criadores de tickets
+- `STAFF_PERMISSIONS` - Permissões para equipe de staff 

@@ -1,4 +1,5 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
+import { createTicketChannelWithInheritance } from '../utils/ticketUtils.js';
 
 const CATEGORY_IDS = {
   suporte: '1386490182085382294',
@@ -285,16 +286,14 @@ export const execute = async function(interaction) {
       const channelName = `${emoji}${tipoNome}-${user.username.toLowerCase()}`;
       let ticketChannel;
       try {
-        ticketChannel = await guild.channels.create({
-          name: channelName,
-          type: ChannelType.GuildText,
-          parent: categoriaId,
-          topic: `Ticket de ${categoria.nome} | ${user.tag}`,
-          permissionOverwrites: [
-            { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
-            { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks] }
-          ]
-        });
+        // Usar a nova função que herda permissões da categoria
+        ticketChannel = await createTicketChannelWithInheritance(
+          guild,
+          channelName,
+          categoriaId,
+          user.id,
+          `Ticket de ${categoria.nome} | ${user.tag}`
+        );
       } catch (err) {
         console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
         if (!interaction.replied && !interaction.deferred) {

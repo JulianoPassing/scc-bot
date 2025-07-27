@@ -1,4 +1,5 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { createTicketChannelWithInheritance } from '../utils/ticketUtils.js';
 
 export const data = {
   name: 'abrir-ticket',
@@ -18,17 +19,19 @@ export async function execute(message, args, client) {
     return message.reply('❌ Você já possui um ticket aberto: ' + existing.toString());
   }
 
-  // Cria o canal do ticket
+  // Cria o canal do ticket com herança de permissões
   const channelName = `ticket-${user.id}`;
-  const ticketChannel = await guild.channels.create({
-    name: channelName,
-    type: 0, // GuildText
-    topic: `Ticket de Suporte | ${user.tag} | ${reason}`,
-    permissionOverwrites: [
-      { id: guild.roles.everyone, deny: ['ViewChannel'] },
-      { id: user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'AttachFiles', 'EmbedLinks'] }
-    ]
-  });
+  
+  // Usar categoria de suporte por padrão (você pode modificar conforme necessário)
+  const categoriaId = '1386490182085382294'; // ID da categoria de suporte
+  
+  const ticketChannel = await createTicketChannelWithInheritance(
+    guild,
+    channelName,
+    categoriaId,
+    user.id,
+    `Ticket de Suporte | ${user.tag} | ${reason}`
+  );
 
   const welcomeEmbed = new EmbedBuilder()
     .setColor('#0099FF')

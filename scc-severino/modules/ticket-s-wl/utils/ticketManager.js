@@ -25,12 +25,18 @@ export async function createTicketChannel(guild, channelName, user, reason, tick
   try {
     // Categoria correta
     const ticketCategory = guild.channels.cache.get(config.categoryId);
-    // Permissões
+    if (!ticketCategory) {
+      throw new Error(`Categoria não encontrada: ${config.categoryId}`);
+    }
+    
+    // Permissões específicas para o canal
     const permissionOverwrites = [
       { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
       { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks] },
       { id: config.staffRoleId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ManageChannels] }
     ];
+    
+    // Adicionar permissões para roles de suporte
     for (const roleName of config.supportRoles || []) {
       const role = guild.roles.cache.find(r => r.name === roleName);
       if (role) {
@@ -40,7 +46,11 @@ export async function createTicketChannel(guild, channelName, user, reason, tick
         });
       }
     }
+    
     // Criação do canal
+    console.log('[DEBUG] Criando canal com permissões:', permissionOverwrites.length, 'overwrites');
+    console.log('[DEBUG] Permissões para usuário:', user.id, 'Staff Role:', config.staffRoleId);
+    
     const ticketChannel = await guild.channels.create({
       name: channelName,
       type: ChannelType.GuildText,
@@ -48,6 +58,9 @@ export async function createTicketChannel(guild, channelName, user, reason, tick
       topic: `Ticket de Segurança #${ticketNumber} | ${user.tag} | ${reason}`,
       permissionOverwrites
     });
+    
+    console.log('[DEBUG] Canal criado com sucesso:', ticketChannel.id);
+    console.log('[DEBUG] Permissões do canal criado:', ticketChannel.permissionOverwrites.cache.size, 'overwrites');
     // Log de criação
     try {
       const logChannel = guild.channels.cache.get(config.logChannelId);

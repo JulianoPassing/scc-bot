@@ -30,6 +30,8 @@ export const execute = async function(interaction) {
     if (interaction.isModalSubmit() && interaction.customId === 'modal_ticket_seguranca_motivo') {
       console.log('[DEBUG] Handler do modal_ticket_seguranca_motivo chamado para', interaction.user.tag, 'Guild:', interaction.guild.id);
       const motivo = interaction.fields.getTextInputValue('motivo');
+      const user = interaction.user;
+      const guild = interaction.guild;
       // Verifica se já existe ticket
       const existing = guild.channels.cache.find(
         c => c.name === `seg-${user.username.toLowerCase()}`
@@ -39,18 +41,41 @@ export const execute = async function(interaction) {
         await interaction.reply({ content: '❌ Você já possui um ticket aberto: ' + existing.toString(), flags: 64 });
         return;
       }
-      // Cria o canal na categoria correta, herdando permissões
+      // Cria o canal na categoria correta com permissões específicas
       let ticketChannel;
       try {
         const ticketNumber = await getNextTicketNumber();
         console.log('[DEBUG] Tentando criar canal:', `seg-${user.username.toLowerCase()}`, 'na categoria', SEGURANCA_CATEGORY_ID);
+        
+        // Permissões específicas para o canal
+        const permissionOverwrites = [
+          { id: guild.roles.everyone, deny: [PermissionFlagsBits.ViewChannel] },
+          { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks] },
+          { id: config.staffRoleId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ManageChannels] }
+        ];
+        
+        console.log('[DEBUG] Permissões configuradas para usuário:', user.id, 'Staff Role:', config.staffRoleId);
+        
+        // Adicionar permissões para roles de suporte
+        for (const roleName of config.supportRoles || []) {
+          const role = guild.roles.cache.find(r => r.name === roleName);
+          if (role) {
+            permissionOverwrites.push({
+              id: role.id,
+              allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ManageChannels]
+            });
+          }
+        }
+        
         ticketChannel = await guild.channels.create({
           name: `seg-${user.username.toLowerCase()}`,
           type: ChannelType.GuildText,
           parent: SEGURANCA_CATEGORY_ID,
-          topic: `Ticket de Segurança | ${user.tag} | ${motivo}`
+          topic: `Ticket de Segurança | ${user.tag} | ${motivo}`,
+          permissionOverwrites
         });
         console.log('[DEBUG] Canal criado com sucesso:', ticketChannel.id);
+        console.log('[DEBUG] Permissões do canal:', ticketChannel.permissionOverwrites.cache.size, 'overwrites');
       } catch (err) {
         console.error('[ERRO] Falha ao criar canal do ticket de segurança:', err, 'Categoria:', SEGURANCA_CATEGORY_ID, 'Guild:', guild.id);
         await interaction.reply({ content: `❌ Erro ao criar o canal do ticket. Detalhe: ${err && (err.stack || JSON.stringify(err))}`, flags: 64 });
@@ -266,7 +291,8 @@ export const execute = async function(interaction) {
     }
     // Assumir Ticket
     if (customId === 'assumir_ticket') {
-      if (!member.roles.cache.has(config.default.staffRoleId)) {
+      const member = guild.members.cache.get(user.id);
+      if (!member.roles.cache.has(config.staffRoleId)) {
         return interaction.reply({ content: '❌ Apenas membros da equipe podem assumir tickets!', ephemeral: true });
       }
       await interaction.reply({ content: `🫡 <@${user.id}> assumiu o ticket!`, ephemeral: false });

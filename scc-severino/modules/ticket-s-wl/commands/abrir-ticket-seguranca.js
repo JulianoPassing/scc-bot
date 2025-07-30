@@ -21,7 +21,7 @@ export async function execute(message, args, client) {
 
   const ticketNumber = await getNextTicketNumber();
   const channelName = `seg-${user.username.toLowerCase()}`;
-  const ticketChannel = await createTicketChannel(guild, channelName, user, reason, ticketNumber);
+  const ticketChannel = await createTicketChannel(guild, channelName, user, reason, ticketNumber, client);
 
   const welcomeEmbed = new EmbedBuilder()
     .setColor('#0099FF')

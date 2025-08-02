@@ -243,6 +243,7 @@ export default async function(client) {
           await interaction.update({ embeds: [embed], components: [row] });
         } else {
           // Conferir respostas
+          console.log('[WL][DEBUG] Finalizando whitelist para usuário:', interaction.user.tag);
           const GABARITO = ['b', 'a', 'c', 'b', 'b', 'a', 'c', 'a'];
           let corretas = 0;
           for (let i = 0; i < GABARITO.length; i++) {
@@ -250,6 +251,7 @@ export default async function(client) {
               corretas++;
             }
           }
+          console.log('[WL][DEBUG] Acertos:', corretas, '/', GABARITO.length);
           // Verificar idade
           let aprovado = corretas === GABARITO.length;
           let idadeNum = parseInt(cache.idade);
@@ -312,9 +314,13 @@ export default async function(client) {
               });
             }
           } catch (e) {}
+          console.log('[WL][DEBUG] Chegou ao ponto de envio da log');
           // Enviar formulário para canal de logs
           try {
+            console.log('[WL][DEBUG] Tentando enviar log para canal 1396911720835973160');
             const logChannel = interaction.guild.channels.cache.get('1396911720835973160');
+            console.log('[WL][DEBUG] Canal encontrado:', !!logChannel);
+            
             if (logChannel) {
               const GABARITO = ['b', 'a', 'c', 'b', 'b', 'a', 'c', 'a'];
               const respostasDetalhadas = cache.respostas.map((r, idx) => {
@@ -322,7 +328,17 @@ export default async function(client) {
                 const status = (r && r.trim().toLowerCase() === correta) ? '✅' : '❌';
                 return `Q${5+idx}: ${r ? r.toUpperCase() : '-'} (Correta: ${correta.toUpperCase()}) ${status}`;
               }).join('\n');
-              const embed = new EmbedBuilder()
+              
+                          console.log('[WL][DEBUG] Criando embed para log');
+            console.log('[WL][DEBUG] Cache data:', {
+              nome: cache?.nome,
+              idade: cache?.idade,
+              motivo: cache?.motivo,
+              conheceu: cache?.conheceu,
+              historia: cache?.historia,
+              respostas: cache?.respostas
+            });
+            const embed = new EmbedBuilder()
                 .setColor(aprovado ? 0x00ff00 : 0xff0000)
                 .setTitle(aprovado ? '✅ Whitelist Aprovada' : '❌ Whitelist Reprovada')
                 .setDescription(`Usuário: <@${interaction.user.id}> (${interaction.user.tag})`)
@@ -337,9 +353,17 @@ export default async function(client) {
                   { name: 'Idade', value: cache?.idade || 'N/A', inline: false }
                 )
                 .setTimestamp();
+              
+              console.log('[WL][DEBUG] Enviando embed para canal de logs');
               await logChannel.send({ embeds: [embed] });
+              console.log('[WL][DEBUG] Log enviado com sucesso!');
+            } else {
+              console.error('[WL][ERRO] Canal de logs não encontrado: 1396911720835973160');
             }
-          } catch (e) {}
+          } catch (e) {
+            console.error('[WL][ERRO ao enviar log]', e);
+            console.error('[WL][ERRO] Stack trace:', e.stack);
+          }
 
           // Enviar resultado no canal especificado
           try {

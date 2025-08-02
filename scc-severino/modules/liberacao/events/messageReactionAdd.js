@@ -128,38 +128,7 @@ export default {
             }
             
             console.log(`✅ Usuário ${messageAuthor.tag} liberado com sucesso!`);
-            
-            // Preparar mensagem de confirmação
-            let confirmMessage = `✅ **Liberação processada!**\n👤 **Usuário:** ${messageAuthor}\n📝 **Nome processado:** ${messageName}\n`;
-            
-            const canManageUser = botHighestRole.position > userHighestRole.position;
-            
-            if (hasManageNicknames && canManageUser) {
-                confirmMessage += `✅ **Nickname alterado**\n`;
-            } else {
-                confirmMessage += `❌ **Nickname não alterado** (sem permissão ou hierarquia)\n`;
-            }
-            
-            if (hasManageRoles && canManageUser) {
-                confirmMessage += `➕ **Cargo adicionado:** <@&${cargoAdicionar}>\n➖ **Cargo removido:** <@&${cargoRemover}>`;
-            } else {
-                confirmMessage += `❌ **Cargos não alterados** (sem permissão ou hierarquia)`;
-            }
-            
-            // Enviar mensagem de confirmação ephemeral (só visível para quem reagiu)
-            try {
-                await reaction.message.reply({
-                    content: confirmMessage,
-                    ephemeral: true
-                });
-                console.log(`✅ Confirmação ephemeral enviada para ${user.tag}`);
-            } catch (ephemeralError) {
-                console.log(`❌ Erro ao enviar mensagem ephemeral: ${ephemeralError.message}`);
-                // Fallback: enviar como mensagem normal no canal
-                await reaction.message.channel.send({
-                    content: confirmMessage
-                });
-            }
+            console.log(`✅ Processo concluído silenciosamente para ${user.tag}`);
             
         } catch (error) {
             console.error('❌ Erro ao processar liberação:', error);

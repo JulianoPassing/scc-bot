@@ -35,7 +35,30 @@ export default {
             
             // Obter o nome da mensagem (primeira linha ou conteúdo da mensagem)
             const messageContent = reaction.message.content;
-            const messageName = messageContent.split('\n')[0] || messageContent || 'Usuário Liberado';
+            let messageName = messageContent.split('\n')[0] || messageContent || 'Usuário Liberado';
+            
+            // Limpar o nome de formatações e limitar a 32 caracteres
+            messageName = messageName
+                .replace(/\*\*/g, '') // Remove **
+                .replace(/\*/g, '') // Remove *
+                .replace(/`/g, '') // Remove `
+                .replace(/__/g, '') // Remove __
+                .replace(/#/g, '') // Remove #
+                .replace(/\n/g, ' ') // Remove quebras de linha
+                .replace(/\s+/g, ' ') // Remove espaços extras
+                .trim();
+            
+            // Limitar a 32 caracteres (limite do Discord)
+            if (messageName.length > 32) {
+                messageName = messageName.substring(0, 29) + '...';
+            }
+            
+            // Se ficou vazio, usar nome padrão
+            if (!messageName || messageName.length === 0) {
+                messageName = 'Usuário Liberado';
+            }
+            
+            console.log(`📝 Nome processado: "${messageName}" (${messageName.length} caracteres)`);
             
             // Cargos
             const cargoAdicionar = '1317086939555434557';

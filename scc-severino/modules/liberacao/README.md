@@ -24,6 +24,7 @@ Este módulo permite liberar usuários através de reações em mensagens espec�
 ## Comandos disponíveis
 
 - `!teste-liberacao` - Testa se o módulo está funcionando corretamente
+- `!liberar @usuario Nome` - Libera um usuário específico com o nome fornecido
 
 ## Configuração
 
@@ -48,6 +49,7 @@ liberacao/
 ├── events/                     # Eventos do módulo
 │   └── messageReactionAdd.js
 ├── commands/                   # Comandos do módulo
-│   └── teste-liberacao.js
+│   ├── teste-liberacao.js
+│   └── liberar.js
 └── README.md                   # Esta documentação
 ``` 

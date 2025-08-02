@@ -10,7 +10,7 @@ export default {
             
             // Enviar mensagem de teste
             const testMessage = await message.channel.send({
-                content: `🧪 **Teste do módulo de liberação**\n\nEste é um teste para verificar se o módulo está funcionando.\nReaja com ✅ para testar a liberação.`
+                content: `Teste Liberação\n\nEste é um teste para verificar se o módulo está funcionando.\nReaja com ✅ para testar a liberação.`
             });
             
             // Adicionar reação de teste

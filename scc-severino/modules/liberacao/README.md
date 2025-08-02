@@ -5,11 +5,19 @@ Este módulo permite liberar usuários através de reações em mensagens espec�
 ## Funcionalidades
 
 - **Canal específico**: Funciona apenas no canal `1317096106844225586`
-- **Emoji de confirmação**: Usa o emoji `:V_confirm:` para confirmar a liberação
-- **Alteração de nome**: Altera o nickname do usuário para o nome da mensagem
+- **Emoji de confirmação**: Usa o emoji `:V_confirm:` ou `✅` para confirmar a liberação
+- **Alteração de nome**: Altera o nickname do usuário para o nome da mensagem (máximo 32 caracteres)
 - **Gerenciamento de cargos**: 
   - Adiciona o cargo `1317086939555434557`
   - Remove o cargo `1263487190575349892`
+
+## Permissões necessárias
+
+O bot precisa das seguintes permissões no servidor:
+- **Manage Nicknames**: Para alterar nicknames dos usuários
+- **Manage Roles**: Para adicionar/remover cargos dos usuários
+
+Se o bot não tiver essas permissões, ele mostrará uma mensagem informando quais ações não puderam ser realizadas.
 
 ## Como usar
 

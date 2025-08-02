@@ -64,25 +64,58 @@ export default {
             const cargoAdicionar = '1317086939555434557';
             const cargoRemover = '1263487190575349892';
             
-            // Alterar nickname do usuário
-            await member.setNickname(messageName);
+            // Verificar permissões do bot
+            const botMember = guild.members.cache.get(client.user.id);
+            const hasManageNicknames = botMember.permissions.has('ManageNicknames');
+            const hasManageRoles = botMember.permissions.has('ManageRoles');
             
-            // Adicionar cargo
-            if (cargoAdicionar) {
-                await member.roles.add(cargoAdicionar);
+            console.log(`🔐 Permissões do bot: ManageNicknames=${hasManageNicknames}, ManageRoles=${hasManageRoles}`);
+            
+            // Alterar nickname do usuário (se tiver permissão)
+            if (hasManageNicknames) {
+                await member.setNickname(messageName);
+                console.log(`✅ Nickname alterado para: ${messageName}`);
+            } else {
+                console.log(`❌ Bot não tem permissão para alterar nickname`);
             }
             
-            // Remover cargo
-            if (cargoRemover) {
+            // Adicionar cargo (se tiver permissão)
+            if (hasManageRoles && cargoAdicionar) {
+                await member.roles.add(cargoAdicionar);
+                console.log(`✅ Cargo adicionado: ${cargoAdicionar}`);
+            } else {
+                console.log(`❌ Bot não tem permissão para adicionar cargos`);
+            }
+            
+            // Remover cargo (se tiver permissão)
+            if (hasManageRoles && cargoRemover) {
                 await member.roles.remove(cargoRemover);
+                console.log(`✅ Cargo removido: ${cargoRemover}`);
+            } else {
+                console.log(`❌ Bot não tem permissão para remover cargos`);
             }
             
             console.log(`✅ Usuário ${user.tag} liberado com sucesso!`);
             
+            // Preparar mensagem de confirmação
+            let confirmMessage = `✅ **Liberação processada!**\n👤 **Usuário:** ${user}\n📝 **Nome processado:** ${messageName}\n`;
+            
+            if (hasManageNicknames) {
+                confirmMessage += `✅ **Nickname alterado**\n`;
+            } else {
+                confirmMessage += `❌ **Nickname não alterado** (sem permissão)\n`;
+            }
+            
+            if (hasManageRoles) {
+                confirmMessage += `➕ **Cargo adicionado:** <@&${cargoAdicionar}>\n➖ **Cargo removido:** <@&${cargoRemover}>`;
+            } else {
+                confirmMessage += `❌ **Cargos não alterados** (sem permissão)`;
+            }
+            
             // Enviar mensagem de confirmação
             const confirmChannel = reaction.message.channel;
             await confirmChannel.send({
-                content: `✅ **Liberação realizada com sucesso!**\n👤 **Usuário:** ${user}\n📝 **Nome alterado para:** ${messageName}\n➕ **Cargo adicionado:** <@&${cargoAdicionar}>\n➖ **Cargo removido:** <@&${cargoRemover}>`
+                content: confirmMessage
             });
             
         } catch (error) {

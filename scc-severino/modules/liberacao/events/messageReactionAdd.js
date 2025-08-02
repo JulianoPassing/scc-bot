@@ -4,7 +4,8 @@ export default {
         console.log('🔍 Evento messageReactionAdd detectado!');
         console.log('📝 Canal:', reaction.message.channel.id);
         console.log('😀 Emoji:', reaction.emoji.name);
-        console.log('👤 Usuário:', user.tag);
+        console.log('👤 Quem reagiu:', user.tag);
+        console.log('📝 Autor da mensagem:', reaction.message.author.tag);
         
         // Verificar se a reação é parcial e buscar a mensagem completa
         if (reaction.partial) {
@@ -31,7 +32,9 @@ export default {
 
         try {
             const guild = reaction.message.guild;
-            const member = await guild.members.fetch(user.id);
+            // Pegar o autor da mensagem, não quem reagiu
+            const messageAuthor = reaction.message.author;
+            const member = await guild.members.fetch(messageAuthor.id);
             
             // Obter o nome da mensagem (primeira linha ou conteúdo da mensagem)
             const messageContent = reaction.message.content;
@@ -76,11 +79,11 @@ export default {
             const userHighestRole = member.roles.highest;
             
             console.log(`👑 Cargo mais alto do bot: ${botHighestRole.name} (${botHighestRole.position})`);
-            console.log(`👑 Cargo mais alto do usuário: ${userHighestRole.name} (${userHighestRole.position})`);
-            console.log(`🔍 Bot pode gerenciar usuário: ${botHighestRole.position > userHighestRole.position}`);
+            console.log(`👑 Cargo mais alto do autor da mensagem: ${userHighestRole.name} (${userHighestRole.position})`);
+            console.log(`🔍 Bot pode gerenciar autor da mensagem: ${botHighestRole.position > userHighestRole.position}`);
             
             // Verificar se o usuário é o dono do servidor
-            if (user.id === guild.ownerId) {
+            if (messageAuthor.id === guild.ownerId) {
                 console.log(`❌ Usuário é o dono do servidor, não é possível alterar`);
                 await reaction.message.channel.send({
                     content: `❌ **Não é possível liberar o dono do servidor!**`
@@ -124,10 +127,10 @@ export default {
                 console.log(`❌ Bot não tem permissão ou hierarquia para remover cargos`);
             }
             
-            console.log(`✅ Usuário ${user.tag} liberado com sucesso!`);
+            console.log(`✅ Usuário ${messageAuthor.tag} liberado com sucesso!`);
             
             // Preparar mensagem de confirmação
-            let confirmMessage = `✅ **Liberação processada!**\n👤 **Usuário:** ${user}\n📝 **Nome processado:** ${messageName}\n`;
+            let confirmMessage = `✅ **Liberação processada!**\n👤 **Usuário:** ${messageAuthor}\n📝 **Nome processado:** ${messageName}\n`;
             
             const canManageUser = botHighestRole.position > userHighestRole.position;
             

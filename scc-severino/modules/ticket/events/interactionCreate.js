@@ -305,6 +305,34 @@ export const execute = async function(interaction) {
       const ticketChannel = ticketResult.channel;
       const categoryFull = ticketResult.categoryFull;
       await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket! Equipe notificada:` });
+      
+      // Verificar se é um ticket de doações e enviar mensagem privada para usuários específicos
+      if (categoriaId === '1386490511606419578') {
+        const usuariosNotificar = ['384772320918765580', '405487427327885313', '411224920085889024'];
+        
+        for (const userId of usuariosNotificar) {
+          try {
+            const userToNotify = await interaction.client.users.fetch(userId);
+            const embedNotificacao = new EmbedBuilder()
+              .setColor('#FF6B6B')
+              .setTitle('💎 Novo Ticket de Doação')
+              .setDescription(`Um novo ticket de doação foi aberto no servidor StreetCarClub.`)
+              .addFields(
+                { name: 'Criador', value: `${user.tag} (${user.id})`, inline: true },
+                { name: 'Assunto', value: assunto, inline: true },
+                { name: 'Canal', value: `<#${ticketChannel.id}>`, inline: true },
+                { name: 'Data', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+              )
+              .setFooter({ text: 'StreetCarClub • Sistema de Notificações' })
+              .setTimestamp();
+            
+            await userToNotify.send({ embeds: [embedNotificacao] });
+          } catch (error) {
+            console.error(`Erro ao enviar notificação para ${userId}:`, error);
+          }
+        }
+      }
+      
       const embed = new EmbedBuilder()
         .setColor(categoryFull ? '#FFA500' : '#0099FF')
         .setTitle(`📑 Ticket Aberto - ${categoria.emoji} ${categoria.nome}`)

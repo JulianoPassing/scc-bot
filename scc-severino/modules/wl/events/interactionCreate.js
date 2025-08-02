@@ -350,13 +350,7 @@ export default async function(client) {
                 await resultadoChannel.send(`<@${interaction.user.id}> Aprovado, agora basta enviar um "Nome e Sobrenome" registrável em cartório (proibido nomes com duplo sentido) no canal <#1317096106844225586> e aguardar.`);
               } else {
                 // Se reprovado: enviar mensagem de reprovação e marcar cargo
-                await resultadoChannel.send(`<@${interaction.user.id}> Reprovado`);
-                try {
-                  const cargoReprovado = '1046404063673192541';
-                  await member.roles.add(cargoReprovado);
-                } catch (roleError) {
-                  console.error('[WL][ERRO ao adicionar cargo reprovado]', roleError);
-                }
+                await resultadoChannel.send(`<@${interaction.user.id}> Reprovado <@&1046404063673192541>`);
               }
             }
           } catch (e) {

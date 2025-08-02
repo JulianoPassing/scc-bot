@@ -272,7 +272,7 @@ export const execute = async function(interaction) {
     // Handler do modal de assunto ao abrir ticket
     if (interaction.isModalSubmit() && interaction.customId.startsWith('modal_ticket_assunto_')) {
       // Deferir a resposta imediatamente para evitar timeout
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
       
       const tipo = interaction.customId.replace('modal_ticket_assunto_', '');
       const categoria = CATEGORY_INFO[tipo];
@@ -373,7 +373,7 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
       const name = interaction.channel.name;
       const emoji = name.startsWith('📁suporte-') ? '📁' :
@@ -390,7 +390,7 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de adicionar membro
     if (interaction.isModalSubmit() && interaction.customId === 'modal_adicionar_membro') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
       const membro = interaction.fields.getTextInputValue('membro');
       const match = membro.match(/<@!?([0-9]+)>/);
       if (!match) {
@@ -412,7 +412,7 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de avisar membro
     if (interaction.isModalSubmit() && interaction.customId === 'modal_avisar_membro') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
       const membro = interaction.fields.getTextInputValue('membro');
       const match = membro.match(/<@!?([0-9]+)>/);
       if (!match) {
@@ -426,7 +426,7 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de motivo de fechamento
     if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: 64 });
       const motivo = interaction.fields.getTextInputValue('motivo');
       const user = interaction.user;
       const channel = interaction.channel;

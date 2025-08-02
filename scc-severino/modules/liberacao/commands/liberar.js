@@ -45,32 +45,58 @@ export default {
             
             console.log(`🔐 Permissões do bot: ManageNicknames=${hasManageNicknames}, ManageRoles=${hasManageRoles}`);
             
+            // Verificar hierarquia de cargos
+            const botHighestRole = botMember.roles.highest;
+            const userHighestRole = member.roles.highest;
+            
+            console.log(`👑 Cargo mais alto do bot: ${botHighestRole.name} (${botHighestRole.position})`);
+            console.log(`👑 Cargo mais alto do usuário: ${userHighestRole.name} (${userHighestRole.position})`);
+            console.log(`🔍 Bot pode gerenciar usuário: ${botHighestRole.position > userHighestRole.position}`);
+            
+            // Verificar se o usuário é o dono do servidor
+            if (user.id === guild.ownerId) {
+                console.log(`❌ Usuário é o dono do servidor, não é possível alterar`);
+                return message.reply('❌ **Não é possível liberar o dono do servidor!**');
+            }
+            
             // Cargos
             const cargoAdicionar = '1317086939555434557';
             const cargoRemover = '1263487190575349892';
             
-            // Alterar nickname do usuário (se tiver permissão)
-            if (hasManageNicknames) {
-                await member.setNickname(processedName);
-                console.log(`✅ Nickname alterado para: ${processedName}`);
+            // Alterar nickname do usuário (se tiver permissão e hierarquia)
+            if (hasManageNicknames && botHighestRole.position > userHighestRole.position) {
+                try {
+                    await member.setNickname(processedName);
+                    console.log(`✅ Nickname alterado para: ${processedName}`);
+                } catch (error) {
+                    console.log(`❌ Erro ao alterar nickname: ${error.message}`);
+                }
             } else {
-                console.log(`❌ Bot não tem permissão para alterar nickname`);
+                console.log(`❌ Bot não tem permissão ou hierarquia para alterar nickname`);
             }
             
-            // Adicionar cargo (se tiver permissão)
-            if (hasManageRoles) {
-                await member.roles.add(cargoAdicionar);
-                console.log(`✅ Cargo adicionado: ${cargoAdicionar}`);
+            // Adicionar cargo (se tiver permissão e hierarquia)
+            if (hasManageRoles && botHighestRole.position > userHighestRole.position) {
+                try {
+                    await member.roles.add(cargoAdicionar);
+                    console.log(`✅ Cargo adicionado: ${cargoAdicionar}`);
+                } catch (error) {
+                    console.log(`❌ Erro ao adicionar cargo: ${error.message}`);
+                }
             } else {
-                console.log(`❌ Bot não tem permissão para adicionar cargos`);
+                console.log(`❌ Bot não tem permissão ou hierarquia para adicionar cargos`);
             }
             
-            // Remover cargo (se tiver permissão)
-            if (hasManageRoles) {
-                await member.roles.remove(cargoRemover);
-                console.log(`✅ Cargo removido: ${cargoRemover}`);
+            // Remover cargo (se tiver permissão e hierarquia)
+            if (hasManageRoles && botHighestRole.position > userHighestRole.position) {
+                try {
+                    await member.roles.remove(cargoRemover);
+                    console.log(`✅ Cargo removido: ${cargoRemover}`);
+                } catch (error) {
+                    console.log(`❌ Erro ao remover cargo: ${error.message}`);
+                }
             } else {
-                console.log(`❌ Bot não tem permissão para remover cargos`);
+                console.log(`❌ Bot não tem permissão ou hierarquia para remover cargos`);
             }
             
             console.log(`✅ Usuário ${user.tag} liberado manualmente!`);
@@ -78,16 +104,18 @@ export default {
             // Preparar mensagem de confirmação
             let confirmMessage = `✅ **Liberação manual processada!**\n👤 **Usuário:** ${user}\n📝 **Nome processado:** ${processedName}\n`;
             
-            if (hasManageNicknames) {
+            const canManageUser = botHighestRole.position > userHighestRole.position;
+            
+            if (hasManageNicknames && canManageUser) {
                 confirmMessage += `✅ **Nickname alterado**\n`;
             } else {
-                confirmMessage += `❌ **Nickname não alterado** (sem permissão)\n`;
+                confirmMessage += `❌ **Nickname não alterado** (sem permissão ou hierarquia)\n`;
             }
             
-            if (hasManageRoles) {
+            if (hasManageRoles && canManageUser) {
                 confirmMessage += `➕ **Cargo adicionado:** <@&${cargoAdicionar}>\n➖ **Cargo removido:** <@&${cargoRemover}>`;
             } else {
-                confirmMessage += `❌ **Cargos não alterados** (sem permissão)`;
+                confirmMessage += `❌ **Cargos não alterados** (sem permissão ou hierarquia)`;
             }
             
             // Enviar mensagem de confirmação

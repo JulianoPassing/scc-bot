@@ -39,7 +39,7 @@ export default {
             }
             
             // Verificar permissões do bot
-            const botMember = guild.members.cache.get(client.user.id);
+            const botMember = guild.members.cache.get(message.client.user.id);
             const hasManageNicknames = botMember.permissions.has('ManageNicknames');
             const hasManageRoles = botMember.permissions.has('ManageRoles');
             

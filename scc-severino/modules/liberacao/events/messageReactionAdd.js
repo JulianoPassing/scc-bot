@@ -65,7 +65,7 @@ export default {
             const cargoRemover = '1263487190575349892';
             
             // Verificar permissões do bot
-            const botMember = guild.members.cache.get(client.user.id);
+            const botMember = guild.members.cache.get(reaction.client.user.id);
             const hasManageNicknames = botMember.permissions.has('ManageNicknames');
             const hasManageRoles = botMember.permissions.has('ManageRoles');
             

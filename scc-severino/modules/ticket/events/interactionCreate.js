@@ -271,11 +271,14 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de assunto ao abrir ticket
     if (interaction.isModalSubmit() && interaction.customId.startsWith('modal_ticket_assunto_')) {
+      // Deferir a resposta imediatamente para evitar timeout
+      await interaction.deferReply({ ephemeral: true });
+      
       const tipo = interaction.customId.replace('modal_ticket_assunto_', '');
       const categoria = CATEGORY_INFO[tipo];
       const categoriaId = CATEGORY_IDS[tipo];
       if (!categoria || !categoriaId) {
-        await interaction.reply({ content: '❌ Categoria inválida ou não configurada.', flags: 64 });
+        await interaction.editReply({ content: '❌ Categoria inválida ou não configurada.' });
         return;
       }
       const assunto = interaction.fields.getTextInputValue('assunto');
@@ -296,9 +299,7 @@ export const execute = async function(interaction) {
         );
       } catch (err) {
         console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
-        if (!interaction.replied && !interaction.deferred) {
-          await interaction.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se a categoria existe, se o bot tem permissão e se o ID está correto.', flags: 64 });
-        }
+        await interaction.editReply({ content: '❌ Erro ao criar o canal do ticket. Verifique se a categoria existe, se o bot tem permissão e se o ID está correto.' });
         return;
       }
       
@@ -367,11 +368,12 @@ export const execute = async function(interaction) {
         new ButtonBuilder().setCustomId('timer_24h').setLabel('Timer 24h').setStyle(ButtonStyle.Primary).setEmoji('⏰')
       );
       await ticketChannel.send({ embeds: [embed], components: [row1, row2] });
-      await interaction.reply({ content: `✅ Ticket criado em <#${ticketChannel.id}>!`, flags: 64 });
+      await interaction.editReply({ content: `✅ Ticket criado em <#${ticketChannel.id}>!` });
       return;
     }
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
+      await interaction.deferReply({ ephemeral: true });
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
       const name = interaction.channel.name;
       const emoji = name.startsWith('📁suporte-') ? '📁' :
@@ -383,15 +385,16 @@ export const execute = async function(interaction) {
       let finalName = novoNome;
       if (!finalName.startsWith(emoji)) finalName = emoji + finalName;
       await interaction.channel.setName(finalName);
-      await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: 64 });
+      await interaction.editReply({ content: `✏️ Nome do ticket alterado para: ${finalName}` });
       return;
     }
     // Handler do modal de adicionar membro
     if (interaction.isModalSubmit() && interaction.customId === 'modal_adicionar_membro') {
+      await interaction.deferReply({ ephemeral: true });
       const membro = interaction.fields.getTextInputValue('membro');
       const match = membro.match(/<@!?([0-9]+)>/);
       if (!match) {
-        await interaction.reply({ content: '❌ Mencione um usuário válido.', flags: 64 });
+        await interaction.editReply({ content: '❌ Mencione um usuário válido.' });
         return;
       }
       const userId = match[1];
@@ -401,27 +404,29 @@ export const execute = async function(interaction) {
           SendMessages: true,
           ReadMessageHistory: true
         });
-        await interaction.reply({ content: `➕ <@${userId}> adicionado ao ticket!`, flags: 0 });
+        await interaction.editReply({ content: `➕ <@${userId}> adicionado ao ticket!` });
       } catch (e) {
-        await interaction.reply({ content: '❌ Erro ao adicionar usuário ao ticket.', flags: 64 });
+        await interaction.editReply({ content: '❌ Erro ao adicionar usuário ao ticket.' });
       }
       return;
     }
     // Handler do modal de avisar membro
     if (interaction.isModalSubmit() && interaction.customId === 'modal_avisar_membro') {
+      await interaction.deferReply({ ephemeral: true });
       const membro = interaction.fields.getTextInputValue('membro');
       const match = membro.match(/<@!?([0-9]+)>/);
       if (!match) {
-        await interaction.reply({ content: '❌ Mencione um usuário válido.', flags: 64 });
+        await interaction.editReply({ content: '❌ Mencione um usuário válido.' });
         return;
       }
       const userId = match[1];
       await interaction.channel.send(`🔔 <@${userId}>, você foi avisado neste ticket!`);
-      await interaction.reply({ content: `🔔 <@${userId}> foi avisado.`, flags: 0 });
+      await interaction.editReply({ content: `🔔 <@${userId}> foi avisado.` });
       return;
     }
     // Handler do modal de motivo de fechamento
     if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento') {
+      await interaction.deferReply({ ephemeral: true });
       const motivo = interaction.fields.getTextInputValue('motivo');
       const user = interaction.user;
       const channel = interaction.channel;
@@ -534,7 +539,7 @@ export const execute = async function(interaction) {
       if (logChannel) {
         await logChannel.send({ embeds: [embed], files: [{ attachment: Buffer.from(html, 'utf-8'), name: `transcript-${channel.name}.html` }] });
       }
-      await interaction.reply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!', flags: 64 });
+      await interaction.editReply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!' });
       setTimeout(async () => {
         try {
           await channel.delete(`Ticket fechado por ${user.tag}`);
@@ -544,7 +549,9 @@ export const execute = async function(interaction) {
     }
   } catch (error) {
     try {
-      if (!interaction.replied && !interaction.deferred) {
+      if (interaction.deferred) {
+        await interaction.editReply({ content: '❌ Ocorreu um erro ao processar sua interação.' });
+      } else if (!interaction.replied) {
         await interaction.reply({ content: '❌ Ocorreu um erro ao processar sua interação.', flags: 64 });
       }
     } catch (e) {}

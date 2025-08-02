@@ -14,12 +14,16 @@ Este módulo permite liberar usuários através de reações em mensagens espec�
 ## Como usar
 
 1. Envie uma mensagem no canal de liberação
-2. Reaja com o emoji `:V_confirm:` na mensagem
+2. Reaja com o emoji `:V_confirm:` ou `✅` na mensagem
 3. O bot irá automaticamente:
    - Alterar o nome do usuário para o conteúdo da mensagem
    - Adicionar o cargo de liberação
    - Remover o cargo anterior
    - Enviar uma confirmação
+
+## Comandos disponíveis
+
+- `!teste-liberacao` - Testa se o módulo está funcionando corretamente
 
 ## Configuração
 
@@ -38,10 +42,12 @@ As configurações estão no arquivo `config.json`:
 
 ```
 liberacao/
-├── index.js          # Arquivo principal do módulo
-├── loader.js         # Carregador de eventos
-├── config.json       # Configurações
-├── events/           # Eventos do módulo
+├── index.js                    # Arquivo principal do módulo
+├── loader.js                   # Carregador de eventos e comandos
+├── config.json                 # Configurações
+├── events/                     # Eventos do módulo
 │   └── messageReactionAdd.js
-└── README.md         # Esta documentação
+├── commands/                   # Comandos do módulo
+│   └── teste-liberacao.js
+└── README.md                   # Esta documentação
 ``` 

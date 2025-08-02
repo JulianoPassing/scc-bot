@@ -1,6 +1,11 @@
-module.exports = {
+export default {
     name: 'messageReactionAdd',
     async execute(reaction, user) {
+        console.log('🔍 Evento messageReactionAdd detectado!');
+        console.log('📝 Canal:', reaction.message.channel.id);
+        console.log('😀 Emoji:', reaction.emoji.name);
+        console.log('👤 Usuário:', user.tag);
+        
         // Verificar se a reação é parcial e buscar a mensagem completa
         if (reaction.partial) {
             try {
@@ -13,11 +18,14 @@ module.exports = {
 
         // Verificar se é o canal específico
         if (reaction.message.channel.id !== '1317096106844225586') {
+            console.log('❌ Canal incorreto, saindo...');
             return;
         }
 
-        // Verificar se o emoji é V_confirm
-        if (reaction.emoji.name !== 'V_confirm') {
+        // Verificar se o emoji é V_confirm (verificação mais flexível)
+        console.log('🔍 Verificando emoji:', reaction.emoji.name);
+        if (reaction.emoji.name !== 'V_confirm' && reaction.emoji.name !== '✅') {
+            console.log('❌ Emoji incorreto, saindo...');
             return;
         }
 

@@ -26,6 +26,7 @@ client.commands = new Collection();
 const modules = [
   'avaliacoes',
   'boost',
+  'liberacao',
   'sugestoes',
   'ticket',
   'ticket-s-wl',
@@ -37,7 +38,10 @@ for (const mod of modules) {
   if (fs.existsSync(modPath)) {
     const loader = path.join(modPath, 'loader.js');
     if (fs.existsSync(loader)) {
-      import(loader).then(m => m.default(client));
+      console.log(`📦 Carregando módulo: ${mod}`);
+      import(loader).then(m => m.default(client)).catch(err => {
+        console.error(`❌ Erro ao carregar módulo ${mod}:`, err);
+      });
     }
   }
 }

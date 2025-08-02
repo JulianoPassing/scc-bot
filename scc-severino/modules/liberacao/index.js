@@ -1,7 +1,7 @@
-const { Client, GatewayIntentBits } = require('discord.js');
-const { loadEvents } = require('./loader');
+import { Client, GatewayIntentBits } from 'discord.js';
+import loadEvents from './loader.js';
 
-module.exports = {
+export default {
     name: 'liberacao',
     description: 'Módulo de liberação de usuários',
     async execute(client) {

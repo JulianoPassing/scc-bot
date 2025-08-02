@@ -146,11 +146,20 @@ export default {
                 confirmMessage += `❌ **Cargos não alterados** (sem permissão ou hierarquia)`;
             }
             
-            // Enviar mensagem de confirmação
-            const confirmChannel = reaction.message.channel;
-            await confirmChannel.send({
-                content: confirmMessage
-            });
+            // Enviar mensagem de confirmação ephemeral (só visível para quem reagiu)
+            try {
+                await reaction.message.reply({
+                    content: confirmMessage,
+                    ephemeral: true
+                });
+                console.log(`✅ Confirmação ephemeral enviada para ${user.tag}`);
+            } catch (ephemeralError) {
+                console.log(`❌ Erro ao enviar mensagem ephemeral: ${ephemeralError.message}`);
+                // Fallback: enviar como mensagem normal no canal
+                await reaction.message.channel.send({
+                    content: confirmMessage
+                });
+            }
             
         } catch (error) {
             console.error('❌ Erro ao processar liberação:', error);

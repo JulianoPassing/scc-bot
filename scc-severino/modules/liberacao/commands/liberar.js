@@ -118,10 +118,20 @@ export default {
                 confirmMessage += `❌ **Cargos não alterados** (sem permissão ou hierarquia)`;
             }
             
-            // Enviar mensagem de confirmação
-            await message.channel.send({
-                content: confirmMessage
-            });
+            // Enviar mensagem de confirmação ephemeral (só visível para quem executou o comando)
+            try {
+                await message.reply({
+                    content: confirmMessage,
+                    ephemeral: true
+                });
+                console.log(`✅ Confirmação ephemeral enviada para ${message.author.tag}`);
+            } catch (ephemeralError) {
+                console.log(`❌ Erro ao enviar mensagem ephemeral: ${ephemeralError.message}`);
+                // Fallback: enviar como mensagem normal no canal
+                await message.channel.send({
+                    content: confirmMessage
+                });
+            }
             
         } catch (error) {
             console.error('❌ Erro ao processar liberação manual:', error);

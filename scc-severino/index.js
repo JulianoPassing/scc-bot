@@ -17,7 +17,13 @@ const client = new Client({
     GatewayIntentBits.GuildMembers,
     GatewayIntentBits.GuildMessageReactions,
     GatewayIntentBits.GuildVoiceStates
-  ]
+  ],
+  // Configurações para cache de mensagens antigas
+  partials: ['MESSAGE', 'CHANNEL', 'REACTION'],
+  // Habilitar cache de mensagens antigas
+  messageCacheMaxSize: 1000,
+  messageCacheLifetime: 0, // Cache permanente
+  messageSweepInterval: 0 // Não limpar cache
 });
 
 client.commands = new Collection();
@@ -64,8 +70,20 @@ client.on('messageCreate', async (message) => {
   }
 });
 
-client.once('ready', () => {
+client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} está online!`);
+  
+  // Fazer fetch das mensagens antigas do canal de liberação
+  try {
+    const liberacaoChannel = client.channels.cache.get('1317096106844225586');
+    if (liberacaoChannel) {
+      console.log('📥 Carregando mensagens antigas do canal de liberação...');
+      const messages = await liberacaoChannel.messages.fetch({ limit: 100 });
+      console.log(`✅ ${messages.size} mensagens antigas carregadas`);
+    }
+  } catch (error) {
+    console.error('❌ Erro ao carregar mensagens antigas:', error);
+  }
 });
 
 client.login(process.env.TOKEN); 

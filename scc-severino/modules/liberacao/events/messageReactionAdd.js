@@ -11,8 +11,20 @@ export default {
         if (reaction.partial) {
             try {
                 await reaction.fetch();
+                console.log('📥 Reação parcial carregada com sucesso');
             } catch (error) {
-                console.error('Erro ao buscar reação:', error);
+                console.error('❌ Erro ao buscar reação parcial:', error);
+                return;
+            }
+        }
+
+        // Verificar se a mensagem é parcial e buscar a mensagem completa
+        if (reaction.message.partial) {
+            try {
+                await reaction.message.fetch();
+                console.log('📥 Mensagem parcial carregada com sucesso');
+            } catch (error) {
+                console.error('❌ Erro ao buscar mensagem parcial:', error);
                 return;
             }
         }

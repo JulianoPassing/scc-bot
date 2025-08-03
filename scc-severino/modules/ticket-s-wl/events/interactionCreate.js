@@ -310,7 +310,12 @@ export const execute = async function(interaction) {
     }
     // Renomear Ticket mantendo emoji da categoria
     if (customId === 'renomear_ticket') {
+      // Verificar se é um ticket de segurança (começa com 'seg-')
       const name = interaction.channel.name;
+      if (!name.startsWith('seg-')) {
+        return; // Não é um ticket de segurança, ignorar
+      }
+      
       const emoji = name.startsWith('seg-') ? '🛡️' : '';
       await interaction.showModal({
         customId: 'modal_renomear_ticket',
@@ -341,8 +346,13 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
-      const novoNome = interaction.fields.getTextInputValue('novo_nome');
+      // Verificar se é um ticket de segurança (começa com 'seg-')
       const name = interaction.channel.name;
+      if (!name.startsWith('seg-')) {
+        return; // Não é um ticket de segurança, ignorar
+      }
+      
+      const novoNome = interaction.fields.getTextInputValue('novo_nome');
       const emoji = name.startsWith('seg-') ? '🛡️' : '';
       let finalName = novoNome;
       if (!finalName.startsWith(emoji)) finalName = emoji + finalName;

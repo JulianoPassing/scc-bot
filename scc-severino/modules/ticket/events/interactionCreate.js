@@ -139,6 +139,11 @@ export const execute = async function(interaction) {
       if (customId === 'renomear_ticket') {
         const name = interaction.channel.name;
         
+        // Verificar se é um ticket de segurança (começa com 'seg-') - se for, ignorar
+        if (name.startsWith('seg-')) {
+          return; // É um ticket de segurança, deixar o módulo ticket-s-wl processar
+        }
+        
         // Melhor lógica para detectar o emoji - verifica se o nome começa com qualquer emoji conhecido
         let emoji = '';
         if (name.startsWith('📁')) emoji = '📁';
@@ -377,9 +382,15 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
+      const name = interaction.channel.name;
+      
+      // Verificar se é um ticket de segurança (começa com 'seg-') - se for, ignorar
+      if (name.startsWith('seg-')) {
+        return; // É um ticket de segurança, deixar o módulo ticket-s-wl processar
+      }
+      
       await interaction.deferReply({ flags: 64 });
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
-      const name = interaction.channel.name;
       
       // Melhor lógica para detectar o emoji - verifica se o nome começa com qualquer emoji conhecido
       let emoji = '';

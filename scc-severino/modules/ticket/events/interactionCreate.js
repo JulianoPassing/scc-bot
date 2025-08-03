@@ -1,6 +1,33 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { createTicketChannelWithCategoryCheck } from '../utils/ticketUtils.js';
 
+/**
+ * Verifica se um usuário é o criador do ticket
+ * @param {TextChannel} channel - Canal do ticket
+ * @param {string} userId - ID do usuário a verificar
+ * @returns {boolean} True se o usuário é o criador do ticket
+ */
+async function isTicketCreator(channel, userId) {
+  try {
+    // Buscar a mensagem de notificação de abertura do ticket
+    const messages = await channel.messages.fetch({ limit: 10 });
+    const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket!'));
+    
+    if (notifyMsg) {
+      const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
+      if (match) {
+        const creatorId = match[1];
+        return creatorId === userId;
+      }
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Erro ao verificar criador do ticket:', error);
+    return false;
+  }
+}
+
 const CATEGORY_IDS = {
   suporte: '1386490182085382294',
   bugs: '1386490279384846418',
@@ -49,7 +76,11 @@ export const execute = async function(interaction) {
       }
       // Botões do painel de ticket aberto
       if (customId === 'fechar_ticket') {
-        if (!interaction.member.permissions.has('ManageChannels')) {
+        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        
+        if (!isStaff || isCreator) {
           return interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets!', flags: 64 });
         }
         // Abrir modal para motivo do fechamento
@@ -71,7 +102,11 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'assumir_ticket') {
-        if (!interaction.member.permissions.has('ManageChannels')) {
+        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        
+        if (!isStaff || isCreator) {
           return interaction.reply({ content: '❌ Apenas membros da equipe podem assumir tickets!', flags: 64 });
         }
         // Atualiza embed para status 'Assumido'
@@ -85,6 +120,14 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'adicionar_membro') {
+        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        
+        if (!isStaff || isCreator) {
+          return interaction.reply({ content: '❌ Apenas membros da equipe podem adicionar membros!', flags: 64 });
+        }
+        
         await interaction.showModal(
           new ModalBuilder()
             .setCustomId('modal_adicionar_membro')
@@ -102,6 +145,14 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'avisar_membro') {
+        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        
+        if (!isStaff || isCreator) {
+          return interaction.reply({ content: '❌ Apenas membros da equipe podem avisar membros!', flags: 64 });
+        }
+        
         // Busca a menção na mensagem de notificação de abertura do ticket
         const channel = interaction.channel;
         const messages = await channel.messages.fetch({ limit: 10 });
@@ -137,6 +188,14 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'renomear_ticket') {
+        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        
+        if (!isStaff || isCreator) {
+          return interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
+        }
+        
         const name = interaction.channel.name;
         
         // Verificar se é um ticket de segurança (começa com 'seg-') - se for, ignorar
@@ -172,6 +231,14 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'timer_24h') {
+        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        
+        if (!isStaff || isCreator) {
+          return interaction.reply({ content: '❌ Apenas membros da equipe podem usar timer!', flags: 64 });
+        }
+        
         // Cria embed com botão de cancelar
         const embed = new EmbedBuilder()
           .setColor('#FFA500')
@@ -258,6 +325,14 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'cancelar_timer_24h') {
+        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        
+        if (!isStaff || isCreator) {
+          return interaction.reply({ content: '❌ Apenas membros da equipe podem cancelar timer!', flags: 64 });
+        }
+        
         if (interaction.client.timers24h && interaction.client.timers24h[interaction.channel.id]) {
           clearTimeout(interaction.client.timers24h[interaction.channel.id]);
           delete interaction.client.timers24h[interaction.channel.id];
@@ -382,6 +457,14 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
+      // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+      const isStaff = interaction.member.permissions.has('ManageChannels');
+      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+      
+      if (!isStaff || isCreator) {
+        return interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
+      }
+      
       const name = interaction.channel.name;
       
       // Verificar se é um ticket de segurança (começa com 'seg-') - se for, ignorar
@@ -420,6 +503,14 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de adicionar membro
     if (interaction.isModalSubmit() && interaction.customId === 'modal_adicionar_membro') {
+      // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+      const isStaff = interaction.member.permissions.has('ManageChannels');
+      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+      
+      if (!isStaff || isCreator) {
+        return interaction.reply({ content: '❌ Apenas membros da equipe podem adicionar membros!', flags: 64 });
+      }
+      
       await interaction.deferReply({ flags: 64 });
       const membro = interaction.fields.getTextInputValue('membro');
       const match = membro.match(/<@!?([0-9]+)>/);
@@ -440,22 +531,17 @@ export const execute = async function(interaction) {
       }
       return;
     }
-    // Handler do modal de avisar membro
-    if (interaction.isModalSubmit() && interaction.customId === 'modal_avisar_membro') {
-      await interaction.deferReply({ flags: 64 });
-      const membro = interaction.fields.getTextInputValue('membro');
-      const match = membro.match(/<@!?([0-9]+)>/);
-      if (!match) {
-        await interaction.editReply({ content: '❌ Mencione um usuário válido.' });
-        return;
-      }
-      const userId = match[1];
-      await interaction.channel.send(`🔔 <@${userId}>, você foi avisado neste ticket!`);
-      await interaction.editReply({ content: `🔔 <@${userId}> foi avisado.` });
-      return;
-    }
+
     // Handler do modal de motivo de fechamento
     if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento') {
+      // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+      const isStaff = interaction.member.permissions.has('ManageChannels');
+      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+      
+      if (!isStaff || isCreator) {
+        return interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets!', flags: 64 });
+      }
+      
       await interaction.deferReply({ flags: 64 });
       const motivo = interaction.fields.getTextInputValue('motivo');
       const user = interaction.user;

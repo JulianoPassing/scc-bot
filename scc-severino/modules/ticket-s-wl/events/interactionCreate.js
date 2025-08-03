@@ -8,6 +8,15 @@ export const name = 'interactionCreate';
 export const execute = async function(interaction) {
   try {
     const { customId, user, guild } = interaction;
+    
+    // Verificar se é um ticket de segurança (começa com 'seg-')
+    const channelName = interaction.channel?.name;
+    const isSecurityTicket = channelName && channelName.startsWith('seg-');
+    
+    // Se não for um ticket de segurança, ignorar (deixar o módulo ticket processar)
+    if (!isSecurityTicket) {
+      return;
+    }
     // Painel de segurança: abrir modal para motivo
     if (interaction.isButton() && customId === 'create_ticket_panel') {
       const modal = new ModalBuilder()

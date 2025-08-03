@@ -18,9 +18,7 @@ function hasStaffRole(member) {
     '1311023008495698081'  // Cargo específico de Casas
   ];
   
-  const hasRole = staffRoles.some(roleId => member.roles.cache.has(roleId));
-  console.log(`[DEBUG] hasStaffRole - User: ${member.user.tag}, Roles: ${member.roles.cache.map(r => r.name).join(', ')}, HasStaffRole: ${hasRole}`);
-  return hasRole;
+  return staffRoles.some(roleId => member.roles.cache.has(roleId));
 }
 
 /**
@@ -39,13 +37,10 @@ async function isTicketCreator(channel, userId) {
       const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
       if (match) {
         const creatorId = match[1];
-        const isCreator = creatorId === userId;
-        console.log(`[DEBUG] Verificando criador do ticket: ${userId} vs ${creatorId} = ${isCreator}`);
-        return isCreator;
+        return creatorId === userId;
       }
     }
     
-    console.log(`[DEBUG] Não foi possível identificar o criador do ticket para ${userId}`);
     return false;
   } catch (error) {
     console.error('Erro ao verificar criador do ticket:', error);
@@ -73,6 +68,15 @@ const CATEGORY_INFO = {
 export const name = 'interactionCreate';
 export const execute = async function(interaction) {
   try {
+    // Verificar se é um ticket de segurança (começa com 'seg-')
+    const channelName = interaction.channel?.name;
+    const isSecurityTicket = channelName && channelName.startsWith('seg-');
+    
+    // Se for um ticket de segurança, ignorar (deixar o módulo ticket-s-wl processar)
+    if (isSecurityTicket) {
+      return;
+    }
+    
     if (interaction.isButton()) {
       const { customId, user, guild } = interaction;
       // Painel principal: abrir modal para assunto
@@ -107,9 +111,8 @@ export const execute = async function(interaction) {
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
-          console.log(`[DEBUG] Permitindo acesso ao fechar ticket para ${interaction.user.tag}`);
+          // Permitir acesso
         } else {
-          console.log(`[DEBUG] Negando acesso ao fechar ticket para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
           await interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets!', flags: 64 });
           return;
         }
@@ -138,9 +141,8 @@ export const execute = async function(interaction) {
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
-          console.log(`[DEBUG] Permitindo acesso ao assumir ticket para ${interaction.user.tag}`);
+          // Permitir acesso
         } else {
-          console.log(`[DEBUG] Negando acesso ao assumir ticket para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
           await interaction.reply({ content: '❌ Apenas membros da equipe podem assumir tickets!', flags: 64 });
           return;
         }
@@ -161,9 +163,8 @@ export const execute = async function(interaction) {
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
-          console.log(`[DEBUG] Permitindo acesso ao adicionar membro para ${interaction.user.tag}`);
+          // Permitir acesso
         } else {
-          console.log(`[DEBUG] Negando acesso ao adicionar membro para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
           await interaction.reply({ content: '❌ Apenas membros da equipe podem adicionar membros!', flags: 64 });
           return;
         }
@@ -189,14 +190,10 @@ export const execute = async function(interaction) {
         const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
         
-        console.log(`[DEBUG] Avisar Membro - User: ${interaction.user.tag}, Staff: ${isStaff}, Creator: ${isCreator}`);
-        console.log(`[DEBUG] Condição de negação: !isStaff=${!isStaff}, isCreator=${isCreator}, Resultado: ${!isStaff || isCreator}`);
-        
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
-          console.log(`[DEBUG] Permitindo acesso ao avisar membro para ${interaction.user.tag}`);
+          // Permitir acesso
         } else {
-          console.log(`[DEBUG] Negando acesso ao avisar membro para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
           await interaction.reply({ content: '❌ Apenas membros da equipe podem avisar membros!', flags: 64 });
           return;
         }
@@ -244,9 +241,8 @@ export const execute = async function(interaction) {
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
-          console.log(`[DEBUG] Permitindo acesso ao renomear ticket para ${interaction.user.tag}`);
+          // Permitir acesso
         } else {
-          console.log(`[DEBUG] Negando acesso ao renomear ticket para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
           await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
           return;
         }
@@ -290,14 +286,10 @@ export const execute = async function(interaction) {
         const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
         
-        console.log(`[DEBUG] Timer 24h - User: ${interaction.user.tag}, Staff: ${isStaff}, Creator: ${isCreator}`);
-        console.log(`[DEBUG] Condição de negação: !isStaff=${!isStaff}, isCreator=${isCreator}, Resultado: ${!isStaff || isCreator}`);
-        
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
-          console.log(`[DEBUG] Permitindo acesso ao timer para ${interaction.user.tag}`);
+          // Permitir acesso
         } else {
-          console.log(`[DEBUG] Negando acesso ao timer para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
           await interaction.reply({ content: '❌ Apenas membros da equipe podem usar timer!', flags: 64 });
           return;
         }
@@ -396,9 +388,8 @@ export const execute = async function(interaction) {
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
-          console.log(`[DEBUG] Permitindo acesso ao cancelar timer para ${interaction.user.tag}`);
+          // Permitir acesso
         } else {
-          console.log(`[DEBUG] Negando acesso ao cancelar timer para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
           await interaction.reply({ content: '❌ Apenas membros da equipe podem cancelar timer!', flags: 64 });
           return;
         }
@@ -533,9 +524,8 @@ export const execute = async function(interaction) {
       
       // Verificar se é staff E não é o criador do ticket
       if (isStaff && !isCreator) {
-        console.log(`[DEBUG] Permitindo acesso ao modal renomear ticket para ${interaction.user.tag}`);
+        // Permitir acesso
       } else {
-        console.log(`[DEBUG] Negando acesso ao modal renomear ticket para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
         await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
         return;
       }
@@ -584,9 +574,8 @@ export const execute = async function(interaction) {
       
       // Verificar se é staff E não é o criador do ticket
       if (isStaff && !isCreator) {
-        console.log(`[DEBUG] Permitindo acesso ao modal adicionar membro para ${interaction.user.tag}`);
+        // Permitir acesso
       } else {
-        console.log(`[DEBUG] Negando acesso ao modal adicionar membro para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
         await interaction.reply({ content: '❌ Apenas membros da equipe podem adicionar membros!', flags: 64 });
         return;
       }
@@ -620,9 +609,8 @@ export const execute = async function(interaction) {
       
       // Verificar se é staff E não é o criador do ticket
       if (isStaff && !isCreator) {
-        console.log(`[DEBUG] Permitindo acesso ao modal fechar ticket para ${interaction.user.tag}`);
+        // Permitir acesso
       } else {
-        console.log(`[DEBUG] Negando acesso ao modal fechar ticket para ${interaction.user.tag} - Staff: ${isStaff}, Creator: ${isCreator}`);
         await interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets!', flags: 64 });
         return;
       }

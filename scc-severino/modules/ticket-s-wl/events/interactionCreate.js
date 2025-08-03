@@ -1,5 +1,4 @@
 import { EmbedBuilder, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits, ButtonBuilder, ButtonStyle } from 'discord.js';
-import { createTicketChannel, getNextTicketNumber } from '../utils/ticketManager.js';
 import config from '../config.json' with { type: 'json' };
 
 const SEGURANCA_CATEGORY_ID = '1378778140528087191';
@@ -39,10 +38,17 @@ export const execute = async function(interaction) {
 
     // Handler do modal de motivo
     if (interaction.isModalSubmit() && interaction.customId === 'modal_ticket_seguranca_motivo') {
+      console.log('[DEBUG] ===== INÍCIO DO PROCESSAMENTO DO MODAL =====');
       console.log('[DEBUG] Handler do modal_ticket_seguranca_motivo chamado para', interaction.user.tag, 'Guild:', interaction.guild.id);
+      console.log('[DEBUG] Modal customId:', interaction.customId);
+      console.log('[DEBUG] Modal fields:', interaction.fields);
+      
       const motivo = interaction.fields.getTextInputValue('motivo');
+      console.log('[DEBUG] Motivo recebido:', motivo);
+      
       const user = interaction.user;
       const guild = interaction.guild;
+      console.log('[DEBUG] Verificando se já existe ticket para:', user.username);
       // Verifica se já existe ticket
       const existing = guild.channels.cache.find(
         c => c.name === `seg-${user.username.toLowerCase()}`
@@ -52,11 +58,17 @@ export const execute = async function(interaction) {
         await interaction.reply({ content: '❌ Você já possui um ticket aberto: ' + existing.toString(), flags: 64 });
         return;
       }
+      console.log('[DEBUG] Nenhum ticket existente encontrado, prosseguindo com criação');
       // Cria o canal na categoria correta com permissões específicas
       let ticketChannel;
       try {
-        const ticketNumber = await getNextTicketNumber();
+        console.log('[DEBUG] Iniciando criação do canal de segurança');
         console.log('[DEBUG] Tentando criar canal:', `seg-${user.username.toLowerCase()}`, 'na categoria', SEGURANCA_CATEGORY_ID);
+        console.log('[DEBUG] Permissões configuradas:', permissionOverwrites.length, 'overwrites');
+        
+        // Verificar se a categoria existe
+        const category = guild.channels.cache.get(SEGURANCA_CATEGORY_ID);
+        console.log('[DEBUG] Categoria encontrada:', category ? category.name : 'NÃO ENCONTRADA');
         
         // Permissões específicas para o canal
         const permissionOverwrites = [
@@ -78,6 +90,7 @@ export const execute = async function(interaction) {
           }
         }
         
+        console.log('[DEBUG] Tentando criar o canal agora...');
         ticketChannel = await guild.channels.create({
           name: `seg-${user.username.toLowerCase()}`,
           type: ChannelType.GuildText,
@@ -88,8 +101,10 @@ export const execute = async function(interaction) {
         console.log('[DEBUG] Canal criado com sucesso:', ticketChannel.id);
         console.log('[DEBUG] Permissões do canal:', ticketChannel.permissionOverwrites.cache.size, 'overwrites');
       } catch (err) {
-        console.error('[ERRO] Falha ao criar canal do ticket de segurança:', err, 'Categoria:', SEGURANCA_CATEGORY_ID, 'Guild:', guild.id);
-        await interaction.reply({ content: `❌ Erro ao criar o canal do ticket. Detalhe: ${err && (err.stack || JSON.stringify(err))}`, flags: 64 });
+        console.error('[ERRO] Falha ao criar canal do ticket de segurança:', err);
+        console.error('[ERRO] Stack trace:', err.stack);
+        console.error('[ERRO] Categoria:', SEGURANCA_CATEGORY_ID, 'Guild:', guild.id);
+        await interaction.reply({ content: `❌ Erro ao criar o canal do ticket. Detalhe: ${err.message}`, flags: 64 });
         return;
       }
       // Notificação
@@ -110,6 +125,7 @@ export const execute = async function(interaction) {
         new ButtonBuilder().setCustomId('avisar_membro_seguranca').setLabel('Avisar Membro').setStyle(ButtonStyle.Primary).setEmoji('🔔')
       );
       await ticketChannel.send({ embeds: [embed], components: [row] });
+      console.log('[DEBUG] ===== FIM DO PROCESSAMENTO DO MODAL =====');
       await interaction.reply({ content: `✅ Ticket de segurança criado em <#${ticketChannel.id}>!`, flags: 64 });
       return;
     }

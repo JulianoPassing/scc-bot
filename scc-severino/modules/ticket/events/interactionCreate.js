@@ -138,12 +138,16 @@ export const execute = async function(interaction) {
       }
       if (customId === 'renomear_ticket') {
         const name = interaction.channel.name;
-        const emoji = name.startsWith('📁suporte-') ? '📁' :
-          name.startsWith('🦠bugs-') ? '🦠' :
-          name.startsWith('🚀boost-') ? '🚀' :
-          name.startsWith('🏠casas-') ? '🏠' :
-          name.startsWith('💎doacoes-') ? '💎' :
-          name.startsWith('⚠️denuncias-') ? '⚠️' : '';
+        
+        // Melhor lógica para detectar o emoji - verifica se o nome começa com qualquer emoji conhecido
+        let emoji = '';
+        if (name.startsWith('📁')) emoji = '📁';
+        else if (name.startsWith('🦠')) emoji = '🦠';
+        else if (name.startsWith('🚀')) emoji = '🚀';
+        else if (name.startsWith('🏠')) emoji = '🏠';
+        else if (name.startsWith('💎')) emoji = '💎';
+        else if (name.startsWith('⚠️')) emoji = '⚠️';
+        
         await interaction.showModal(
           new ModalBuilder()
             .setCustomId('modal_renomear_ticket')
@@ -376,14 +380,21 @@ export const execute = async function(interaction) {
       await interaction.deferReply({ flags: 64 });
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
       const name = interaction.channel.name;
-      const emoji = name.startsWith('📁suporte-') ? '📁' :
-        name.startsWith('🦠bugs-') ? '🦠' :
-        name.startsWith('🚀boost-') ? '🚀' :
-        name.startsWith('🏠casas-') ? '🏠' :
-        name.startsWith('💎doacoes-') ? '💎' :
-        name.startsWith('⚠️denuncias-') ? '⚠️' : '';
+      
+      // Melhor lógica para detectar o emoji - verifica se o nome começa com qualquer emoji conhecido
+      let emoji = '';
+      if (name.startsWith('📁')) emoji = '📁';
+      else if (name.startsWith('🦠')) emoji = '🦠';
+      else if (name.startsWith('🚀')) emoji = '🚀';
+      else if (name.startsWith('🏠')) emoji = '🏠';
+      else if (name.startsWith('💎')) emoji = '💎';
+      else if (name.startsWith('⚠️')) emoji = '⚠️';
+      
       let finalName = novoNome;
-      if (!finalName.startsWith(emoji)) finalName = emoji + finalName;
+      if (emoji && !finalName.startsWith(emoji)) {
+        finalName = emoji + finalName;
+      }
+      
       await interaction.channel.setName(finalName);
       await interaction.editReply({ content: `✏️ Nome do ticket alterado para: ${finalName}` });
       return;

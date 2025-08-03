@@ -6,6 +6,7 @@ const SEGURANCA_CATEGORY_ID = '1378778140528087191';
 export const name = 'interactionCreate';
 export const execute = async function(interaction) {
   try {
+    console.log('[DEBUG] ticket-s-wl: execute chamado para', interaction.type, interaction.customId);
     const { customId, user, guild } = interaction;
     
     // Permitir sempre o botão create_ticket_panel (criação de ticket)
@@ -31,12 +32,16 @@ export const execute = async function(interaction) {
     const channelName = interaction.channel?.name;
     const isSecurityTicket = channelName && channelName.startsWith('seg-');
     
-    // Se não for um ticket de segurança, ignorar (deixar o módulo ticket processar)
-    if (!isSecurityTicket) {
+    console.log('[DEBUG] Canal atual:', channelName, 'É ticket de segurança:', isSecurityTicket);
+    
+    // Se não for um ticket de segurança E não for um modal, ignorar (deixar o módulo ticket processar)
+    if (!isSecurityTicket && !interaction.isModalSubmit()) {
+      console.log('[DEBUG] Não é ticket de segurança nem modal, saindo...');
       return;
     }
 
     // Handler do modal de motivo
+    console.log('[DEBUG] Verificando modal:', interaction.isModalSubmit(), interaction.customId);
     if (interaction.isModalSubmit() && interaction.customId === 'modal_ticket_seguranca_motivo') {
       console.log('[DEBUG] ===== INÍCIO DO PROCESSAMENTO DO MODAL =====');
       console.log('[DEBUG] Handler do modal_ticket_seguranca_motivo chamado para', interaction.user.tag, 'Guild:', interaction.guild.id);

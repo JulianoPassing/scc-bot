@@ -382,15 +382,15 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'cancelar_timer_24h') {
-        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
+        // Verificar se é staff OU é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
         
-        // Verificar se é staff E não é o criador do ticket
-        if (isStaff && !isCreator) {
+        // Permitir se é staff OU é o criador do ticket
+        if (isStaff || isCreator) {
           // Permitir acesso
         } else {
-          await interaction.reply({ content: '❌ Apenas membros da equipe podem cancelar timer!', flags: 64 });
+          await interaction.reply({ content: '❌ Apenas membros da equipe ou o criador do ticket podem cancelar timer!', flags: 64 });
           return;
         }
         

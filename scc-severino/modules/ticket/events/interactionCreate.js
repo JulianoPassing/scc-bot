@@ -2,6 +2,26 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType
 import { createTicketChannelWithCategoryCheck } from '../utils/ticketUtils.js';
 
 /**
+ * Verifica se um usuário tem cargo de staff
+ * @param {GuildMember} member - Membro do servidor
+ * @returns {boolean} True se o membro tem cargo de staff
+ */
+function hasStaffRole(member) {
+  const staffRoles = [
+    '1204393192284229692', // Cargo de Suporte
+    '1046404063673192542', // Cargo de Staff
+    '1277638402019430501', // Cargo de Moderador
+    '1226903187055972484', // Cargo de Admin
+    '1226907937117569128', // Cargo de Gerente
+    '1230131375965737044', // Cargo de Supervisor
+    '1046404063522197521', // Cargo de Owner
+    '1311023008495698081'  // Cargo específico de Casas
+  ];
+  
+  return staffRoles.some(roleId => member.roles.cache.has(roleId));
+}
+
+/**
  * Verifica se um usuário é o criador do ticket
  * @param {TextChannel} channel - Canal do ticket
  * @param {string} userId - ID do usuário a verificar
@@ -10,17 +30,20 @@ import { createTicketChannelWithCategoryCheck } from '../utils/ticketUtils.js';
 async function isTicketCreator(channel, userId) {
   try {
     // Buscar a mensagem de notificação de abertura do ticket
-    const messages = await channel.messages.fetch({ limit: 10 });
+    const messages = await channel.messages.fetch({ limit: 20 });
     const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket!'));
     
     if (notifyMsg) {
       const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
       if (match) {
         const creatorId = match[1];
-        return creatorId === userId;
+        const isCreator = creatorId === userId;
+        console.log(`[DEBUG] Verificando criador do ticket: ${userId} vs ${creatorId} = ${isCreator}`);
+        return isCreator;
       }
     }
     
+    console.log(`[DEBUG] Não foi possível identificar o criador do ticket para ${userId}`);
     return false;
   } catch (error) {
     console.error('Erro ao verificar criador do ticket:', error);
@@ -77,7 +100,7 @@ export const execute = async function(interaction) {
       // Botões do painel de ticket aberto
       if (customId === 'fechar_ticket') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
         
         if (!isStaff || isCreator) {
@@ -103,7 +126,7 @@ export const execute = async function(interaction) {
       }
       if (customId === 'assumir_ticket') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
         
         if (!isStaff || isCreator) {
@@ -121,7 +144,7 @@ export const execute = async function(interaction) {
       }
       if (customId === 'adicionar_membro') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
         
         if (!isStaff || isCreator) {
@@ -146,8 +169,10 @@ export const execute = async function(interaction) {
       }
       if (customId === 'avisar_membro') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        
+        console.log(`[DEBUG] Avisar Membro - User: ${interaction.user.tag}, Staff: ${isStaff}, Creator: ${isCreator}`);
         
         if (!isStaff || isCreator) {
           return interaction.reply({ content: '❌ Apenas membros da equipe podem avisar membros!', flags: 64 });
@@ -189,7 +214,7 @@ export const execute = async function(interaction) {
       }
       if (customId === 'renomear_ticket') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
         
         if (!isStaff || isCreator) {
@@ -232,8 +257,10 @@ export const execute = async function(interaction) {
       }
       if (customId === 'timer_24h') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        
+        console.log(`[DEBUG] Timer 24h - User: ${interaction.user.tag}, Staff: ${isStaff}, Creator: ${isCreator}`);
         
         if (!isStaff || isCreator) {
           return interaction.reply({ content: '❌ Apenas membros da equipe podem usar timer!', flags: 64 });
@@ -326,7 +353,7 @@ export const execute = async function(interaction) {
       }
       if (customId === 'cancelar_timer_24h') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-        const isStaff = interaction.member.permissions.has('ManageChannels');
+        const isStaff = hasStaffRole(interaction.member);
         const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
         
         if (!isStaff || isCreator) {
@@ -458,7 +485,7 @@ export const execute = async function(interaction) {
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
       // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-      const isStaff = interaction.member.permissions.has('ManageChannels');
+      const isStaff = hasStaffRole(interaction.member);
       const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
       
       if (!isStaff || isCreator) {
@@ -504,7 +531,7 @@ export const execute = async function(interaction) {
     // Handler do modal de adicionar membro
     if (interaction.isModalSubmit() && interaction.customId === 'modal_adicionar_membro') {
       // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-      const isStaff = interaction.member.permissions.has('ManageChannels');
+      const isStaff = hasStaffRole(interaction.member);
       const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
       
       if (!isStaff || isCreator) {
@@ -535,7 +562,7 @@ export const execute = async function(interaction) {
     // Handler do modal de motivo de fechamento
     if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento') {
       // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
-      const isStaff = interaction.member.permissions.has('ManageChannels');
+      const isStaff = hasStaffRole(interaction.member);
       const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
       
       if (!isStaff || isCreator) {

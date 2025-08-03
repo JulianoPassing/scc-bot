@@ -9,15 +9,7 @@ export const execute = async function(interaction) {
   try {
     const { customId, user, guild } = interaction;
     
-    // Verificar se é um ticket de segurança (começa com 'seg-')
-    const channelName = interaction.channel?.name;
-    const isSecurityTicket = channelName && channelName.startsWith('seg-');
-    
-    // Se não for um ticket de segurança, ignorar (deixar o módulo ticket processar)
-    if (!isSecurityTicket) {
-      return;
-    }
-    // Painel de segurança: abrir modal para motivo
+    // Permitir sempre o botão create_ticket_panel (criação de ticket)
     if (interaction.isButton() && customId === 'create_ticket_panel') {
       const modal = new ModalBuilder()
         .setCustomId('modal_ticket_seguranca_motivo')
@@ -35,6 +27,16 @@ export const execute = async function(interaction) {
       await interaction.showModal(modal);
       return;
     }
+    
+    // Verificar se é um ticket de segurança (começa com 'seg-')
+    const channelName = interaction.channel?.name;
+    const isSecurityTicket = channelName && channelName.startsWith('seg-');
+    
+    // Se não for um ticket de segurança, ignorar (deixar o módulo ticket processar)
+    if (!isSecurityTicket) {
+      return;
+    }
+
     // Handler do modal de motivo
     if (interaction.isModalSubmit() && interaction.customId === 'modal_ticket_seguranca_motivo') {
       console.log('[DEBUG] Handler do modal_ticket_seguranca_motivo chamado para', interaction.user.tag, 'Guild:', interaction.guild.id);

@@ -31,7 +31,9 @@ client.commands = new Collection();
 // Carregar módulos de cada pasta
 const modules = [
   'avaliacoes',
+  'batebapo',
   'boost',
+  'instagram',
   'liberacao',
   'sugestoes',
   'ticket',

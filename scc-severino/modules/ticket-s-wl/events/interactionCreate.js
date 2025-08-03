@@ -69,7 +69,6 @@ export const execute = async function(interaction) {
       try {
         console.log('[DEBUG] Iniciando criação do canal de segurança');
         console.log('[DEBUG] Tentando criar canal:', `seg-${user.username.toLowerCase()}`, 'na categoria', SEGURANCA_CATEGORY_ID);
-        console.log('[DEBUG] Permissões configuradas:', permissionOverwrites.length, 'overwrites');
         
         // Verificar se a categoria existe
         const category = guild.channels.cache.get(SEGURANCA_CATEGORY_ID);
@@ -81,6 +80,8 @@ export const execute = async function(interaction) {
           { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks] },
           { id: config.staffRoleId, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory, PermissionFlagsBits.AttachFiles, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ManageChannels] }
         ];
+        
+        console.log('[DEBUG] Permissões configuradas:', permissionOverwrites.length, 'overwrites');
         
         console.log('[DEBUG] Permissões configuradas para usuário:', user.id, 'Staff Role:', config.staffRoleId);
         

@@ -44,6 +44,18 @@ export default {
 
         try {
             const guild = reaction.message.guild;
+            
+            // Verificar se quem reagiu tem o cargo específico
+            const reactorMember = await guild.members.fetch(user.id);
+            const cargoPermitido = '1046404063673192541';
+            
+            if (!reactorMember.roles.cache.has(cargoPermitido)) {
+                console.log(`❌ Usuário ${user.tag} não tem o cargo necessário para liberar`);
+                return;
+            }
+            
+            console.log(`✅ Usuário ${user.tag} tem permissão para liberar`);
+            
             // Pegar o autor da mensagem, não quem reagiu
             const messageAuthor = reaction.message.author;
             const member = await guild.members.fetch(messageAuthor.id);

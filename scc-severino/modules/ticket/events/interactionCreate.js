@@ -392,7 +392,10 @@ export const execute = async function(interaction) {
       await interaction.deferReply({ flags: 64 });
       const novoNome = interaction.fields.getTextInputValue('novo_nome');
       
-      // Melhor lógica para detectar o emoji - verifica se o nome começa com qualquer emoji conhecido
+      // Debug: log do nome atual do canal
+      console.log('[DEBUG] Nome atual do canal:', name);
+      
+      // Lógica melhorada para detectar o emoji - verifica se o nome começa com qualquer emoji conhecido
       let emoji = '';
       if (name.startsWith('📁')) emoji = '📁';
       else if (name.startsWith('🦠')) emoji = '🦠';
@@ -401,10 +404,15 @@ export const execute = async function(interaction) {
       else if (name.startsWith('💎')) emoji = '💎';
       else if (name.startsWith('⚠️')) emoji = '⚠️';
       
+      // Debug: log do emoji detectado
+      console.log('[DEBUG] Emoji detectado:', emoji);
+      
       let finalName = novoNome;
       if (emoji && !finalName.startsWith(emoji)) {
         finalName = emoji + finalName;
       }
+      
+      console.log('[DEBUG] Nome final:', finalName);
       
       await interaction.channel.setName(finalName);
       await interaction.editReply({ content: `✏️ Nome do ticket alterado para: ${finalName}` });

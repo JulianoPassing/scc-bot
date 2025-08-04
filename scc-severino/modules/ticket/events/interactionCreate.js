@@ -54,7 +54,8 @@ const CATEGORY_IDS = {
   boost: '1386490600353828884',
   casas: '1386490752485294150',
   doacoes: '1386490511606419578',
-  denuncias: '1386490428404138054'
+  denuncias: '1386490428404138054',
+  revisao: '1386490752485294151'
 };
 const CATEGORY_INFO = {
   suporte: { emoji: '📁', nome: 'Suporte', desc: 'Suporte técnico e ajuda geral' },
@@ -62,7 +63,8 @@ const CATEGORY_INFO = {
   boost: { emoji: '🚀', nome: 'Boost', desc: 'Suporte para membros boosters' },
   casas: { emoji: '🏠', nome: 'Casas', desc: 'Questões relacionadas a casas e propriedades' },
   doacoes: { emoji: '💎', nome: 'Doações', desc: 'Assuntos relacionados a doações' },
-  denuncias: { emoji: '⚠️', nome: 'Denúncias', desc: 'Reportar infrações e problemas de conduta' }
+  denuncias: { emoji: '⚠️', nome: 'Denúncias', desc: 'Reportar infrações e problemas de conduta' },
+  revisao: { emoji: '🔍', nome: 'Revisão', desc: 'Solicitar revisão de decisões e processos' }
 };
 
 export const name = 'interactionCreate';
@@ -543,14 +545,15 @@ export const execute = async function(interaction) {
       // Debug: log do nome atual do canal
       console.log('[DEBUG] Nome atual do canal:', name);
       
-      // Lógica melhorada para detectar o emoji - verifica se o nome começa com qualquer emoji conhecido
-      let emoji = '';
-      if (name.startsWith('📁')) emoji = '📁';
-      else if (name.startsWith('🦠')) emoji = '🦠';
-      else if (name.startsWith('🚀')) emoji = '🚀';
-      else if (name.startsWith('🏠')) emoji = '🏠';
-      else if (name.startsWith('💎')) emoji = '💎';
-      else if (name.startsWith('⚠️')) emoji = '⚠️';
+              // Lógica melhorada para detectar o emoji - verifica se o nome começa com qualquer emoji conhecido
+        let emoji = '';
+        if (name.startsWith('📁')) emoji = '📁';
+        else if (name.startsWith('🦠')) emoji = '🦠';
+        else if (name.startsWith('🚀')) emoji = '🚀';
+        else if (name.startsWith('🏠')) emoji = '🏠';
+        else if (name.startsWith('💎')) emoji = '💎';
+        else if (name.startsWith('⚠️')) emoji = '⚠️';
+        else if (name.startsWith('🔍')) emoji = '🔍';
       
       // Debug: log do emoji detectado
       console.log('[DEBUG] Emoji detectado:', emoji);

@@ -18,7 +18,8 @@ export async function execute(message, args, client) {
       '⚠️ **Denúncias**\nReportar infrações e problemas de conduta\n' +
       '💎 **Doações**\nAssuntos relacionados a doações\n' +
       '🚀 **Boost**\nSuporte para membros boosters\n' +
-      '🏠 **Casas**\nQuestões relacionadas a casas e propriedades\n'
+      '🏠 **Casas**\nQuestões relacionadas a casas e propriedades\n' +
+      '🔍 **Revisão**\nSolicitar revisão de decisões e processos\n'
     )
     .setImage('https://i.imgur.com/ShgYL6s.png')
     .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade | ™ Street CarClub © All rights reserved', iconURL: null })
@@ -58,7 +59,14 @@ export async function execute(message, args, client) {
       .setStyle(ButtonStyle.Primary)
       .setEmoji('🏠')
   );
+  const row3 = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setCustomId('ticket_revisao')
+      .setLabel('Revisão')
+      .setStyle(ButtonStyle.Primary)
+      .setEmoji('🔍')
+  );
 
-  await message.channel.send({ embeds: [embed], components: [row1, row2] });
+  await message.channel.send({ embeds: [embed], components: [row1, row2, row3] });
   await message.reply('✅ Painel de tickets criado!');
 } 

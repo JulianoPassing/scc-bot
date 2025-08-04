@@ -74,6 +74,17 @@ export const CATEGORY_CONFIG = {
       '1226903187055972484', // Cargo de Admin
       '1046404063522197521'  // Cargo de Owner
     ]
+  },
+  revisao: {
+    id: '1386490752485294151',
+    name: 'Revisão',
+    emoji: '🔍',
+    description: 'Solicitar revisão de decisões e processos',
+    staffRoles: [
+      '1277638402019430501', // Cargo de Moderador
+      '1226903187055972484', // Cargo de Admin
+      '1046404063522197521'  // Cargo de Owner
+    ]
   }
 };
 

@@ -76,7 +76,7 @@ export const CATEGORY_CONFIG = {
     ]
   },
   revisao: {
-    id: '1386490752485294151',
+    id: '1402054800933392565',
     name: 'Revisão',
     emoji: '🔍',
     description: 'Solicitar revisão de decisões e processos',

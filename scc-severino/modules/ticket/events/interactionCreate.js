@@ -55,7 +55,7 @@ const CATEGORY_IDS = {
   casas: '1386490752485294150',
   doacoes: '1386490511606419578',
   denuncias: '1386490428404138054',
-  revisao: '1386490752485294151'
+  revisao: '1402054800933392565'
 };
 const CATEGORY_INFO = {
   suporte: { emoji: '📁', nome: 'Suporte', desc: 'Suporte técnico e ajuda geral' },

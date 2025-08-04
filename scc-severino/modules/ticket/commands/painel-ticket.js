@@ -19,7 +19,7 @@ export async function execute(message, args, client) {
       '💎 **Doações**\nAssuntos relacionados a doações\n' +
       '🚀 **Boost**\nSuporte para membros boosters\n' +
       '🏠 **Casas**\nQuestões relacionadas a casas e propriedades\n' +
-      '🔍 **Revisão**\nSolicitar revisão de decisões e processos\n'
+      '🔍 **Revisão**\nSolicitar revisão de advertências e banimentos\n'
     )
     .setImage('https://i.imgur.com/ShgYL6s.png')
     .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade | ™ Street CarClub © All rights reserved', iconURL: null })
@@ -63,7 +63,7 @@ export async function execute(message, args, client) {
     new ButtonBuilder()
       .setCustomId('ticket_revisao')
       .setLabel('Revisão')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Danger)
       .setEmoji('🔍')
   );
 

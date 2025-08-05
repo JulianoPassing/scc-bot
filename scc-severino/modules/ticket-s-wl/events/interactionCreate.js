@@ -28,11 +28,13 @@ export const execute = async function(interaction) {
       return;
     }
     
-    // Verificar se é um ticket de segurança (começa com 'seg-')
+    // Verificar se é um ticket de segurança (começa com 'seg-' e está em categoria de segurança)
     const channelName = interaction.channel?.name;
-    const isSecurityTicket = channelName && channelName.startsWith('seg-');
+    const channelCategory = interaction.channel?.parentId;
+    const isSecurityCategory = config.securityCategories.includes(channelCategory);
+    const isSecurityTicket = channelName && channelName.startsWith('seg-') && isSecurityCategory;
     
-    console.log('[DEBUG] Canal atual:', channelName, 'É ticket de segurança:', isSecurityTicket);
+    console.log('[DEBUG] Canal atual:', channelName, 'Categoria:', channelCategory, 'É categoria de segurança:', isSecurityCategory, 'É ticket de segurança:', isSecurityTicket);
     
     // Se não for um ticket de segurança E não for um modal, ignorar (deixar o módulo ticket processar)
     if (!isSecurityTicket && !interaction.isModalSubmit()) {
@@ -54,9 +56,10 @@ export const execute = async function(interaction) {
       const user = interaction.user;
       const guild = interaction.guild;
       console.log('[DEBUG] Verificando se já existe ticket para:', user.username);
-      // Verifica se já existe ticket
+      // Verifica se já existe ticket em qualquer categoria de segurança
       const existing = guild.channels.cache.find(
-        c => c.name === `seg-${user.username.toLowerCase()}`
+        c => c.name === `seg-${user.username.toLowerCase()}` && 
+             config.securityCategories.includes(c.parentId)
       );
       if (existing) {
         console.log('[DEBUG] Usuário já possui ticket aberto:', existing.name);
@@ -70,9 +73,10 @@ export const execute = async function(interaction) {
         console.log('[DEBUG] Iniciando criação do canal de segurança');
         console.log('[DEBUG] Tentando criar canal:', `seg-${user.username.toLowerCase()}`, 'na categoria', SEGURANCA_CATEGORY_ID);
         
-        // Verificar se a categoria existe
-        const category = guild.channels.cache.get(SEGURANCA_CATEGORY_ID);
-        console.log('[DEBUG] Categoria encontrada:', category ? category.name : 'NÃO ENCONTRADA');
+        // Usar sempre a categoria padrão para criação
+        const selectedCategoryId = SEGURANCA_CATEGORY_ID; // Sempre usar a categoria padrão
+        const category = guild.channels.cache.get(selectedCategoryId);
+        console.log('[DEBUG] Categoria padrão selecionada:', category ? category.name : 'NÃO ENCONTRADA', 'ID:', selectedCategoryId);
         
         // Permissões específicas para o canal
         const permissionOverwrites = [
@@ -100,7 +104,7 @@ export const execute = async function(interaction) {
         ticketChannel = await guild.channels.create({
           name: `seg-${user.username.toLowerCase()}`,
           type: ChannelType.GuildText,
-          parent: SEGURANCA_CATEGORY_ID,
+          parent: selectedCategoryId,
           topic: `Ticket de Segurança | ${user.tag} | ${motivo}`,
           permissionOverwrites
         });

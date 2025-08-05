@@ -1,6 +1,10 @@
 {
   "categoryId": "1378778140528087191",
-  "securityCategories": ["1378778140528087191"],
+  "securityCategories": [
+    "1378778022357766254",
+    "1378778111856087130", 
+    "1378778140528087191"
+  ],
   "supportRoles": [
     "Support Team",
     "Moderator",

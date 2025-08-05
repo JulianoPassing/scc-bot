@@ -1,5 +1,6 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createTicketChannel, getNextTicketNumber } from '../utils/ticketManager.js';
+import config from '../config.json' with { type: 'json' };
 
 export const data = {
   name: 'abrir-ticket-seguranca',
@@ -11,9 +12,10 @@ export async function execute(message, args, client) {
   const guild = message.guild;
   const reason = args.join(' ') || 'Sem motivo especificado';
 
-  // Verifica se já existe ticket
+  // Verifica se já existe ticket em qualquer categoria de segurança
   const existing = guild.channels.cache.find(
-    channel => channel.name === `seg-${user.username.toLowerCase()}`
+    channel => channel.name === `seg-${user.username.toLowerCase()}` && 
+               config.securityCategories.includes(channel.parentId)
   );
   if (existing) {
     return message.reply('❌ Você já possui um ticket aberto: ' + existing.toString());

@@ -1,3 +1,5 @@
+import { formatName } from '../utils/nameFormatter.js';
+
 export default {
     name: 'messageReactionAdd',
     async execute(reaction, user) {
@@ -62,30 +64,12 @@ export default {
             
             // Obter o nome da mensagem (primeira linha ou conteúdo da mensagem)
             const messageContent = reaction.message.content;
-            let messageName = messageContent.split('\n')[0] || messageContent || 'Usuário Liberado';
+            const messageName = messageContent.split('\n')[0] || messageContent || 'Usuário Liberado';
             
-            // Limpar o nome de formatações e limitar a 32 caracteres
-            messageName = messageName
-                .replace(/\*\*/g, '') // Remove **
-                .replace(/\*/g, '') // Remove *
-                .replace(/`/g, '') // Remove `
-                .replace(/__/g, '') // Remove __
-                .replace(/#/g, '') // Remove #
-                .replace(/\n/g, ' ') // Remove quebras de linha
-                .replace(/\s+/g, ' ') // Remove espaços extras
-                .trim();
+            // Processar o nome usando a função de formatação
+            const processedName = formatName(messageName);
             
-            // Limitar a 32 caracteres (limite do Discord)
-            if (messageName.length > 32) {
-                messageName = messageName.substring(0, 29) + '...';
-            }
-            
-            // Se ficou vazio, usar nome padrão
-            if (!messageName || messageName.length === 0) {
-                messageName = 'Usuário Liberado';
-            }
-            
-            console.log(`📝 Nome processado: "${messageName}" (${messageName.length} caracteres)`);
+            console.log(`📝 Nome processado: "${processedName}" (${processedName.length} caracteres)`);
             
             // Cargos
             const cargoAdicionar = '1317086939555434557';
@@ -118,8 +102,8 @@ export default {
             // Alterar nickname do usuário (se tiver permissão e hierarquia)
             if (hasManageNicknames && botHighestRole.position > userHighestRole.position) {
                 try {
-                    await member.setNickname(messageName);
-                    console.log(`✅ Nickname alterado para: ${messageName}`);
+                    await member.setNickname(processedName);
+                    console.log(`✅ Nickname alterado para: ${processedName}`);
                 } catch (error) {
                     console.log(`❌ Erro ao alterar nickname: ${error.message}`);
                 }

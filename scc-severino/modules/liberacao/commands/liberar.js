@@ -1,3 +1,5 @@
+import { formatName } from '../utils/nameFormatter.js';
+
 export default {
     name: 'liberar',
     description: 'Libera um usuário específico',
@@ -23,20 +25,8 @@ export default {
             const guild = message.guild;
             const member = await guild.members.fetch(user.id);
             
-            // Processar o nome (mesma lógica do evento)
-            let processedName = nome
-                .replace(/\*\*/g, '')
-                .replace(/\*/g, '')
-                .replace(/`/g, '')
-                .replace(/__/g, '')
-                .replace(/#/g, '')
-                .replace(/\n/g, ' ')
-                .replace(/\s+/g, ' ')
-                .trim();
-            
-            if (processedName.length > 32) {
-                processedName = processedName.substring(0, 29) + '...';
-            }
+            // Processar o nome usando a função de formatação
+            const processedName = formatName(nome);
             
             // Verificar permissões do bot
             const botMember = guild.members.cache.get(message.client.user.id);

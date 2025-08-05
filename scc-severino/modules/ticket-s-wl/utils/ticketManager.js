@@ -23,10 +23,11 @@ export async function getNextTicketNumber() {
 
 export async function createTicketChannel(guild, channelName, user, reason, ticketNumber, client) {
   try {
-    // Categoria correta
-    const ticketCategory = guild.channels.cache.get(config.categoryId);
+    // Usar sempre a categoria padrão para criação
+    const selectedCategoryId = config.categoryId; // Sempre usar a categoria padrão
+    const ticketCategory = guild.channels.cache.get(selectedCategoryId);
     if (!ticketCategory) {
-      throw new Error(`Categoria não encontrada: ${config.categoryId}`);
+      throw new Error(`Categoria padrão não encontrada: ${config.categoryId}`);
     }
     
     // Permissões específicas para o canal
@@ -54,7 +55,7 @@ export async function createTicketChannel(guild, channelName, user, reason, tick
     const ticketChannel = await guild.channels.create({
       name: channelName,
       type: ChannelType.GuildText,
-      parent: ticketCategory,
+      parent: selectedCategoryId,
       topic: `Ticket de Segurança #${ticketNumber} | ${user.tag} | ${reason}`,
       permissionOverwrites
     });

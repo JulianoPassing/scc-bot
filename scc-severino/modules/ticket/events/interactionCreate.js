@@ -179,9 +179,10 @@ export const execute = async function(interaction) {
               new ActionRowBuilder().addComponents(
                 new TextInputBuilder()
                   .setCustomId('membro')
-                  .setLabel('Mencione o usuário (@usuario)')
+                  .setLabel('Discord ID do usuário')
                   .setStyle(TextInputStyle.Short)
                   .setRequired(true)
+                  .setPlaceholder('Ex: 123456789012345678')
               )
             )
         );
@@ -585,21 +586,35 @@ export const execute = async function(interaction) {
       
       await interaction.deferReply({ flags: 64 });
       const membro = interaction.fields.getTextInputValue('membro');
-      const match = membro.match(/<@!?([0-9]+)>/);
-      if (!match) {
-        await interaction.editReply({ content: '❌ Mencione um usuário válido.' });
+      
+      // Validar se é um Discord ID válido (apenas números)
+      if (!/^\d{17,19}$/.test(membro)) {
+        await interaction.editReply({ content: '❌ Discord ID inválido. Digite apenas os números do ID do usuário.' });
         return;
       }
-      const userId = match[1];
+      
+      const userId = membro;
+      
       try {
+        // Verificar se o usuário existe
+        const user = await interaction.client.users.fetch(userId);
+        
+        // Adicionar permissões ao canal
         await interaction.channel.permissionOverwrites.create(userId, {
           ViewChannel: true,
           SendMessages: true,
-          ReadMessageHistory: true
+          ReadMessageHistory: true,
+          AttachFiles: true,
+          EmbedLinks: true
         });
-        await interaction.editReply({ content: `➕ <@${userId}> adicionado ao ticket!` });
+        
+        await interaction.editReply({ content: `➕ <@${userId}> adicionado ao ticket com todas as permissões necessárias!` });
       } catch (e) {
-        await interaction.editReply({ content: '❌ Erro ao adicionar usuário ao ticket.' });
+        if (e.code === 10013) {
+          await interaction.editReply({ content: '❌ Usuário não encontrado. Verifique se o Discord ID está correto.' });
+        } else {
+          await interaction.editReply({ content: '❌ Erro ao adicionar usuário ao ticket.' });
+        }
       }
       return;
     }

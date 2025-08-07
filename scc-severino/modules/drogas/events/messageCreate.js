@@ -79,14 +79,46 @@ export default {
         console.log('✅ Log de drogas detectado no embed!');
         console.log('📝 Conteúdo do embed:', embedContent);
         
-        // Extrair o ID do usuário mencionado do embed
+        // Procurar o usuário mencionado em todos os campos do embed
+        let userId = null;
+        
+        // Primeiro, tentar no conteúdo já extraído
         const userMentionMatch = embedContent.match(/<@(\d+)>/);
-        if (!userMentionMatch) {
-            console.log('❌ Nenhum usuário mencionado encontrado no embed');
+        if (userMentionMatch) {
+            userId = userMentionMatch[1];
+            console.log('👤 Usuário encontrado no conteúdo extraído:', userId);
+        } else {
+            // Se não encontrou, procurar em todos os campos do embed
+            console.log('🔍 Procurando usuário nos campos do embed...');
+            
+            if (logEmbed.fields) {
+                for (const field of logEmbed.fields) {
+                    console.log('📋 Verificando campo:', field.name, '=', field.value);
+                    
+                    // Procurar menção no valor do campo
+                    const fieldMentionMatch = field.value.match(/<@(\d+)>/);
+                    if (fieldMentionMatch) {
+                        userId = fieldMentionMatch[1];
+                        console.log('👤 Usuário encontrado no campo:', field.name, '=', userId);
+                        break;
+                    }
+                    
+                    // Procurar menção no nome do campo
+                    const nameMentionMatch = field.name.match(/<@(\d+)>/);
+                    if (nameMentionMatch) {
+                        userId = nameMentionMatch[1];
+                        console.log('👤 Usuário encontrado no nome do campo:', field.name, '=', userId);
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (!userId) {
+            console.log('❌ Nenhum usuário mencionado encontrado em nenhum campo do embed');
             return;
         }
         
-        const userId = userMentionMatch[1];
         console.log('👤 Usuário encontrado:', userId);
         
         try {

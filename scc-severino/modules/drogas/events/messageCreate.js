@@ -1,6 +1,6 @@
-const { EmbedBuilder } = require('discord.js');
+import { EmbedBuilder } from 'discord.js';
 
-module.exports = {
+export default {
     name: 'messageCreate',
     async execute(message, config) {
         console.log('🔍 Módulo drogas: Mensagem recebida');

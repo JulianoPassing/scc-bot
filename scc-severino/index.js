@@ -32,6 +32,7 @@ client.commands = new Collection();
 const modules = [
   'avaliacoes',
   'batebapo',
+  'blacklist',
   'boost',
   'instagram',
   'liberacao',

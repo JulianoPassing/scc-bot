@@ -16,18 +16,73 @@ export default {
         
         console.log('✅ Canal correto detectado!');
         
-        // Verificar se a mensagem contém um log de drogas
-        if (!message.content.includes('SCC Gangs Logs')) {
-            console.log('❌ Não é um log de drogas, ignorando...');
+        // Verificar se a mensagem tem embeds
+        if (!message.embeds || message.embeds.length === 0) {
+            console.log('❌ Mensagem não tem embeds, ignorando...');
             return;
         }
         
-        console.log('✅ Log de drogas detectado!');
+        console.log('📦 Embeds encontrados:', message.embeds.length);
         
-        // Extrair o ID do usuário mencionado
-        const userMentionMatch = message.content.match(/<@(\d+)>/);
+        // Procurar por "SCC Gangs Logs" nos embeds
+        let logEmbed = null;
+        let embedContent = '';
+        
+        for (const embed of message.embeds) {
+            console.log('🔍 Verificando embed:', {
+                title: embed.title,
+                description: embed.description,
+                fieldsCount: embed.fields?.length || 0
+            });
+            
+            // Verificar no título do embed
+            if (embed.title && embed.title.includes('SCC Gangs Logs')) {
+                logEmbed = embed;
+                embedContent = embed.title + '\n' + (embed.description || '');
+                console.log('✅ Encontrado no título do embed');
+                break;
+            }
+            
+            // Verificar na descrição do embed
+            if (embed.description && embed.description.includes('SCC Gangs Logs')) {
+                logEmbed = embed;
+                embedContent = embed.description;
+                console.log('✅ Encontrado na descrição do embed');
+                break;
+            }
+            
+            // Verificar nos campos do embed
+            if (embed.fields) {
+                for (const field of embed.fields) {
+                    console.log('📋 Campo:', { name: field.name, value: field.value });
+                    if (field.name && field.name.includes('SCC Gangs Logs')) {
+                        logEmbed = embed;
+                        embedContent = field.name + '\n' + (field.value || '');
+                        console.log('✅ Encontrado no nome do campo');
+                        break;
+                    }
+                    if (field.value && field.value.includes('SCC Gangs Logs')) {
+                        logEmbed = embed;
+                        embedContent = field.value;
+                        console.log('✅ Encontrado no valor do campo');
+                        break;
+                    }
+                }
+            }
+        }
+        
+        if (!logEmbed) {
+            console.log('❌ Nenhum embed com "SCC Gangs Logs" encontrado');
+            return;
+        }
+        
+        console.log('✅ Log de drogas detectado no embed!');
+        console.log('📝 Conteúdo do embed:', embedContent);
+        
+        // Extrair o ID do usuário mencionado do embed
+        const userMentionMatch = embedContent.match(/<@(\d+)>/);
         if (!userMentionMatch) {
-            console.log('❌ Nenhum usuário mencionado encontrado');
+            console.log('❌ Nenhum usuário mencionado encontrado no embed');
             return;
         }
         

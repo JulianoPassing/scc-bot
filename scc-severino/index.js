@@ -34,6 +34,7 @@ const modules = [
   'batebapo',
   'blacklist',
   'boost',
+  'drogas',
   'instagram',
   'liberacao',
   'sugestoes',

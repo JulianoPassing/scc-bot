@@ -150,13 +150,16 @@ export default {
                     .setTitle('⚠️ Usuário sem SET')
                     .setDescription(`<@${userId}> não possui nenhum dos cargos necessários!`)
                     .addFields(
-                        { name: 'Cargo SET', value: `<@&${config.setRoleId}>`, inline: true },
                         { name: 'Usuário', value: `<@${userId}>`, inline: true }
                     )
                     .setTimestamp()
                     .setFooter({ text: 'SCC Bot - Sistema de Verificação de Cargos' });
                 
-                await message.reply({ embeds: [embed] });
+                // Enviar mensagem com o cargo mencionado fora do embed
+                await message.reply({ 
+                    content: `<@&${config.setRoleId}>`,
+                    embeds: [embed] 
+                });
                 console.log('✅ Alerta enviado com sucesso!');
             } else {
                 console.log('✅ Usuário possui cargo necessário, ignorando...');

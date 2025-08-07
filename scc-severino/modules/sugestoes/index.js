@@ -1,12 +1,97 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
 
 const SUGGESTION_CHANNEL_ID = '1395117926402756669';
 const VOTES_CHANNEL_ID = '1395118049115246825';
+const VOTES_FILE = './modules/sugestoes/votes.json';
 
 const votos = new Map(); // Map<messageId, {yes: Set<userId>, no: Set<userId>}>
 const logsMessages = new Map(); // Map<suggestionId, logMessageId>
 
+// Função para salvar votos no arquivo JSON
+const saveVotes = () => {
+  try {
+    const votesData = {};
+    for (const [messageId, voteData] of votos.entries()) {
+      votesData[messageId] = {
+        yes: Array.from(voteData.yes),
+        no: Array.from(voteData.no)
+      };
+    }
+    fs.writeFileSync(VOTES_FILE, JSON.stringify(votesData, null, 2));
+  } catch (error) {
+    console.error('Erro ao salvar votos:', error);
+  }
+};
+
+// Função para carregar votos do arquivo JSON
+const loadVotes = () => {
+  try {
+    if (fs.existsSync(VOTES_FILE)) {
+      const votesData = JSON.parse(fs.readFileSync(VOTES_FILE, 'utf8'));
+      for (const [messageId, voteData] of Object.entries(votesData)) {
+        votos.set(messageId, {
+          yes: new Set(voteData.yes),
+          no: new Set(voteData.no)
+        });
+      }
+      console.log(`✅ Votos carregados: ${Object.keys(votesData).length} sugestões`);
+    }
+  } catch (error) {
+    console.error('Erro ao carregar votos:', error);
+  }
+};
+
+// Função para atualizar botões com votos carregados
+const updateButtonsWithVotes = async (client) => {
+  try {
+    const suggestionChannel = client.channels.cache.get(SUGGESTION_CHANNEL_ID);
+    if (!suggestionChannel) return;
+
+    const messages = await suggestionChannel.messages.fetch({ limit: 100 });
+    
+    for (const [messageId, message] of messages) {
+      if (votos.has(messageId) && message.components.length > 0) {
+        const voto = votos.get(messageId);
+        const totalVotos = voto.yes.size + voto.no.size;
+        const porcentagemSim = totalVotos > 0 ? Math.round((voto.yes.size / totalVotos) * 100) : 0;
+        const porcentagemNao = totalVotos > 0 ? Math.round((voto.no.size / totalVotos) * 100) : 0;
+        
+        const row = new ActionRowBuilder().addComponents(
+          new ButtonBuilder()
+            .setCustomId('vote_yes')
+            .setLabel(`👍 (${voto.yes.size}) - ${porcentagemSim}%`)
+            .setStyle(ButtonStyle.Success)
+            .setEmoji('✅'),
+          new ButtonBuilder()
+            .setCustomId('vote_no')
+            .setLabel(`👎 (${voto.no.size}) - ${porcentagemNao}%`)
+            .setStyle(ButtonStyle.Danger)
+            .setEmoji('❌')
+        );
+        
+        try {
+          await message.edit({ components: [row] });
+        } catch (error) {
+          console.error(`Erro ao atualizar botões da mensagem ${messageId}:`, error);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Erro ao atualizar botões com votos:', error);
+  }
+};
+
 const setupSugestoesModule = function(client) {
+  // Carregar votos existentes ao inicializar
+  loadVotes();
+  
+  // Atualizar botões com votos carregados após um pequeno delay
+  setTimeout(() => {
+    updateButtonsWithVotes(client);
+  }, 2000);
+
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
     if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
@@ -48,6 +133,7 @@ ${conteudo}
       );
       const sentMessage = await message.channel.send({ embeds: [embed], components: [row] });
       votos.set(sentMessage.id, { yes: new Set(), no: new Set() });
+      saveVotes(); // Salvar após criar nova sugestão
       try {
         await sentMessage.startThread({
           name: `💬 Debate: ${conteudo.substring(0, 50)}${conteudo.length > 50 ? '...' : ''}`,
@@ -70,6 +156,10 @@ ${conteudo}
       voto.no.delete(user.id);
       if (customId === 'vote_yes') voto.yes.add(user.id);
       if (customId === 'vote_no') voto.no.add(user.id);
+      
+      // Salvar votos após cada voto
+      saveVotes();
+      
       const row = ActionRowBuilder.from(message.components[0]);
       const totalVotos = voto.yes.size + voto.no.size;
       const porcentagemSim = totalVotos > 0 ? Math.round((voto.yes.size / totalVotos) * 100) : 0;

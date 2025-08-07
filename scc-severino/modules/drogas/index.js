@@ -31,23 +31,39 @@ module.exports = {
         const eventsPath = path.join(__dirname, 'events');
         const fs = require('fs');
         
+        console.log('📁 Carregando eventos do módulo drogas...');
+        console.log('📂 Caminho dos eventos:', eventsPath);
+        
         if (fs.existsSync(eventsPath)) {
             const eventFiles = fs.readdirSync(eventsPath).filter(file => file.endsWith('.js'));
+            console.log('📄 Arquivos de eventos encontrados:', eventFiles);
             
             for (const file of eventFiles) {
+                console.log(`🔄 Carregando evento: ${file}`);
                 const event = require(path.join(eventsPath, file));
                 if (event.once) {
                     client.once(event.name, (...args) => event.execute(...args, this.config));
+                    console.log(`✅ Evento ${event.name} registrado como once`);
                 } else {
                     client.on(event.name, (...args) => event.execute(...args, this.config));
+                    console.log(`✅ Evento ${event.name} registrado como listener`);
                 }
             }
+        } else {
+            console.log('❌ Pasta de eventos não encontrada!');
         }
     },
 
     // Inicializar módulo
     init: function(client) {
+        console.log('🚀 Iniciando módulo drogas...');
         this.loadEvents(client);
         console.log('✅ Módulo drogas carregado com sucesso!');
+        console.log('📋 Configurações:', {
+            guildId: this.config.guildId,
+            channelId: this.config.channelId,
+            requiredRolesCount: this.config.requiredRoles.length,
+            setRoleId: this.config.setRoleId
+        });
     }
 };

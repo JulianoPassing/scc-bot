@@ -1,4 +1,5 @@
 import { EmbedBuilder } from 'discord.js';
+import { removeActiveTicket, loadTicketsData } from '../utils/ticketManager.js';
 
 export const data = {
   name: 'fechar-ticket',
@@ -13,6 +14,20 @@ export async function execute(message, args, client) {
   // Permissão: apenas staff
   if (!message.member.permissions.has('ManageChannels')) {
     return message.reply('❌ Apenas membros da equipe podem fechar tickets!');
+  }
+  
+  // Remover ticket do registro
+  const data = await loadTicketsData();
+  const channelId = channel.id;
+  
+  // Encontrar o usuário que possui este ticket
+  for (const [userId, userTickets] of Object.entries(data.activeTickets)) {
+    for (const [category, ticketData] of Object.entries(userTickets)) {
+      if (ticketData.channelId === channelId) {
+        await removeActiveTicket(userId, category);
+        break;
+      }
+    }
   }
   const confirmEmbed = new EmbedBuilder()
     .setColor('#FFA500')

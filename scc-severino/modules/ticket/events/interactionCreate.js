@@ -1,5 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType, PermissionFlagsBits, ModalBuilder, TextInputBuilder, TextInputStyle } from 'discord.js';
 import { createTicketChannelWithCategoryCheck } from '../utils/ticketUtils.js';
+import { hasActiveTicketInCategory, registerActiveTicket, removeActiveTicket, loadTicketsData } from '../utils/ticketManager.js';
+import { CATEGORY_CONFIG } from '../config.js';
 
 /**
  * Verifica se um usuário tem cargo de staff
@@ -429,8 +431,19 @@ export const execute = async function(interaction) {
         await interaction.editReply({ content: '❌ Categoria inválida ou não configurada.' });
         return;
       }
-      const assunto = interaction.fields.getTextInputValue('assunto');
+      
       const user = interaction.user;
+      
+      // Verificar se o usuário já tem ticket ativo nesta categoria
+      const hasActiveTicket = await hasActiveTicketInCategory(user.id, tipo);
+      if (hasActiveTicket) {
+        const categoriaConfig = CATEGORY_CONFIG[tipo];
+        const categoriaName = categoriaConfig ? categoriaConfig.name : tipo;
+        await interaction.editReply({ content: `❌ Você já possui um ticket ativo na categoria **${categoriaName}**. Você só pode ter 1 ticket por categoria.` });
+        return;
+      }
+      
+      const assunto = interaction.fields.getTextInputValue('assunto');
       const guild = interaction.guild;
       const emoji = categoria.emoji;
       const tipoNome = tipo;
@@ -453,6 +466,10 @@ export const execute = async function(interaction) {
       
       const ticketChannel = ticketResult.channel;
       const categoryFull = ticketResult.categoryFull;
+      
+      // Registrar o ticket ativo
+      await registerActiveTicket(user.id, tipo, ticketChannel.id, ticketChannel.name);
+      
       await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket! Equipe notificada:` });
       
       // Verificar se é um ticket de doações e enviar mensagem privada para usuários específicos
@@ -637,6 +654,20 @@ export const execute = async function(interaction) {
       const motivo = interaction.fields.getTextInputValue('motivo');
       const user = interaction.user;
       const channel = interaction.channel;
+      
+      // Remover ticket do registro
+      const data = await loadTicketsData();
+      const channelId = channel.id;
+      
+      // Encontrar o usuário que possui este ticket
+      for (const [userId, userTickets] of Object.entries(data.activeTickets)) {
+        for (const [category, ticketData] of Object.entries(userTickets)) {
+          if (ticketData.channelId === channelId) {
+            await removeActiveTicket(userId, category);
+            break;
+          }
+        }
+      }
       // Buscar todas as mensagens do canal (transcript completo)
       let allMessages = [];
       let lastId;

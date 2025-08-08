@@ -1,5 +1,7 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createTicketChannelWithCategoryCheck } from '../utils/ticketUtils.js';
+import { hasActiveTicketInCategory, registerActiveTicket, getUserActiveTicket } from '../utils/ticketManager.js';
+import { CATEGORY_CONFIG } from '../config.js';
 
 export const data = {
   name: 'abrir-ticket',
@@ -11,19 +13,24 @@ export async function execute(message, args, client) {
   const guild = message.guild;
   const reason = args.join(' ') || 'Sem motivo especificado';
 
-  // Verifica se já existe ticket
-  const existing = guild.channels.cache.find(
-    channel => channel.name === `ticket-${user.id}`
-  );
-  if (existing) {
-    return message.reply('❌ Você já possui um ticket aberto: ' + existing.toString());
+  // Verifica se o usuário já tem tickets ativos
+  const activeTickets = await getUserActiveTicket(user.id);
+  if (activeTickets) {
+    const ticketList = Object.entries(activeTickets).map(([category, ticket]) => {
+      const categoryConfig = CATEGORY_CONFIG[category];
+      const categoryName = categoryConfig ? categoryConfig.name : category;
+      return `• **${categoryName}**: <#${ticket.channelId}>`;
+    }).join('\n');
+    
+    return message.reply(`❌ Você já possui tickets ativos:\n${ticketList}\n\nVocê só pode ter 1 ticket por categoria. Feche os tickets existentes antes de abrir novos.`);
   }
 
   // Cria o canal do ticket com verificação de categoria cheia
   const channelName = `ticket-${user.id}`;
   
-  // Usar categoria de suporte por padrão (você pode modificar conforme necessário)
+  // Usar categoria de suporte por padrão
   const categoriaId = '1386490182085382294'; // ID da categoria de suporte
+  const categoryName = 'suporte'; // Nome da categoria para registro
   
   const ticketResult = await createTicketChannelWithCategoryCheck(
     guild,
@@ -35,6 +42,9 @@ export async function execute(message, args, client) {
   
   const ticketChannel = ticketResult.channel;
   const categoryFull = ticketResult.categoryFull;
+  
+  // Registrar o ticket ativo
+  await registerActiveTicket(user.id, categoryName, ticketChannel.id, ticketChannel.name);
 
   const welcomeEmbed = new EmbedBuilder()
     .setColor(categoryFull ? '#FFA500' : '#0099FF')

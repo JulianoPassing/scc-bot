@@ -9,6 +9,10 @@ Este módulo implementa um sistema de tickets que herda automaticamente as permi
 - ✅ Sistema de categorias configurável
 - ✅ Verificação de permissões por categoria
 - ✅ Criação de tickets com permissões corretas
+- ✅ **Limitação de 1 ticket por categoria por usuário**
+- ✅ **Sistema de registro de tickets ativos**
+- ✅ **Verificação automática de tickets duplicados**
+- ✅ **Limpeza automática de tickets deletados**
 
 ## Configuração
 
@@ -80,6 +84,15 @@ O sistema automaticamente:
 
 ## Como Funciona
 
+### Sistema de Limitação de Tickets
+
+O sistema agora implementa uma limitação de **1 ticket por categoria por usuário**:
+
+1. **Verificação Prévia**: Antes de criar um ticket, o sistema verifica se o usuário já possui um ticket ativo na categoria
+2. **Registro Automático**: Quando um ticket é criado, ele é automaticamente registrado no sistema
+3. **Remoção Automática**: Quando um ticket é fechado ou deletado, ele é removido do registro
+4. **Limpeza Automática**: O sistema detecta tickets deletados manualmente e os remove do registro
+
 ### Herança de Permissões
 
 1. **Busca da Categoria**: O sistema busca a categoria pai pelo ID
@@ -103,11 +116,15 @@ Ticket criado herda:
 ## Comandos Disponíveis
 
 - `!abrir-ticket` - Abre um ticket de suporte básico
+- `!fechar-ticket` - Fecha o ticket atual (apenas staff)
+- `!status-tickets` - Verifica os tickets ativos de um usuário
+- `!limpar-tickets` - Limpa tickets deletados manualmente do registro (apenas admin)
 - `!painel-ticket` - Mostra o painel de tickets (se implementado)
 
 ## Eventos
 
 - **interactionCreate**: Gerencia botões e modais do sistema de tickets
+- **channelDelete**: Remove tickets deletados manualmente do registro
 - **ready**: Inicialização do módulo
 
 ## Utilitários
@@ -119,6 +136,17 @@ Ticket criado herda:
 - `createTicketChannelWithInheritance()` - Cria canal com herança
 - `hasCategoryPermission()` - Verifica permissões por categoria
 - `getMemberCategories()` - Lista categorias do membro
+
+### `ticketManager.js`
+
+- `loadTicketsData()` - Carrega dados dos tickets ativos
+- `saveTicketsData()` - Salva dados dos tickets ativos
+- `hasActiveTicketInCategory()` - Verifica se usuário tem ticket ativo em categoria
+- `getUserActiveTicket()` - Obtém todos os tickets ativos de um usuário
+- `registerActiveTicket()` - Registra novo ticket ativo
+- `removeActiveTicket()` - Remove ticket ativo do registro
+- `getActiveTicketsInCategory()` - Obtém todos os tickets ativos de uma categoria
+- `cleanupDeletedTickets()` - Limpa tickets que não existem mais
 
 ### `ticketPermissions.js`
 
@@ -139,6 +167,15 @@ Ticket criado herda:
 ### Permissões não estão sendo herdadas
 - Verifique se as permissões estão configuradas na categoria
 - Confirme se os IDs dos cargos estão corretos no `config.js`
+
+### Erro: "Você já possui um ticket ativo"
+- O usuário já tem um ticket aberto na categoria solicitada
+- Use `!status-tickets` para verificar os tickets ativos
+- Feche o ticket existente antes de abrir um novo
+
+### Tickets não estão sendo removidos do registro
+- Execute `!limpar-tickets` para limpar tickets deletados manualmente
+- Verifique se o arquivo `data/tickets.json` existe e tem permissões de escrita
 
 ## Personalização
 

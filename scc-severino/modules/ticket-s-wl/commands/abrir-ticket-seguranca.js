@@ -23,10 +23,7 @@ export async function execute(message, args, client) {
 
   const ticketNumber = await getNextTicketNumber();
   const channelName = `seg-${user.username.toLowerCase()}`;
-  
-  console.log('[DEBUG] Criando canal:', channelName);
   const ticketChannel = await createTicketChannel(guild, channelName, user, reason, ticketNumber, client);
-  console.log('[DEBUG] Canal criado:', ticketChannel.id, ticketChannel.name);
 
   const welcomeEmbed = new EmbedBuilder()
     .setColor('#0099FF')
@@ -53,21 +50,12 @@ export async function execute(message, args, client) {
     components: [closeButton]
   });
 
-  console.log('[DEBUG] Primeira mensagem enviada com sucesso');
-
   // Mensagem automática informando sobre o horário de atendimento
   try {
-    console.log('[DEBUG] Tentando enviar mensagem automática...');
-    console.log('[DEBUG] Canal ID:', ticketChannel.id);
-    console.log('[DEBUG] Canal existe:', !!ticketChannel);
-    
     // Enviar como mensagem simples primeiro para teste
-    const sentMessage = await ticketChannel.send('Olá. Seu ticket foi recebido e está na fila para atendimento. Nossa equipe entrará em contato em breve, lembrando que nosso horário de atendimento é de segunda a sexta-feira. Não é necessário enviar novas mensagens.');
-    
-    console.log('[DEBUG] Mensagem automática enviada com sucesso. ID da mensagem:', sentMessage.id);
+    await ticketChannel.send('Olá. Seu ticket foi recebido e está na fila para atendimento. Nossa equipe entrará em contato em breve, lembrando que nosso horário de atendimento é de segunda a sexta-feira. Não é necessário enviar novas mensagens.');
   } catch (error) {
     console.error('[ERRO] Falha ao enviar mensagem automática:', error);
-    console.error('[ERRO] Stack trace:', error.stack);
   }
 
   await message.reply('✅ Ticket criado com sucesso!');

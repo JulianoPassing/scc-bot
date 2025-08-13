@@ -135,6 +135,17 @@ export const execute = async function(interaction) {
         new ButtonBuilder().setCustomId('avisar_membro_seguranca').setLabel('Avisar Membro').setStyle(ButtonStyle.Primary).setEmoji('🔔')
       );
       await ticketChannel.send({ embeds: [embed], components: [row] });
+      
+      // Mensagem automática informando sobre o horário de atendimento
+      const autoMessage = new EmbedBuilder()
+        .setColor('#FFA500')
+        .setTitle('📋 Informações Importantes')
+        .setDescription('Olá. Seu ticket foi recebido e está na fila para atendimento. Nossa equipe entrará em contato em breve, lembrando que nosso horário de atendimento é de segunda a sexta-feira. Não é necessário enviar novas mensagens.')
+        .setFooter({ text: 'Aguarde o atendimento da equipe' })
+        .setTimestamp();
+
+      await ticketChannel.send({ embeds: [autoMessage] });
+      
       console.log('[DEBUG] ===== FIM DO PROCESSAMENTO DO MODAL =====');
       await interaction.reply({ content: `✅ Ticket de segurança criado em <#${ticketChannel.id}>!`, flags: 64 });
       return;

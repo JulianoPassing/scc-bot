@@ -50,15 +50,19 @@ export async function execute(message, args, client) {
     components: [closeButton]
   });
 
-  // Mensagem automática informando sobre o horário de atendimento
-  const autoMessage = new EmbedBuilder()
-    .setColor('#FFA500')
-    .setTitle('📋 Informações Importantes')
-    .setDescription('Olá. Seu ticket foi recebido e está na fila para atendimento. Nossa equipe entrará em contato em breve, lembrando que nosso horário de atendimento é de segunda a sexta-feira. Não é necessário enviar novas mensagens.')
-    .setFooter({ text: 'Aguarde o atendimento da equipe' })
-    .setTimestamp();
+  console.log('[DEBUG] Primeira mensagem enviada com sucesso');
 
-  await ticketChannel.send({ embeds: [autoMessage] });
+  // Mensagem automática informando sobre o horário de atendimento
+  try {
+    console.log('[DEBUG] Tentando enviar mensagem automática...');
+    
+    // Enviar como mensagem simples primeiro para teste
+    await ticketChannel.send('Olá. Seu ticket foi recebido e está na fila para atendimento. Nossa equipe entrará em contato em breve, lembrando que nosso horário de atendimento é de segunda a sexta-feira. Não é necessário enviar novas mensagens.');
+    
+    console.log('[DEBUG] Mensagem automática enviada com sucesso');
+  } catch (error) {
+    console.error('[ERRO] Falha ao enviar mensagem automática:', error);
+  }
 
   await message.reply('✅ Ticket criado com sucesso!');
 } 

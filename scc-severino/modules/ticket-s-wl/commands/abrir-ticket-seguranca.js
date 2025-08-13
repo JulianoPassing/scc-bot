@@ -49,5 +49,16 @@ export async function execute(message, args, client) {
     embeds: [welcomeEmbed],
     components: [closeButton]
   });
+
+  // Mensagem automática informando sobre o horário de atendimento
+  const autoMessage = new EmbedBuilder()
+    .setColor('#FFA500')
+    .setTitle('📋 Informações Importantes')
+    .setDescription('Olá. Seu ticket foi recebido e está na fila para atendimento. Nossa equipe entrará em contato em breve, lembrando que nosso horário de atendimento é de segunda a sexta-feira. Não é necessário enviar novas mensagens.')
+    .setFooter({ text: 'Aguarde o atendimento da equipe' })
+    .setTimestamp();
+
+  await ticketChannel.send({ embeds: [autoMessage] });
+
   await message.reply('✅ Ticket criado com sucesso!');
 } 

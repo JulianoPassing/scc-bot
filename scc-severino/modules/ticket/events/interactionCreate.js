@@ -317,10 +317,55 @@ export const execute = async function(interaction) {
         if (!interaction.client.timers24h) interaction.client.timers24h = {};
         const timerKey = interaction.channel.id;
         if (interaction.client.timers24h[timerKey]) clearTimeout(interaction.client.timers24h[timerKey]);
-        interaction.client.timers24h[timerKey] = setTimeout(async () => {
+                interaction.client.timers24h[timerKey] = setTimeout(async () => {
           try {
             // Fecha o ticket automaticamente
             const motivo = 'Timer esgotado';
+            
+            // Identificar o criador do ticket antes de fechar
+            let ticketCreatorId = null;
+            let ticketCategory = null;
+            const data = await loadTicketsData();
+            const channelId = interaction.channel.id;
+            
+            // Encontrar o usuário que possui este ticket
+            for (const [userId, userTickets] of Object.entries(data.activeTickets)) {
+              for (const [category, ticketData] of Object.entries(userTickets)) {
+                if (ticketData.channelId === channelId) {
+                  ticketCreatorId = userId;
+                  ticketCategory = category;
+                  await removeActiveTicket(userId, category);
+                  break;
+                }
+              }
+            }
+
+            // Enviar mensagem privada ao criador do ticket solicitando avaliação
+            if (ticketCreatorId) {
+              try {
+                const ticketCreator = await interaction.client.users.fetch(ticketCreatorId);
+                const evaluationEmbed = new EmbedBuilder()
+                  .setColor('#FF6B6B')
+                  .setTitle('🎫 Ticket Fechado - Avalie seu Atendimento')
+                  .setDescription(
+                    'Olá! Seu ticket foi fechado automaticamente após 24h de inatividade.\n\n' +
+                    '**Não se esqueça de avaliar seu último atendimento!**\n\n' +
+                    'Sua opinião é muito importante para continuarmos melhorando nossos serviços.\n\n' +
+                    '📝 **Avalie aqui:** https://discord.com/channels/1046404063287332936/1394727160991842324'
+                  )
+                  .addFields(
+                    { name: 'Categoria do Ticket', value: ticketCategory ? ticketCategory.charAt(0).toUpperCase() + ticketCategory.slice(1) : 'Suporte', inline: true },
+                    { name: 'Motivo do Fechamento', value: 'Timer de 24h esgotado', inline: true }
+                  )
+                  .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
+                  .setTimestamp();
+
+                await ticketCreator.send({ embeds: [evaluationEmbed] });
+              } catch (error) {
+                console.error('Erro ao enviar mensagem privada para avaliação (Timer):', error);
+              }
+            }
+            
             // Gerar transcript visual
             let allMessages = [];
             let lastId;
@@ -356,7 +401,7 @@ export const execute = async function(interaction) {
               }
               if (msg.reference && msg.reference.messageId) {
                 line += `\n↪️ Em resposta a mensagem ID: ${msg.reference.messageId}`;
-              }
+                }
               transcript += line + '\n';
             }
             const embedLog = new EmbedBuilder()
@@ -658,14 +703,44 @@ export const execute = async function(interaction) {
       // Remover ticket do registro
       const data = await loadTicketsData();
       const channelId = channel.id;
+      let ticketCreatorId = null;
+      let ticketCategory = null;
       
       // Encontrar o usuário que possui este ticket
       for (const [userId, userTickets] of Object.entries(data.activeTickets)) {
         for (const [category, ticketData] of Object.entries(userTickets)) {
           if (ticketData.channelId === channelId) {
+            ticketCreatorId = userId;
+            ticketCategory = category;
             await removeActiveTicket(userId, category);
             break;
           }
+        }
+      }
+
+      // Enviar mensagem privada ao criador do ticket solicitando avaliação
+      if (ticketCreatorId) {
+        try {
+          const ticketCreator = await interaction.client.users.fetch(ticketCreatorId);
+          const evaluationEmbed = new EmbedBuilder()
+            .setColor('#FF6B6B')
+            .setTitle('🎫 Ticket Fechado - Avalie seu Atendimento')
+            .setDescription(
+              'Olá! Seu ticket foi fechado pela nossa equipe.\n\n' +
+              '**Não se esqueça de avaliar seu último atendimento!**\n\n' +
+              'Sua opinião é muito importante para continuarmos melhorando nossos serviços.\n\n' +
+              '📝 **Avalie aqui:** https://discord.com/channels/1046404063287332936/1394727160991842324'
+            )
+            .addFields(
+              { name: 'Categoria do Ticket', value: ticketCategory ? ticketCategory.charAt(0).toUpperCase() + ticketCategory.slice(1) : 'Suporte', inline: true },
+              { name: 'Fechado por', value: user.tag, inline: true }
+            )
+            .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
+            .setTimestamp();
+
+          await ticketCreator.send({ embeds: [evaluationEmbed] });
+        } catch (error) {
+          console.error('Erro ao enviar mensagem privada para avaliação:', error);
         }
       }
       // Buscar todas as mensagens do canal (transcript completo)

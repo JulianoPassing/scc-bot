@@ -1,201 +1,121 @@
-# Sistema de Tickets com Herança de Permissões
+# Módulo de Tickets - StreetCarClub
 
-Este módulo implementa um sistema de tickets que herda automaticamente as permissões das categorias pai, garantindo que os cargos de staff tenham acesso aos tickets de suas respectivas áreas.
+## Descrição
+Sistema completo de tickets para o servidor StreetCarClub, permitindo que usuários abram tickets de suporte em diferentes categorias.
 
 ## Funcionalidades
 
-- ✅ Herança automática de permissões da categoria
-- ✅ Permissões específicas para criadores de tickets
-- ✅ Sistema de categorias configurável
-- ✅ Verificação de permissões por categoria
-- ✅ Criação de tickets com permissões corretas
-- ✅ **Limitação de 1 ticket por categoria por usuário**
-- ✅ **Sistema de registro de tickets ativos**
-- ✅ **Verificação automática de tickets duplicados**
-- ✅ **Limpeza automática de tickets deletados**
+### Abertura de Tickets
+- **Comando:** `!abrir-ticket [motivo]`
+- **Categorias disponíveis:**
+  - 📁 Suporte - Suporte técnico e ajuda geral
+  - 🦠 Reportar Bugs - Reportar erros e problemas técnicos
+  - 🚀 Boost - Suporte para membros boosters
+  - 🏠 Casas - Questões relacionadas a casas e propriedades
+  - 💎 Doações - Assuntos relacionados a doações
+  - ⚠️ Denúncias - Reportar infrações e problemas de conduta
+  - 🔍 Revisão - Solicitar revisão de decisões e processos
+
+### Fechamento de Tickets
+- **Comandos disponíveis:**
+  - `!fechar-ticket` - Fecha o ticket atual
+  - `!ticket-close` - Comando alternativo para fechar tickets
+- **Botão de fechamento** - Disponível em todos os tickets
+- **Timer automático** - Fecha tickets após 24h de inatividade
+
+### Nova Funcionalidade: Mensagem de Avaliação
+Quando um ticket é fechado (por qualquer método), o sistema automaticamente:
+1. **Identifica o criador** do ticket
+2. **Envia uma mensagem privada** solicitando avaliação
+3. **Inclui link direto** para o canal de avaliações
+4. **Informa detalhes** do ticket fechado
+
+**Mensagem enviada:**
+```
+🎫 Ticket Fechado - Avalie seu Atendimento
+
+Olá! Seu ticket foi fechado pela nossa equipe.
+
+Não se esqueça de avaliar seu último atendimento!
+
+Sua opinião é muito importante para continuarmos melhorando nossos serviços.
+
+📝 Avalie aqui: [Link para canal de avaliações]
+```
+
+### Gestão de Tickets
+- **Adicionar membros** ao ticket
+- **Avisar membros** sobre atualizações
+- **Renomear tickets** para melhor organização
+- **Assumir tickets** para controle de atendimento
+- **Timer de 24h** para evitar tickets abandonados
+
+### Sistema de Logs
+- **Transcript completo** de todos os tickets fechados
+- **Canal de logs** para auditoria
+- **Registro de atividades** com timestamps
+
+## Comandos da Staff
+
+### Comandos Básicos
+- `!fechar-ticket` - Fecha o ticket atual
+- `!ticket-close` - Comando alternativo para fechar tickets
+- `!adicionar-usuario [ID]` - Adiciona usuário ao ticket
+- `!remover-usuario [ID]` - Remove usuário do ticket
+
+### Comandos de Gestão
+- `!painel-ticket` - Exibe painel de controle de tickets
+- `!status-tickets` - Mostra status de todos os tickets
+- `!status-categorias` - Exibe informações sobre categorias
+- `!limpar-tickets` - Limpa registros de tickets deletados
+
+### Comandos de Ajuda
+- `!ajuda-categorias` - Explica as categorias disponíveis
+- `!ajuda-avaliacao` - Informações sobre o sistema de avaliação
 
 ## Configuração
 
-### 1. Configurar IDs dos Cargos de Staff
+### Categorias
+As categorias são configuradas no arquivo `config.js` com:
+- IDs dos canais
+- Emojis representativos
+- Descrições
+- Cargos de staff autorizados
 
-Edite o arquivo `config.js` e adicione os IDs dos cargos de staff para cada categoria:
+### Permissões
+- **Criadores:** Visualizar, enviar mensagens, anexar arquivos
+- **Staff:** Todas as permissões + gerenciar mensagens e canais
 
-```javascript
-export const CATEGORY_CONFIG = {
-  suporte: {
-    id: '1386490182085382294',
-    name: 'Suporte',
-    emoji: '📁',
-    description: 'Suporte técnico e ajuda geral',
-    staffRoles: [
-      '1234567890123456789', // ID do cargo de Suporte
-      '9876543210987654321'  // ID do cargo de Moderador
-    ]
-  },
-  bugs: {
-    id: '1386490279384846418',
-    name: 'Reportar Bugs',
-    emoji: '🦠',
-    description: 'Reportar erros e problemas técnicos',
-    staffRoles: [
-      '1111111111111111111', // ID do cargo de Desenvolvedor
-      '2222222222222222222'  // ID do cargo de QA
-    ]
-  },
-     revisao: {
-     id: '1402054800933392565',
-     name: 'Revisão',
-     emoji: '🔍',
-     description: 'Solicitar revisão de decisões e processos',
-     staffRoles: [
-       '1277638402019430501', // Cargo de Moderador
-       '1226903187055972484', // Cargo de Admin
-       '1046404063522197521'  // Cargo de Owner
-     ]
-   },
-  // ... outras categorias
-};
-```
+## Arquivos Principais
 
-### 2. Configurar Permissões da Categoria
-
-Para que a herança funcione corretamente, configure as permissões da categoria no Discord:
-
-1. Acesse a categoria no Discord
-2. Clique com botão direito → "Editar Categoria"
-3. Vá na aba "Permissões"
-4. Adicione os cargos de staff com as permissões necessárias:
-   - **Ver Canal**: ✅
-   - **Enviar Mensagens**: ✅
-   - **Ler Histórico de Mensagens**: ✅
-   - **Anexar Arquivos**: ✅
-   - **Incorporar Links**: ✅
-   - **Gerenciar Mensagens**: ✅ (para staff)
-   - **Gerenciar Canais**: ✅ (para staff)
-
-### 3. Permissões Automáticas
-
-O sistema automaticamente:
-
-- **Herdará** todas as permissões da categoria pai
-- **Negará** acesso para @everyone
-- **Concederá** permissões específicas para o criador do ticket
-- **Mesclará** permissões conflitantes de forma inteligente
+- `index.js` - Ponto de entrada do módulo
+- `loader.js` - Carregador de comandos e eventos
+- `config.js` - Configurações das categorias
+- `utils/ticketManager.js` - Gerenciamento de dados dos tickets
+- `utils/ticketUtils.js` - Utilitários para criação de tickets
+- `utils/permissions.js` - Sistema de permissões
+- `events/interactionCreate.js` - Handler de interações (botões, modais)
+- `events/channelDelete.js` - Limpeza automática de registros
 
 ## Como Funciona
 
-### Sistema de Limitação de Tickets
+1. **Usuário abre ticket** usando `!abrir-ticket` ou painel
+2. **Sistema cria canal** com permissões apropriadas
+3. **Ticket é registrado** no sistema de dados
+4. **Staff atende** o usuário no canal
+5. **Ticket é fechado** por staff ou timer automático
+6. **Sistema envia mensagem** privada solicitando avaliação
+7. **Transcript é gerado** e enviado para logs
+8. **Canal é deletado** após 5 segundos
 
-O sistema agora implementa uma limitação de **1 ticket por categoria por usuário**:
+## Benefícios da Nova Funcionalidade
 
-1. **Verificação Prévia**: Antes de criar um ticket, o sistema verifica se o usuário já possui um ticket ativo na categoria
-2. **Registro Automático**: Quando um ticket é criado, ele é automaticamente registrado no sistema
-3. **Remoção Automática**: Quando um ticket é fechado ou deletado, ele é removido do registro
-4. **Limpeza Automática**: O sistema detecta tickets deletados manualmente e os remove do registro
+- **Aumenta engajamento** dos usuários
+- **Coleta feedback** sobre qualidade do atendimento
+- **Melhora experiência** do usuário
+- **Fornece métricas** para a equipe
+- **Link direto** para avaliação facilita o processo
 
-### Herança de Permissões
+## Suporte
 
-1. **Busca da Categoria**: O sistema busca a categoria pai pelo ID
-2. **Extração de Permissões**: Copia todas as permissões configuradas na categoria
-3. **Mesclagem Inteligente**: Combina permissões da categoria com permissões específicas do ticket
-4. **Aplicação**: Cria o canal com todas as permissões corretas
-
-### Exemplo de Fluxo
-
-```
-Categoria "Suporte" tem:
-- Cargo "Suporte" com permissões completas
-- Cargo "Moderador" com permissões completas
-
-Ticket criado herda:
-- Todas as permissões da categoria
-- + Permissões específicas para o criador
-- + Negação para @everyone
-```
-
-## Comandos Disponíveis
-
-- `!abrir-ticket` - Abre um ticket de suporte básico
-- `!fechar-ticket` - Fecha o ticket atual (apenas staff)
-- `!status-tickets` - Verifica os tickets ativos de um usuário
-- `!limpar-tickets` - Limpa tickets deletados manualmente do registro (apenas admin)
-- `!painel-ticket` - Mostra o painel de tickets (se implementado)
-
-## Eventos
-
-- **interactionCreate**: Gerencia botões e modais do sistema de tickets
-- **channelDelete**: Remove tickets deletados manualmente do registro
-- **ready**: Inicialização do módulo
-
-## Utilitários
-
-### `ticketUtils.js`
-
-- `inheritCategoryPermissions()` - Herda permissões da categoria
-- `createTicketPermissionsWithInheritance()` - Cria permissões completas
-- `createTicketChannelWithInheritance()` - Cria canal com herança
-- `hasCategoryPermission()` - Verifica permissões por categoria
-- `getMemberCategories()` - Lista categorias do membro
-
-### `ticketManager.js`
-
-- `loadTicketsData()` - Carrega dados dos tickets ativos
-- `saveTicketsData()` - Salva dados dos tickets ativos
-- `hasActiveTicketInCategory()` - Verifica se usuário tem ticket ativo em categoria
-- `getUserActiveTicket()` - Obtém todos os tickets ativos de um usuário
-- `registerActiveTicket()` - Registra novo ticket ativo
-- `removeActiveTicket()` - Remove ticket ativo do registro
-- `getActiveTicketsInCategory()` - Obtém todos os tickets ativos de uma categoria
-- `cleanupDeletedTickets()` - Limpa tickets que não existem mais
-
-### `ticketPermissions.js`
-
-- Funções auxiliares para gerenciamento de permissões
-- Verificação de categorias cheias
-- Gerenciamento de cargos de staff
-
-## Troubleshooting
-
-### Erro: "Categoria não encontrada"
-- Verifique se o ID da categoria está correto no `config.js`
-- Confirme se a categoria existe no servidor
-
-### Erro: "Sem permissão para criar canal"
-- Verifique se o bot tem permissão "Gerenciar Canais"
-- Confirme se o bot tem permissão na categoria pai
-
-### Permissões não estão sendo herdadas
-- Verifique se as permissões estão configuradas na categoria
-- Confirme se os IDs dos cargos estão corretos no `config.js`
-
-### Erro: "Você já possui um ticket ativo"
-- O usuário já tem um ticket aberto na categoria solicitada
-- Use `!status-tickets` para verificar os tickets ativos
-- Feche o ticket existente antes de abrir um novo
-
-### Tickets não estão sendo removidos do registro
-- Execute `!limpar-tickets` para limpar tickets deletados manualmente
-- Verifique se o arquivo `data/tickets.json` existe e tem permissões de escrita
-
-## Personalização
-
-### Adicionar Nova Categoria
-
-1. Adicione a configuração no `config.js`:
-```javascript
-nova_categoria: {
-  id: 'SEU_ID_DA_CATEGORIA',
-  name: 'Nova Categoria',
-  emoji: '🔧',
-  description: 'Descrição da categoria',
-  staffRoles: ['ID_DO_CARGO_1', 'ID_DO_CARGO_2']
-}
-```
-
-2. Adicione o botão no painel de tickets (se aplicável)
-
-### Modificar Permissões
-
-Edite as constantes no `config.js`:
-- `CREATOR_PERMISSIONS` - Permissões para criadores de tickets
-- `STAFF_PERMISSIONS` - Permissões para equipe de staff 
+Para dúvidas ou problemas com o sistema de tickets, entre em contato com a equipe de desenvolvimento do StreetCarClub. 

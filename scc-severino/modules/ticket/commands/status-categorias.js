@@ -22,7 +22,7 @@ export async function execute(message, args, client) {
   }
 
   const embed = new EmbedBuilder()
-    .setColor('#0099FF')
+            .setColor('#EAF207')
     .setTitle('📊 Status das Categorias de Ticket')
     .setDescription('Informações sobre o uso das categorias de ticket')
     .setTimestamp();

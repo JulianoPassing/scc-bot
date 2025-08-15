@@ -17,7 +17,7 @@
   "embedColors": {
     "success": "#00FF00",
     "error": "#FF0000",
-    "info": "#0099FF",
+    "info": "#EAF207",
     "warning": "#FFA500"
   },
   "autoCleanup": {

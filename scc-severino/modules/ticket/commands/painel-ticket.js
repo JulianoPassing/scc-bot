@@ -7,7 +7,7 @@ export const data = {
 
 export async function execute(message, args, client) {
   const embed = new EmbedBuilder()
-    .setColor('#0099FF')
+            .setColor('#EAF207')
     .setTitle('📑 Central de Atendimento - StreetCarClub')
     .setDescription(
       'Bem-vindo à nossa Central de Atendimento!\n\n' +

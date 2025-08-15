@@ -7,7 +7,7 @@ export const data = {
 
 export async function execute(message, args, client) {
   const embed = new EmbedBuilder()
-    .setColor('#0099FF')
+            .setColor('#EAF207')
     .setTitle('📊 Comandos de Gerenciamento de Categorias')
     .setDescription('Comandos para gerenciar categorias de ticket quando estão cheias')
     .addFields(

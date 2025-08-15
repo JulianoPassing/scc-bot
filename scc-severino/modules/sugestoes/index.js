@@ -99,7 +99,7 @@ const setupSugestoesModule = function(client) {
       const conteudo = message.content;
       await message.delete();
       const embed = new EmbedBuilder()
-        .setColor('#0099FF')
+        .setColor('#EAF207')
         .setAuthor({
           name: `${message.author.username} - ${message.author.id}`,
           iconURL: message.author.displayAvatarURL({ dynamic: true, size: 64 })
@@ -180,7 +180,7 @@ ${conteudo}
           }
         }
         const votesEmbed = new EmbedBuilder()
-          .setColor('#0099FF')
+          .setColor('#EAF207')
           .setTitle('📊 Votação da Sugestão')
           .setDescription(`**Sugestão:** ${message.embeds[0].description}`)
           .addFields(

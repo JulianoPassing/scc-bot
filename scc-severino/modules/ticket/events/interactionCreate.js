@@ -216,7 +216,7 @@ export const execute = async function(interaction) {
         }
         if (autorId) {
           const embed = new EmbedBuilder()
-            .setColor('#0099FF')
+            .setColor('#EAF207')
             .setTitle('🔔 Atualização do seu Ticket')
             .setDescription(
               'Olá! Esta é uma atualização sobre o seu ticket no Street CarClub.\n\n' +
@@ -545,7 +545,7 @@ export const execute = async function(interaction) {
       }
       
       const embed = new EmbedBuilder()
-        .setColor(categoryFull ? '#FFA500' : '#0099FF')
+        .setColor(categoryFull ? '#FFA500' : '#EAF207')
         .setTitle(`📑 Ticket Aberto - ${categoria.emoji} ${categoria.nome}`)
         .setDescription(`Olá <@${user.id}>, obrigado por entrar em contato!\n\nSua solicitação foi registrada e nossa equipe irá te atender o mais breve possível. Acompanhe o status do seu ticket por aqui.`)
         .addFields(

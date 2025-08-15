@@ -26,7 +26,7 @@ export async function execute(message, args, client) {
   const ticketChannel = await createTicketChannel(guild, channelName, user, reason, ticketNumber, client);
 
   const welcomeEmbed = new EmbedBuilder()
-    .setColor('#0099FF')
+            .setColor('#EAF207')
     .setTitle(`🛡️ Ticket de Segurança #${ticketNumber}`)
     .setDescription(`Olá ${user}, obrigado por abrir um ticket de segurança.`)
     .addFields(

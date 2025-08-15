@@ -121,7 +121,7 @@ export const execute = async function(interaction) {
       await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket de segurança! Equipe notificada:` });
       // Embed do painel de ticket aberto
       const embed = new EmbedBuilder()
-        .setColor('#0099FF')
+        .setColor('#EAF207')
         .setTitle('🛡️ Ticket de Segurança Aberto')
         .setDescription(`Olá <@${user.id}>, obrigado por entrar em contato!\n\nSua solicitação foi registrada e nossa equipe de segurança irá te atender o mais breve possível.\n\n**Motivo:** ${motivo}`)
         .addFields(
@@ -314,7 +314,7 @@ export const execute = async function(interaction) {
       }
       if (autorId) {
         const embed = new EmbedBuilder()
-          .setColor('#0099FF')
+          .setColor('#EAF207')
           .setTitle('🔔 Atualização do seu Ticket de Segurança')
           .setDescription(
             'Olá! Esta é uma atualização sobre o seu ticket de segurança no Street CarClub.\n\n' +

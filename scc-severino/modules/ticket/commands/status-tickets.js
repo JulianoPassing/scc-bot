@@ -23,7 +23,7 @@ export async function execute(message, args, client) {
   }
   
   const embed = new EmbedBuilder()
-    .setColor('#0099FF')
+            .setColor('#EAF207')
     .setTitle('📋 Status dos Tickets')
     .setDescription(`Tickets ativos de ${targetUser}:`)
     .setFooter({ text: 'StreetCarClub • Sistema de Tickets' })

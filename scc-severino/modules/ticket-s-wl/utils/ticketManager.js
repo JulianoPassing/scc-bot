@@ -67,7 +67,7 @@ export async function createTicketChannel(guild, channelName, user, reason, tick
       const logChannel = guild.channels.cache.get(config.logChannelId);
       if (logChannel) {
         const embed = new EmbedBuilder()
-          .setColor('#0099FF')
+          .setColor('#EAF207')
           .setTitle('🛡️ Novo Ticket de Segurança')
           .setDescription(`Usuário: <@${user.id}> (${user.tag})\nCanal: ${ticketChannel}`)
           .addFields(

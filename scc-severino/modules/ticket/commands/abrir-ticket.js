@@ -47,7 +47,7 @@ export async function execute(message, args, client) {
   await registerActiveTicket(user.id, categoryName, ticketChannel.id, ticketChannel.name);
 
   const welcomeEmbed = new EmbedBuilder()
-    .setColor(categoryFull ? '#FFA500' : '#0099FF')
+            .setColor(categoryFull ? '#FFA500' : '#EAF207')
     .setTitle(`🎫 Ticket de Suporte`)
     .setDescription(`Olá ${user}, obrigado por abrir um ticket de suporte.`)
     .addFields(

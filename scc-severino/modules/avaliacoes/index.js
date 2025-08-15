@@ -59,7 +59,7 @@ function createStaffPanelEmbed(staffMember, ratingData) {
         }
     }
     return new EmbedBuilder()
-        .setColor(0x5865F2)
+        .setColor(0xEAF207)
         .setAuthor({ name: staffMember.displayName, iconURL: staffMember.user.displayAvatarURL() })
         .addFields(
             { name: 'Avaliação Média', value: `${starString}\n**${notaString}**`, inline: true },

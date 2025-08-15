@@ -20,7 +20,7 @@ export async function execute(message, args, client) {
   }
 
   const panelEmbed = new EmbedBuilder()
-    .setColor('#5865F2')
+    .setColor('#EAF207')
     .setTitle('🛡️ Painel de Tickets de Segurança')
     .setDescription(
       '**Precisa reportar um problema, denúncia ou situação confidencial?**\n\n' +

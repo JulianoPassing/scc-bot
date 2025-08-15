@@ -555,7 +555,7 @@ export const execute = async function(interaction) {
           { name: 'Assunto', value: assunto, inline: false },
           { name: 'Descrição', value: categoria.desc, inline: false }
         )
-        .setImage('https://i.imgur.com/ShgYL6s.png')
+        .setImage('https://i.imgur.com/kHvmXj6.png')
         .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade | ™ Street CarClub © All rights reserved', iconURL: null })
         .setTimestamp();
 

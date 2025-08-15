@@ -99,7 +99,7 @@ const setupAvaliacaoModule = function(client) {
                 const panelEmbed = createStaffPanelEmbed(staffMember, ratingData);
                 const row = new ActionRowBuilder();
                 for (let i = 1; i <= 5; i++) {
-                    row.addComponents(new ButtonBuilder().setCustomId(`rate_${staffId}_${i}`).setLabel('⭐'.repeat(i)).setStyle(ButtonStyle.Primary));
+                    row.addComponents(new ButtonBuilder().setCustomId(`rate_${staffId}_${i}`).setLabel('⭐'.repeat(i)).setStyle(ButtonStyle.Secondary));
                 }
                 try {
                     const newPanel = await targetChannel.send({ embeds: [panelEmbed], components: [row] });

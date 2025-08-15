@@ -187,11 +187,11 @@ export default async function(client) {
         // Enviar primeira questão
         const q = questoes[0];
         const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder().setCustomId('wl_a').setLabel('A').setStyle(ButtonStyle.Primary),
-          new ButtonBuilder().setCustomId('wl_b').setLabel('B').setStyle(ButtonStyle.Primary)
+          new ButtonBuilder().setCustomId('wl_a').setLabel('A').setStyle(ButtonStyle.Secondary),
+          new ButtonBuilder().setCustomId('wl_b').setLabel('B').setStyle(ButtonStyle.Secondary)
         );
         if (q.alternativas.c && q.alternativas.c.trim()) {
-          row.addComponents(new ButtonBuilder().setCustomId('wl_c').setLabel('C').setStyle(ButtonStyle.Primary));
+          row.addComponents(new ButtonBuilder().setCustomId('wl_c').setLabel('C').setStyle(ButtonStyle.Secondary));
         }
         const embed = new EmbedBuilder()
           .setTitle(q.titulo)
@@ -227,11 +227,11 @@ export default async function(client) {
           cache.questaoAtual = idx + 1;
           const q = cache.questoes[cache.questaoAtual];
           const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('wl_a').setLabel('A').setStyle(ButtonStyle.Primary),
-            new ButtonBuilder().setCustomId('wl_b').setLabel('B').setStyle(ButtonStyle.Primary)
+            new ButtonBuilder().setCustomId('wl_a').setLabel('A').setStyle(ButtonStyle.Secondary),
+            new ButtonBuilder().setCustomId('wl_b').setLabel('B').setStyle(ButtonStyle.Secondary)
           );
           if (q.alternativas.c && q.alternativas.c.trim()) {
-            row.addComponents(new ButtonBuilder().setCustomId('wl_c').setLabel('C').setStyle(ButtonStyle.Primary));
+            row.addComponents(new ButtonBuilder().setCustomId('wl_c').setLabel('C').setStyle(ButtonStyle.Secondary));
           }
           const embed = new EmbedBuilder()
             .setTitle(q.titulo)

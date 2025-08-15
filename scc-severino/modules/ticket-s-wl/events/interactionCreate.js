@@ -132,7 +132,7 @@ export const execute = async function(interaction) {
         .setTimestamp();
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder().setCustomId('close_ticket').setLabel('Fechar Ticket').setStyle(ButtonStyle.Danger).setEmoji('🔒'),
-        new ButtonBuilder().setCustomId('avisar_membro_seguranca').setLabel('Avisar Membro').setStyle(ButtonStyle.Primary).setEmoji('🔔')
+        new ButtonBuilder().setCustomId('avisar_membro_seguranca').setLabel('Avisar Membro').setStyle(ButtonStyle.Secondary).setEmoji('🔔')
       );
       await ticketChannel.send({ embeds: [embed], components: [row] });
       

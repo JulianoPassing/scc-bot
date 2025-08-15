@@ -29,7 +29,7 @@ export async function execute(message, args, client) {
     new ButtonBuilder()
       .setCustomId('ticket_suporte')
       .setLabel('Suporte')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Secondary)
       .setEmoji('📁'),
     new ButtonBuilder()
       .setCustomId('ticket_bugs')
@@ -46,17 +46,17 @@ export async function execute(message, args, client) {
     new ButtonBuilder()
       .setCustomId('ticket_doacoes')
       .setLabel('Doações')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Secondary)
       .setEmoji('💎'),
     new ButtonBuilder()
       .setCustomId('ticket_boost')
       .setLabel('Boost')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Secondary)
       .setEmoji('🚀'),
     new ButtonBuilder()
       .setCustomId('ticket_casas')
       .setLabel('Casas')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Secondary)
       .setEmoji('🏠')
   );
   const row3 = new ActionRowBuilder().addComponents(

@@ -39,7 +39,7 @@ export async function execute(message, args, client) {
     new ButtonBuilder()
       .setCustomId('create_ticket_panel')
       .setLabel('🛡️ Abrir Ticket')
-      .setStyle(ButtonStyle.Primary)
+      .setStyle(ButtonStyle.Secondary)
       .setEmoji('🛡️')
   );
 

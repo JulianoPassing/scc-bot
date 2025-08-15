@@ -8,7 +8,7 @@ export default {
   
   async execute(message, args, client) {
     const embed = new EmbedBuilder()
-      .setColor(0x5865F2)
+      .setColor(0xEAF207)
       .setTitle('⭐ Sistema de Avaliações de Staff - Ajuda')
       .setDescription('Como usar o sistema de avaliações de staff do **Street Car Club**')
       .addFields(

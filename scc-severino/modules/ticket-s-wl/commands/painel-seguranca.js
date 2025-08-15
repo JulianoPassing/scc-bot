@@ -32,7 +32,7 @@ export async function execute(message, args, client) {
       { name: 'Atenção', value: '⚠️ **Abuso do sistema pode resultar em punição. Use apenas para assuntos sérios!**', inline: false }
     )
     .setFooter({ text: 'Sistema de Segurança • Confidencialidade garantida', iconURL: 'https://cdn-icons-png.flaticon.com/512/3064/3064197.png' })
-    .setImage('https://i.imgur.com/ShgYL6s.png')
+    .setImage('https://i.imgur.com/kHvmXj6.png')
     .setTimestamp();
 
   const ticketButton = new ActionRowBuilder().addComponents(

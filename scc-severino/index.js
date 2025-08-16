@@ -86,7 +86,7 @@ client.once('ready', async () => {
       }],
       status: 'online'
     });
-    console.log('🎮 Atividade definida: Jogando a melhor cidade StreetCarClub');
+    console.log('🎮 Atividade definida: 🎮 Jogando A melhor cidade de carros StreetCarClub!');
   } catch (error) {
     console.error('❌ Erro ao definir atividade:', error);
   }

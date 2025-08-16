@@ -38,6 +38,7 @@ const modules = [
   'instagram',
   'liberacao',
   'sugestoes',
+  'tagseason',
   'ticket',
   'ticket-s-wl',
   'wl'

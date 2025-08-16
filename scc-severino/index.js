@@ -77,9 +77,19 @@ client.on('messageCreate', async (message) => {
 client.once('ready', async () => {
   console.log(`🤖 ${client.user.tag} está online!`);
   
-  // Definir atividade do bot
-  client.user.setActivity('a melhor cidade StreetCarClub', { type: 'PLAYING' });
-  console.log('🎮 Atividade definida: Jogando a melhor cidade StreetCarClub');
+  // Definir status e atividade do bot
+  try {
+    client.user.setPresence({
+      activities: [{
+        name: 'a melhor cidade StreetCarClub',
+        type: 0 // 0 = Playing, 1 = Streaming, 2 = Listening, 3 = Watching
+      }],
+      status: 'online'
+    });
+    console.log('🎮 Atividade definida: Jogando a melhor cidade StreetCarClub');
+  } catch (error) {
+    console.error('❌ Erro ao definir atividade:', error);
+  }
   
   // Fazer fetch das mensagens antigas do canal de liberação
   try {

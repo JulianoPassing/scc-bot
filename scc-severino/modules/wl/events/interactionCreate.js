@@ -92,7 +92,7 @@ export default async function(client) {
               .setStyle(TextInputStyle.Paragraph)
               .setRequired(true)
               .setMinLength(700)
-              .setMaxLength(2000)
+              .setMaxLength(1000)
           )
         );
       await interaction.showModal(modal);

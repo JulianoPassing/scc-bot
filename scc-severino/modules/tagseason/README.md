@@ -1,32 +1,60 @@
 # Módulo TagSeason
 
-## Descrição
-Módulo automático para gerenciar cargos baseado em reações específicas. Quando um usuário reagir com o emoji 🎉 (tada) à mensagem especificada, ele receberá automaticamente o cargo de participante da temporada.
+Este módulo permite que os usuários resgatem tags comemorativas da temporada através de um botão interativo.
 
 ## Funcionalidades
-- **Detecção automática de reações**: Monitora reações na mensagem específica
-- **Atribuição de cargos**: Adiciona automaticamente o cargo configurado
-- **Validação de canal**: Funciona apenas no canal especificado
-- **Notificação**: Envia mensagem de confirmação quando o cargo é adicionado
+
+- **Comando `!tag-season`**: Cria um painel com botão para resgatar a tag da temporada
+- **Sistema de botões**: Usuários podem clicar no botão para receber automaticamente o cargo da tag
+- **Verificação de duplicatas**: Impede que usuários recebam o mesmo cargo múltiplas vezes
+- **Restrição de canal**: Comando só funciona no canal específico configurado
 
 ## Configuração
-- **Canal**: 1406085682639671468
-- **Mensagem**: 1406087068437708913
-- **Emoji**: 🎉 (tada)
-- **Cargo**: 1406086032989880350
 
-## Como funciona
-1. Usuário reage com 🎉 à mensagem especificada
-2. Sistema verifica se é o canal e mensagem corretos
-3. Cargo é automaticamente adicionado ao usuário
-4. Mensagem de confirmação é enviada no canal
+### Canais
+- **Canal de uso**: `1406085682639671468`
 
-## Arquivos
-- `index.js` - Arquivo principal do módulo
-- `loader.js` - Carregador de eventos
-- `events/messageReactionAdd.js` - Evento para detectar reações
-- `README.md` - Esta documentação
+### Cargos
+- **Cargo da tag**: `1406086032989880350`
 
-## Dependências
-- Discord.js
-- Permissões para gerenciar cargos no servidor
+## Comandos
+
+### `!tag-season`
+Cria o painel para resgatar a tag da temporada 04.
+
+**Uso**: `!tag-season`
+**Canal**: Apenas no canal configurado
+**Permissões**: Qualquer usuário
+
+## Estrutura do Módulo
+
+```
+tagseason/
+├── index.js          # Configuração principal do módulo
+├── loader.js         # Carregador do módulo
+├── commands/         # Comandos do módulo
+│   └── tag-season.js # Comando principal
+├── events/           # Eventos do módulo
+│   └── interactionCreate.js # Processamento de interações
+└── README.md         # Esta documentação
+```
+
+## Como Funciona
+
+1. Um staff executa o comando `!tag-season` no canal configurado
+2. O bot envia uma mensagem com embed e botão "Resgatar Tag"
+3. Usuários clicam no botão para receber o cargo automaticamente
+4. O sistema verifica se o usuário já possui o cargo antes de adicionar
+5. Feedback é enviado ao usuário sobre o sucesso ou falha da operação
+
+## Mensagens
+
+### Painel Principal
+🏆 A Temporada 04 do SCC foi inesquecível! 🏆
+
+Para celebrar suas conquistas, resgate agora sua Tag comemorativa. Basta clicar no botão resgatar e ela será sua!
+
+### Respostas
+- **Sucesso**: 🎉 Parabéns! Você resgatou com sucesso sua Tag da Temporada 04! 🏆
+- **Já possui**: ❌ Você já possui esta tag da temporada!
+- **Erro**: ❌ Ocorreu um erro ao adicionar a tag. Entre em contato com a equipe.

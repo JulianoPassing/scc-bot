@@ -81,7 +81,7 @@ client.once('ready', async () => {
   try {
     client.user.setPresence({
       activities: [{
-        name: 'a melhor cidade StreetCarClub',
+        name: 'A melhor cidade de carros StreetCarClub!',
         type: 0 // 0 = Playing, 1 = Streaming, 2 = Listening, 3 = Watching
       }],
       status: 'online'

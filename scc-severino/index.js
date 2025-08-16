@@ -81,12 +81,12 @@ client.once('ready', async () => {
   try {
     client.user.setPresence({
       activities: [{
-        name: 'A melhor cidade de carros StreetCarClub!',
+        name: 'A melhor cidade StreetCarClub!',
         type: 0 // 0 = Playing, 1 = Streaming, 2 = Listening, 3 = Watching
       }],
       status: 'online'
     });
-    console.log('🎮 Atividade definida: 🎮 Jogando A melhor cidade de carros StreetCarClub!');
+    console.log('🎮 Atividade definida: 🎮 Jogando A melhor cidade StreetCarClub!');
   } catch (error) {
     console.error('❌ Erro ao definir atividade:', error);
   }

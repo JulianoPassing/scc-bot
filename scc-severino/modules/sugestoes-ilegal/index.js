@@ -84,11 +84,34 @@ const updateButtonsWithVotes = async (client) => {
 };
 
 const setupSugestoesIlegalModule = function(client) {
+  console.log('🚨 Iniciando módulo sugestoes-ilegal...');
+  
   // Verificar se o bot está no servidor correto
   const targetGuild = client.guilds.cache.get('1326731475797934080');
   if (!targetGuild) {
     console.log('⚠️ Módulo sugestoes-ilegal: Servidor alvo não encontrado');
+    console.log('📋 Servidores disponíveis:', Array.from(client.guilds.cache.keys()));
     return;
+  }
+  
+  console.log(`✅ Servidor alvo encontrado: ${targetGuild.name} (${targetGuild.id})`);
+  
+  // Verificar se o canal de sugestões existe
+  const suggestionChannel = client.channels.cache.get(SUGGESTION_CHANNEL_ID);
+  if (!suggestionChannel) {
+    console.log('⚠️ Canal de sugestões não encontrado:', SUGGESTION_CHANNEL_ID);
+    console.log('📋 Canais disponíveis no servidor:', Array.from(targetGuild.channels.cache.keys()));
+    return;
+  }
+  
+  console.log(`✅ Canal de sugestões encontrado: ${suggestionChannel.name} (${suggestionChannel.id})`);
+  
+  // Verificar se o canal de logs existe
+  const logsChannel = client.channels.cache.get(VOTES_CHANNEL_ID);
+  if (!logsChannel) {
+    console.log('⚠️ Canal de logs não encontrado:', VOTES_CHANNEL_ID);
+  } else {
+    console.log(`✅ Canal de logs encontrado: ${logsChannel.name} (${logsChannel.id})`);
   }
 
   // Carregar votos existentes ao inicializar
@@ -105,6 +128,8 @@ const setupSugestoesIlegalModule = function(client) {
     
     // Verificar se a mensagem é do servidor correto
     if (message.guild?.id !== '1326731475797934080') return;
+    
+    console.log(`🚨 Nova mensagem no canal de sugestões ilegais: ${message.content}`);
     
     try {
       const conteudo = message.content;
@@ -145,14 +170,21 @@ ${conteudo}
       const sentMessage = await message.channel.send({ embeds: [embed], components: [row] });
       votos.set(sentMessage.id, { yes: new Set(), no: new Set() });
       saveVotes(); // Salvar após criar nova sugestão
+      console.log(`✅ Sugestão ilegal criada com sucesso: ${sentMessage.id}`);
+      
       try {
         await sentMessage.startThread({
           name: `💬 Debate: ${conteudo.substring(0, 50)}${conteudo.length > 50 ? '...' : ''}`,
           autoArchiveDuration: 60,
           reason: 'Tópico de debate criado automaticamente para a sugestão ilegal'
         });
-      } catch (threadError) {}
-    } catch (error) {}
+        console.log(`✅ Thread criado para a sugestão ilegal`);
+      } catch (threadError) {
+        console.error('❌ Erro ao criar thread:', threadError);
+      }
+    } catch (error) {
+      console.error('❌ Erro ao processar sugestão ilegal:', error);
+    }
   });
   
   client.on('interactionCreate', async (interaction) => {
@@ -162,6 +194,8 @@ ${conteudo}
     
     // Verificar se a interação é do servidor correto
     if (interaction.guild?.id !== '1326731475797934080') return;
+    
+    console.log(`🗳️ Voto registrado: ${customId} na sugestão ${message.id} por ${user.username}`);
     
     try {
       if (!votos.has(message.id)) {
@@ -216,10 +250,10 @@ ${conteudo}
           });
         }
         if (voto.no.size > 0) {
-          const votantesNao = Array.from(voto.no).map(id => `<@${id}>`).join(', ');
+          const votantesSim = Array.from(voto.no).map(id => `<@${id}>`).join(', ');
           votesEmbed.addFields({ 
             name: `❌ Votaram Não (${voto.no.size}) - ${porcentagemNao}%`, 
-            value: votantesNao, 
+            value: votantesSim, 
             inline: false 
           });
         }
@@ -231,9 +265,12 @@ ${conteudo}
         }
       }
     } catch (error) {
+      console.error('❌ Erro ao processar voto:', error);
       await interaction.reply({ content: 'Erro ao processar seu voto. Tente novamente.', ephemeral: true });
     }
   });
+  
+  console.log('🚨 Módulo sugestoes-ilegal configurado com sucesso!');
 };
 
 export default setupSugestoesIlegalModule;

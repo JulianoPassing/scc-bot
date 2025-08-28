@@ -1,15 +1,13 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import fs from 'fs';
-import path from 'path';
 
 const SUGGESTION_CHANNEL_ID = '1336660114249224262';
 const VOTES_CHANNEL_ID = '1410612496947216485';
 const VOTES_FILE = './modules/sugestoes-ilegal/votes.json';
 
-const votos = new Map(); // Map<messageId, {yes: Set<userId>, no: Set<userId>}>
-const logsMessages = new Map(); // Map<suggestionId, logMessageId>
+const votos = new Map();
+const logsMessages = new Map();
 
-// Função para salvar votos no arquivo JSON
 const saveVotes = () => {
   try {
     const votesData = {};
@@ -25,7 +23,6 @@ const saveVotes = () => {
   }
 };
 
-// Função para carregar votos do arquivo JSON
 const loadVotes = () => {
   try {
     if (fs.existsSync(VOTES_FILE)) {
@@ -43,97 +40,27 @@ const loadVotes = () => {
   }
 };
 
-// Função para atualizar botões com votos carregados
-const updateButtonsWithVotes = async (client) => {
-  try {
-    const suggestionChannel = client.channels.cache.get(SUGGESTION_CHANNEL_ID);
-    if (!suggestionChannel) return;
-
-    const messages = await suggestionChannel.messages.fetch({ limit: 100 });
-    
-    for (const [messageId, message] of messages) {
-      if (votos.has(messageId) && message.components.length > 0) {
-        const voto = votos.get(messageId);
-        const totalVotos = voto.yes.size + voto.no.size;
-        const porcentagemSim = totalVotos > 0 ? Math.round((voto.yes.size / totalVotos) * 100) : 0;
-        const porcentagemNao = totalVotos > 0 ? Math.round((voto.no.size / totalVotos) * 100) : 0;
-        
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId('vote_yes')
-            .setLabel(`👍 (${voto.yes.size}) - ${porcentagemSim}%`)
-            .setStyle(ButtonStyle.Success)
-            .setEmoji('✅'),
-          new ButtonBuilder()
-            .setCustomId('vote_no')
-            .setLabel(`👎 (${voto.no.size}) - ${porcentagemNao}%`)
-            .setStyle(ButtonStyle.Danger)
-            .setEmoji('❌')
-        );
-        
-        try {
-          await message.edit({ components: [row] });
-        } catch (error) {
-          console.error(`Erro ao atualizar botões da mensagem ${messageId}:`, error);
-        }
-      }
-    }
-  } catch (error) {
-    console.error('Erro ao atualizar botões com votos:', error);
-  }
-};
-
 const setupSugestoesIlegalModule = function(client) {
   console.log('🚨 Iniciando módulo sugestoes-ilegal...');
   
-  // Verificar se o bot está no servidor correto
-  const targetGuild = client.guilds.cache.get('1326731475797934080');
-  if (!targetGuild) {
-    console.log('⚠️ Módulo sugestoes-ilegal: Servidor alvo não encontrado');
-    console.log('📋 Servidores disponíveis:', Array.from(client.guilds.cache.keys()));
-    return;
-  }
-  
-  console.log(`✅ Servidor alvo encontrado: ${targetGuild.name} (${targetGuild.id})`);
-  
-  // Verificar se o canal de sugestões existe
-  const suggestionChannel = client.channels.cache.get(SUGGESTION_CHANNEL_ID);
-  if (!suggestionChannel) {
-    console.log('⚠️ Canal de sugestões não encontrado:', SUGGESTION_CHANNEL_ID);
-    console.log('📋 Canais disponíveis no servidor:', Array.from(targetGuild.channels.cache.keys()));
-    return;
-  }
-  
-  console.log(`✅ Canal de sugestões encontrado: ${suggestionChannel.name} (${suggestionChannel.id})`);
-  
-  // Verificar se o canal de logs existe
-  const logsChannel = client.channels.cache.get(VOTES_CHANNEL_ID);
-  if (!logsChannel) {
-    console.log('⚠️ Canal de logs não encontrado:', VOTES_CHANNEL_ID);
-  } else {
-    console.log(`✅ Canal de logs encontrado: ${logsChannel.name} (${logsChannel.id})`);
-  }
-
-  // Carregar votos existentes ao inicializar
+  // Carregar votos existentes
   loadVotes();
   
-  // Atualizar botões com votos carregados após um pequeno delay
-  setTimeout(() => {
-    updateButtonsWithVotes(client);
-  }, 2000);
-
+  // Evento para mensagens no canal de sugestões ilegais
   client.on('messageCreate', async (message) => {
+    // Verificar se é bot ou não é o canal correto
     if (message.author.bot) return;
     if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
-    
-    // Verificar se a mensagem é do servidor correto
-    if (message.guild?.id !== '1326731475797934080') return;
     
     console.log(`🚨 Nova mensagem no canal de sugestões ilegais: ${message.content}`);
     
     try {
       const conteudo = message.content;
+      
+      // Deletar a mensagem original
       await message.delete();
+      
+      // Criar embed da sugestão ilegal
       const embed = new EmbedBuilder()
         .setColor('#FF6B6B')
         .setAuthor({
@@ -155,6 +82,8 @@ ${conteudo}
           iconURL: message.guild.iconURL({ dynamic: true }) 
         })
         .setTimestamp();
+      
+      // Criar botões de votação
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId('vote_yes')
@@ -167,11 +96,17 @@ ${conteudo}
           .setStyle(ButtonStyle.Danger)
           .setEmoji('❌')
       );
+      
+      // Enviar a sugestão com botões
       const sentMessage = await message.channel.send({ embeds: [embed], components: [row] });
+      
+      // Inicializar votos para esta mensagem
       votos.set(sentMessage.id, { yes: new Set(), no: new Set() });
-      saveVotes(); // Salvar após criar nova sugestão
+      saveVotes();
+      
       console.log(`✅ Sugestão ilegal criada com sucesso: ${sentMessage.id}`);
       
+      // Criar thread para debate
       try {
         await sentMessage.startThread({
           name: `💬 Debate: ${conteudo.substring(0, 50)}${conteudo.length > 50 ? '...' : ''}`,
@@ -182,46 +117,57 @@ ${conteudo}
       } catch (threadError) {
         console.error('❌ Erro ao criar thread:', threadError);
       }
+      
     } catch (error) {
       console.error('❌ Erro ao processar sugestão ilegal:', error);
     }
   });
   
+  // Evento para interações com botões
   client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
+    
     const { customId, message, user } = interaction;
     if (!['vote_yes', 'vote_no'].includes(customId)) return;
-    
-    // Verificar se a interação é do servidor correto
-    if (interaction.guild?.id !== '1326731475797934080') return;
     
     console.log(`🗳️ Voto registrado: ${customId} na sugestão ${message.id} por ${user.username}`);
     
     try {
+      // Inicializar votos se não existir
       if (!votos.has(message.id)) {
         votos.set(message.id, { yes: new Set(), no: new Set() });
       }
+      
       const voto = votos.get(message.id);
+      
+      // Remover voto anterior do usuário
       voto.yes.delete(user.id);
       voto.no.delete(user.id);
+      
+      // Adicionar novo voto
       if (customId === 'vote_yes') voto.yes.add(user.id);
       if (customId === 'vote_no') voto.no.add(user.id);
       
-      // Salvar votos após cada voto
+      // Salvar votos
       saveVotes();
       
+      // Atualizar botões com novos contadores
       const row = ActionRowBuilder.from(message.components[0]);
       const totalVotos = voto.yes.size + voto.no.size;
       const porcentagemSim = totalVotos > 0 ? Math.round((voto.yes.size / totalVotos) * 100) : 0;
       const porcentagemNao = totalVotos > 0 ? Math.round((voto.no.size / totalVotos) * 100) : 0;
+      
       row.components[0].setLabel(`👍 (${voto.yes.size}) - ${porcentagemSim}%`);
       row.components[1].setLabel(`👎 (${voto.no.size}) - ${porcentagemNao}%`);
+      
       await interaction.update({ components: [row] });
       
+      // Enviar log para canal de logs
       const votesChannel = interaction.guild.channels.cache.get(VOTES_CHANNEL_ID);
       if (votesChannel) {
         let logMessageId = logsMessages.get(message.id);
         let logMessage = null;
+        
         if (logMessageId) {
           try {
             logMessage = await votesChannel.messages.fetch(logMessageId);
@@ -230,6 +176,7 @@ ${conteudo}
             logMessageId = null;
           }
         }
+        
         const votesEmbed = new EmbedBuilder()
           .setColor('#FF6B6B')
           .setTitle('📊 Votação da Sugestão Ilegal')
@@ -241,6 +188,7 @@ ${conteudo}
           )
           .setFooter({ text: `Sugestão Ilegal ID: ${message.id}` })
           .setTimestamp();
+        
         if (voto.yes.size > 0) {
           const votantesSim = Array.from(voto.yes).map(id => `<@${id}>`).join(', ');
           votesEmbed.addFields({ 
@@ -249,14 +197,16 @@ ${conteudo}
             inline: false 
           });
         }
+        
         if (voto.no.size > 0) {
-          const votantesSim = Array.from(voto.no).map(id => `<@${id}>`).join(', ');
+          const votantesNao = Array.from(voto.no).map(id => `<@${id}>`).join(', ');
           votesEmbed.addFields({ 
             name: `❌ Votaram Não (${voto.no.size}) - ${porcentagemNao}%`, 
-            value: votantesSim, 
+            value: votantesNao, 
             inline: false 
           });
         }
+        
         if (logMessage) {
           await logMessage.edit({ embeds: [votesEmbed] });
         } else {
@@ -264,6 +214,7 @@ ${conteudo}
           logsMessages.set(message.id, newLogMessage.id);
         }
       }
+      
     } catch (error) {
       console.error('❌ Erro ao processar voto:', error);
       await interaction.reply({ content: 'Erro ao processar seu voto. Tente novamente.', ephemeral: true });

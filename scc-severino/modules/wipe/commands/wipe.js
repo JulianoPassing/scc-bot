@@ -7,9 +7,12 @@ export const data = {
 
 export async function execute(message, args, client) {
   try {
-    // Verificar se o usuário tem permissão (você pode ajustar conforme necessário)
-    if (!message.member.permissions.has('Administrator')) {
-      return message.reply('❌ Você não tem permissão para usar este comando.');
+    // Verificar se o usuário tem um dos cargos permitidos
+    const allowedRoles = ['1046404063689977984', '1046404063689977986'];
+    const hasAllowedRole = message.member.roles.cache.some(role => allowedRoles.includes(role.id));
+    
+    if (!hasAllowedRole) {
+      return message.reply('❌ Você não tem permissão para usar este comando. Apenas membros com cargos específicos podem utilizá-lo.');
     }
 
     const guildId = '1046404063287332936';

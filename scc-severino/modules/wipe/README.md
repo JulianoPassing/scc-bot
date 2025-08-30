@@ -6,12 +6,12 @@ Este módulo permite enviar mensagens de anúncio de wipe para todos os membros 
 
 ### `!wipe`
 - **Descrição**: Envia mensagem de anúncio de Season 5 para todos os membros com o cargo especificado
-- **Permissão**: Administrador
+- **Permissão**: Cargos específicos (1046404063689977984, 1046404063689977986)
 - **Uso**: `!wipe`
 
 ### `!teste-wipe`
 - **Descrição**: Testa o envio da mensagem de wipe para um membro específico (ID: 405487427327885313)
-- **Permissão**: Administrador
+- **Permissão**: Cargos específicos (1046404063689977984, 1046404063689977986)
 - **Uso**: `!teste-wipe`
 
 ## Funcionalidades
@@ -25,8 +25,8 @@ Este módulo permite enviar mensagens de anúncio de wipe para todos os membros 
 
 O módulo está configurado para:
 - **Servidor**: 1046404063287332936
-- **Cargo**: 1317086939555434557
-- **Permissão necessária**: Administrador
+- **Cargo alvo**: 1317086939555434557 (membros que receberão a mensagem)
+- **Cargos com permissão**: 1046404063689977984, 1046404063689977986
 
 ## Estrutura do Módulo
 

@@ -1,4 +1,39 @@
 import { EmbedBuilder } from 'discord.js';
+import fs from 'fs';
+import path from 'path';
+import { dirname } from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const progressFile = path.join(__dirname, '../data/progress.json');
+
+// Funções para gerenciar o progresso
+function loadProgress() {
+  try {
+    if (fs.existsSync(progressFile)) {
+      const data = fs.readFileSync(progressFile, 'utf8');
+      return JSON.parse(data);
+    }
+  } catch (error) {
+    console.error('Erro ao carregar progresso:', error);
+  }
+  return { lastWipe: null, sentMembers: [], totalMembers: 0, lastUpdate: null };
+}
+
+function saveProgress(progress) {
+  try {
+    // Garantir que o diretório existe
+    const dir = path.dirname(progressFile);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+    
+    progress.lastUpdate = new Date().toISOString();
+    fs.writeFileSync(progressFile, JSON.stringify(progress, null, 2));
+  } catch (error) {
+    console.error('Erro ao salvar progresso:', error);
+  }
+}
 
 export const data = {
   name: 'wipe',
@@ -30,12 +65,40 @@ export async function execute(message, args, client) {
       return message.reply('❌ Cargo não encontrado.');
     }
 
-    // Buscar todos os membros com o cargo
-    const members = guild.members.cache.filter(member => member.roles.cache.has(roleId));
+    // Fazer fetch de todos os membros do servidor
+    await message.reply('🔄 Carregando todos os membros do servidor... Isso pode demorar alguns segundos.');
     
-    if (members.size === 0) {
+    try {
+      await guild.members.fetch();
+    } catch (error) {
+      console.error('Erro ao fazer fetch dos membros:', error);
+      await message.reply('❌ Erro ao carregar membros do servidor.');
+      return;
+    }
+
+    // Buscar todos os membros com o cargo após o fetch
+    const allMembers = guild.members.cache.filter(member => member.roles.cache.has(roleId));
+    
+    if (allMembers.size === 0) {
       return message.reply('❌ Nenhum membro encontrado com este cargo.');
     }
+
+    // Carregar progresso anterior
+    const progress = loadProgress();
+    const sentMembers = new Set(progress.sentMembers);
+    
+    // Filtrar membros que ainda não receberam a mensagem
+    const pendingMembers = allMembers.filter(member => !sentMembers.has(member.id));
+    
+    if (pendingMembers.size === 0) {
+      return message.reply('✅ Todos os membros já receberam a mensagem! Use `!reset-wipe` para limpar o histórico.');
+    }
+
+    await message.reply(`📊 **Status do Envio:**\n` +
+      `📝 **Total de moradores:** ${allMembers.size}\n` +
+      `✅ **Já enviados:** ${sentMembers.size}\n` +
+      `🔄 **Pendentes:** ${pendingMembers.size}\n\n` +
+      `Iniciando envio para os membros pendentes...`);
 
     // Criar o embed
     const embed = new EmbedBuilder()
@@ -55,19 +118,35 @@ export async function execute(message, args, client) {
     let successCount = 0;
     let errorCount = 0;
 
-    // Enviar mensagem para cada membro
-    for (const [memberId, member] of members) {
+    // Enviar mensagem para cada membro pendente
+    for (const [memberId, member] of pendingMembers) {
       try {
         await member.send({ embeds: [embed] });
         successCount++;
         
-        // Pequena pausa para evitar rate limiting
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Adicionar ao progresso
+        sentMembers.add(member.id);
+        
+        // Salvar progresso a cada 10 envios
+        if (successCount % 10 === 0) {
+          progress.sentMembers = Array.from(sentMembers);
+          progress.totalMembers = allMembers.size;
+          saveProgress(progress);
+        }
+        
+        // Pequena pausa para evitar rate limiting (reduzida para muitos membros)
+        await new Promise(resolve => setTimeout(resolve, 50));
       } catch (error) {
         console.error(`Erro ao enviar mensagem para ${member.user.tag}:`, error);
         errorCount++;
       }
     }
+
+    // Salvar progresso final
+    progress.sentMembers = Array.from(sentMembers);
+    progress.totalMembers = allMembers.size;
+    progress.lastWipe = new Date().toISOString();
+    saveProgress(progress);
 
     // Relatório final
     const reportEmbed = new EmbedBuilder()
@@ -76,7 +155,9 @@ export async function execute(message, args, client) {
       .setDescription(
         `✅ **Mensagens enviadas com sucesso:** ${successCount}\n` +
         `❌ **Erros:** ${errorCount}\n` +
-        `📝 **Total de membros:** ${members.size}`
+        `📝 **Total de moradores:** ${allMembers.size}\n` +
+        `📤 **Total enviados (incluindo anteriores):** ${sentMembers.size}\n` +
+        `🔄 **Pendentes restantes:** ${allMembers.size - sentMembers.size}`
       )
       .setTimestamp();
 

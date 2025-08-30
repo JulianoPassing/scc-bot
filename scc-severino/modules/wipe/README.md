@@ -14,12 +14,25 @@ Este módulo permite enviar mensagens de anúncio de wipe para todos os membros 
 - **Permissão**: Cargos específicos (1046404063689977984, 1046404063689977986)
 - **Uso**: `!teste-wipe`
 
+### `!status-wipe`
+- **Descrição**: Verifica o status atual dos envios de wipe
+- **Permissão**: Cargos específicos (1046404063689977984, 1046404063689977986)
+- **Uso**: `!status-wipe`
+
+### `!reset-wipe`
+- **Descrição**: Reseta o progresso dos envios (requer confirmação)
+- **Permissão**: Cargos específicos (1046404063689977984, 1046404063689977986)
+- **Uso**: `!reset-wipe --confirm`
+
 ## Funcionalidades
 
-- Envia mensagem embed personalizada para todos os membros com o cargo `1317086939555434557` no servidor `1046404063287332936`
-- Inclui contagem de mensagens enviadas com sucesso e erros
-- Pausa entre envios para evitar rate limiting
-- Relatório detalhado após a execução
+- **Sistema de Progresso**: Grava em JSON os membros que já receberam a mensagem
+- **Continuidade**: Pode ser interrompido e continuado de onde parou
+- **Sem Duplicatas**: Não envia mensagem para membros que já receberam
+- **Controle Total**: Comandos para verificar status e resetar progresso
+- **Envio Inteligente**: Fetch automático de todos os membros do servidor
+- **Relatórios Detalhados**: Status completo com contadores e progresso visual
+- **Pausa Otimizada**: 50ms entre envios para evitar rate limiting
 
 ## Configuração
 
@@ -35,6 +48,11 @@ wipe/
 ├── index.js          # Configuração principal do módulo
 ├── loader.js         # Carregador do módulo
 ├── commands/         # Comandos do módulo
-│   └── wipe.js      # Comando principal
+│   ├── wipe.js       # Comando principal
+│   ├── teste-wipe.js # Comando de teste
+│   ├── status-wipe.js # Verificar status
+│   └── reset-wipe.js # Resetar progresso
+├── data/             # Dados de progresso
+│   └── progress.json # Controle de envios
 └── README.md         # Esta documentação
 ```

@@ -32,7 +32,7 @@ export async function execute(message, args, client) {
 
     // Criar o embed
     const embed = new EmbedBuilder()
-      .setColor('#FF6B35')
+      .setColor('#EAF207')
       .setTitle('🎉 A contagem regressiva começou!')
       .setDescription(
         'Em uma semana, a **SEASON 5** vai revolucionar tudo que você conhece! 💥 Novas áreas, novas mecânicas e um mundo de novidades te esperando.\n\n' +

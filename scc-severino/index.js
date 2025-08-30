@@ -42,7 +42,8 @@ const modules = [
   'tagseason',
   'ticket',
   'ticket-s-wl',
-  'wl'
+  'wl',
+  'wipe'
 ];
 
 for (const mod of modules) {

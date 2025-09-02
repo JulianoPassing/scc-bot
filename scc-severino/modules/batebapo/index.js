@@ -64,6 +64,11 @@ const setupBateBapoModule = function(client) {
     if (message.content.toLowerCase().trim() === 'noel') {
       await message.reply('Esse cara é foda! 🎅🏻');
     }
+    
+    // Resposta para mensagens contendo "wipe"
+    if (message.content.toLowerCase().includes('wipe')) {
+      await message.reply('O wipe está com data prevista para 07/09. Mais informações e spoilers em https://discord.com/channels/1046404063287332936/1406109950769627176 . Lembrando o Noel é foda e o PH é uma moça.');
+    }
   });
 };
 export default setupBateBapoModule; 

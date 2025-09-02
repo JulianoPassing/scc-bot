@@ -67,7 +67,7 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para mensagens contendo "wipe"
     if (message.content.toLowerCase().includes('wipe')) {
-      await message.reply('O wipe está com data prevista para 07/09. Mais informações e spoilers em https://discord.com/channels/1046404063287332936/1406109950769627176 . Lembrando o Noel é foda e o PH é uma moça.');
+      await message.reply('**🗓️ Wipe previsto para 07/09**\n\n📋 Mais informações e spoilers em: https://discord.com/channels/1046404063287332936/1406109950769627176\n\n*Lembrando: o Noel é foda e o PH é uma moça.*');
     }
   });
 };

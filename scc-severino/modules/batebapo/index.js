@@ -35,8 +35,10 @@ const setupBateBapoModule = function(client) {
       await message.reply('Se sua dúvida for referente a tutorias da cidade, aqui temos alguns <#1317105357453266995>');
     }
     
-    // Resposta para "caiu" ou "F"
-    if (message.content.toLowerCase().trim() === 'caiu' || message.content.toLowerCase().trim() === 'f') {
+    // Resposta para "caiu", "F" ou "servidor ta off"
+    if (message.content.toLowerCase().trim() === 'caiu' || 
+        message.content.toLowerCase().trim() === 'f' || 
+        message.content.toLowerCase().includes('servidor ta off')) {
       await message.reply('Tente acessar pelo <#1046404064004558923>, caso não resolva, tenta fazer os procedimentos de <#1332835981874827304>.\nCaso persista <@1387031132343763086> ou entrar na call <#1046404065241862193>.');
     }
     

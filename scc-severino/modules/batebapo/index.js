@@ -69,6 +69,11 @@ const setupBateBapoModule = function(client) {
     if (message.content.toLowerCase().includes('wipe')) {
       await message.reply('**🗓️ Wipe previsto para 07/09**\n\n📋 Mais informações e spoilers em: https://discord.com/channels/1046404063287332936/1406109950769627176\n\n*Lembrando: o Noel é foda e o PH é uma moça.*');
     }
+    
+    // Resposta para "PH"
+    if (message.content.toLowerCase().trim() === 'ph') {
+      await message.reply('**🏳️‍🌈 Esse se deita com iguais**');
+    }
   });
 };
 export default setupBateBapoModule; 

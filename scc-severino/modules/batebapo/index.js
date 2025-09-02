@@ -74,6 +74,11 @@ const setupBateBapoModule = function(client) {
     if (message.content.toLowerCase().trim() === 'ph') {
       await message.reply('**🏳️‍🌈 Esse se deita com iguais**');
     }
+    
+    // Resposta para "abuser"
+    if (message.content.toLowerCase().includes('abuser')) {
+      await message.reply('**🎅🏻 Provavelmente você está falando do Noel**');
+    }
   });
 };
 export default setupBateBapoModule; 

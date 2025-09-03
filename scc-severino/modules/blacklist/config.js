@@ -7,7 +7,7 @@ export const config = {
   monitorChannelId: '1326731476498255924', // Canal pedit-set
   
   // ID do cargo de blacklist
-  blacklistRoleId: '1317086276935225394', // Cargo de blacklist
+  blacklistRoleId: '1412754856690581515', // Cargo de blacklist
   
   // Mensagem de resposta
   blacklistMessage: 'Este usuario esta em BlackList'

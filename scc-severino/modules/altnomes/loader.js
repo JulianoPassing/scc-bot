@@ -71,13 +71,9 @@ export default {
                 if (member) {
                     console.log(`👤 Tentando alterar nome do usuário: ${member.user.tag}`);
                     await member.setNickname(formattedName);
-                    
-                    // Enviar confirmação
-                    await message.reply(`✅ Nome alterado para: **${formattedName}**`);
                     console.log(`✅ Nome alterado com sucesso para: ${formattedName}`);
                 } else {
                     console.log('❌ Membro não encontrado no cache');
-                    await message.reply('❌ Usuário não encontrado no servidor!');
                 }
                 
             } catch (error) {

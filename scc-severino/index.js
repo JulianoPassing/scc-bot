@@ -38,6 +38,7 @@ const modules = [
   'drogas',
   'instagram',
   'liberacao',
+  'limparchat',
   'sugestoes',
   'sugestoes-ilegal',
   'tagseason',

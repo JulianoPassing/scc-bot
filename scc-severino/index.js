@@ -129,6 +129,18 @@ client.once('ready', async () => {
   } catch (error) {
     console.error('❌ Erro ao carregar mensagens antigas:', error);
   }
+  
+  // Fazer fetch das mensagens antigas do canal de altnomes
+  try {
+    const altnomesChannel = client.channels.cache.get('1413150739290918962');
+    if (altnomesChannel) {
+      console.log('📥 Carregando mensagens antigas do canal de altnomes...');
+      const messages = await altnomesChannel.messages.fetch({ limit: 100 });
+      console.log(`✅ ${messages.size} mensagens antigas carregadas do canal altnomes`);
+    }
+  } catch (error) {
+    console.error('❌ Erro ao carregar mensagens antigas do canal altnomes:', error);
+  }
 });
 
 client.login(process.env.TOKEN); 

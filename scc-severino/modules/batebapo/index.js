@@ -74,7 +74,7 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para "PH"
     if (message.content.toLowerCase().trim() === 'ph') {
-      await message.reply('**🏳️‍🌈 Esse se deita com iguais**');
+      await message.reply('**🏳️‍🌈 PH, esse se deita com iguais**');
     }
     
     // Resposta para "abuser"

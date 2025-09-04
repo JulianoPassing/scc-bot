@@ -11,6 +11,9 @@ export default {
         console.log(`📍 Emoji de confirmação: ${config.confirmEmoji}`);
         console.log('🔧 Event listener registrado para MessageReactionAdd');
         
+        // Verificar se o client tem o evento registrado
+        console.log('🔧 Verificando se o event listener foi registrado...');
+        console.log('🔧 Client listeners:', client.listenerCount(Events.MessageReactionAdd));
         
         // Evento para detectar reações em mensagens
         client.on(Events.MessageReactionAdd, async (reaction, user) => {

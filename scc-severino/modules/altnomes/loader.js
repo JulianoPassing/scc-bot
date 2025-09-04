@@ -84,5 +84,8 @@ export default {
                 console.error('❌ Erro ao alterar nome:', error);
             }
         });
+        
+        // Verificar novamente se o listener foi registrado
+        console.log('🔧 Client listeners após registro:', client.listenerCount(Events.MessageReactionAdd));
     }
 };

@@ -57,6 +57,7 @@ for (const mod of modules) {
         console.log(`🔧 CARREGANDO MÓDULO ALTNOMES ESPECÍFICO!`);
         console.log(`🔧 Caminho do loader: ${loader}`);
         console.log(`🔧 Arquivo existe: ${fs.existsSync(loader)}`);
+        console.log(`🔧 Conteúdo do arquivo:`, fs.readFileSync(loader, 'utf8').substring(0, 200));
       }
       import(loader).then(m => {
         if (mod === 'altnomes') {

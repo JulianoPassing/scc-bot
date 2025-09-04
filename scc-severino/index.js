@@ -63,8 +63,16 @@ for (const mod of modules) {
         if (mod === 'altnomes') {
           console.log(`🔧 MÓDULO ALTNOMES IMPORTADO COM SUCESSO!`);
           console.log(`🔧 Módulo altnomes:`, m);
+          console.log(`🔧 m.default:`, m.default);
+          console.log(`🔧 typeof m.default:`, typeof m.default);
         }
-        return m.default(client);
+        if (m.default && typeof m.default === 'function') {
+          return m.default(client);
+        } else if (m.default && typeof m.default.execute === 'function') {
+          return m.default.execute(client);
+        } else {
+          console.error(`❌ Módulo ${mod} não tem função default válida`);
+        }
       }).catch(err => {
         console.error(`❌ Erro ao carregar módulo ${mod}:`, err);
         if (mod === 'altnomes') {

@@ -44,299 +44,102 @@ const setupLimparchatModule = function(client) {
             // Mensagem de início da limpeza
             const startMessage = await message.channel.send('**🧹 Iniciando limpeza do canal...**');
             
-            // VERSÃO EXTREMA - Força bruta total
+            // VERSÃO ULTRA-SIMPLES - Re-lê canal a cada mensagem
             let deletedCount = 0;
-            let lastMessageId = null;
             let attempts = 0;
-            const maxAttempts = 1000; // Aumentei para 1000
+            const maxAttempts = 10000; // Aumentei drasticamente
             
-            console.log('🧹 Iniciando limpeza EXTREMA do canal...');
+            console.log('🧹 Iniciando limpeza ULTRA-SIMPLES - Re-lendo canal a cada mensagem...');
             
-            // ESTRATÉGIA 0: Deletar mensagens por ID específico (força bruta)
-            console.log('💥 Iniciando Estratégia 0 - Força bruta por ID...');
-            let strategy0Count = 0;
-            
-            // Tenta deletar mensagens por ID em sequência
-            for (let idAttempt = 0; idAttempt < 1000; idAttempt++) {
-              try {
-                // Gera um ID de mensagem possível (baseado no timestamp atual)
-                const possibleId = (BigInt(Date.now()) - BigInt(idAttempt * 1000)) << BigInt(22);
-                const possibleIdString = possibleId.toString();
-                
-                try {
-                  const msg = await message.channel.messages.fetch(possibleIdString);
-                  if (msg) {
-                    await msg.delete();
-                    strategy0Count++;
-                    deletedCount++;
-                    console.log(`💥 Estratégia 0 - Deletada por ID ${possibleIdString} (${strategy0Count} nesta estratégia)`);
-                    await new Promise(resolve => setTimeout(resolve, 1));
-                  }
-                } catch (fetchError) {
-                  // Ignora erros de mensagem não encontrada
-                }
-                
-                if (idAttempt % 100 === 0) {
-                  console.log(`💥 Estratégia 0 - Tentativa ${idAttempt}/1000`);
-                }
-                
-              } catch (error) {
-                // Ignora erros
-              }
-            }
-            
-            console.log(`🏁 Estratégia 0 concluída. ${strategy0Count} mensagens deletadas por ID.`);
-            
-            // ESTRATÉGIA 1: Deletar do mais recente para o mais antigo
+            // ESTRATÉGIA SIMPLES: Re-lê canal e deleta uma mensagem por vez
             while (attempts < maxAttempts) {
               try {
-                const messages = await message.channel.messages.fetch({ 
-                  limit: 100, 
-                  before: lastMessageId 
-                });
-                
-                console.log(`📊 Estratégia 1 - Tentativa ${attempts + 1}: Encontradas ${messages.size} mensagens`);
+                // SEMPRE re-lê o canal do zero
+                const messages = await message.channel.messages.fetch({ limit: 1 });
                 
                 if (messages.size === 0) {
-                  console.log('✅ Estratégia 1 concluída - Nenhuma mensagem encontrada');
+                  console.log('✅ Nenhuma mensagem encontrada - canal limpo!');
                   break;
                 }
                 
-                // Deleta em ordem reversa (mais recente primeiro)
-                const sortedMessages = Array.from(messages.values()).sort((a, b) => b.createdTimestamp - a.createdTimestamp);
+                // Pega a primeira (mais recente) mensagem
+                const firstMessage = messages.first();
                 
-                for (const msg of sortedMessages) {
+                if (firstMessage) {
                   try {
-                    await msg.delete();
+                    await firstMessage.delete();
                     deletedCount++;
-                    console.log(`🗑️ Deletada mensagem ${msg.id} de ${new Date(msg.createdTimestamp).toLocaleDateString('pt-BR')} (${deletedCount} total)`);
-                    await new Promise(resolve => setTimeout(resolve, 25)); // Pausa ainda menor
+                    attempts++;
+                    console.log(`🗑️ Deletada mensagem ${firstMessage.id} (${deletedCount} total, tentativa ${attempts})`);
+                    
+                    // Pausa pequena para evitar rate limit
+                    await new Promise(resolve => setTimeout(resolve, 100));
                   } catch (deleteError) {
-                    console.log(`❌ Erro ao deletar mensagem ${msg.id}:`, deleteError.message);
+                    console.log(`❌ Erro ao deletar mensagem ${firstMessage.id}:`, deleteError.message);
+                    attempts++;
+                    
+                    // Se não conseguiu deletar, tenta a próxima
+                    await new Promise(resolve => setTimeout(resolve, 500));
                   }
+                } else {
+                  console.log('⚠️ Nenhuma mensagem válida encontrada');
+                  attempts++;
+                  await new Promise(resolve => setTimeout(resolve, 1000));
                 }
                 
-                lastMessageId = messages.last().id;
-                attempts++;
-                
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Log de progresso a cada 100 tentativas
+                if (attempts % 100 === 0) {
+                  console.log(`📊 Progresso: ${attempts} tentativas, ${deletedCount} mensagens deletadas`);
+                }
                 
               } catch (fetchError) {
-                console.log(`❌ Erro na estratégia 1:`, fetchError.message);
+                console.log(`❌ Erro ao buscar mensagens (tentativa ${attempts + 1}):`, fetchError.message);
                 attempts++;
-                await new Promise(resolve => setTimeout(resolve, 500));
+                await new Promise(resolve => setTimeout(resolve, 1000));
               }
             }
             
-            console.log(`🏁 Estratégia 1 concluída. ${deletedCount} mensagens deletadas em ${attempts} tentativas.`);
-            
-            // ESTRATÉGIA 2: Buscar por ID específico e deletar
-            console.log('🔄 Iniciando Estratégia 2 - Busca por ID...');
-            let strategy2Count = 0;
-            
-            for (let i = 0; i < 50; i++) {
-              try {
-                const messages = await message.channel.messages.fetch({ limit: 100 });
-                if (messages.size === 0) break;
-                
-                console.log(`📊 Estratégia 2 - Tentativa ${i + 1}: ${messages.size} mensagens restantes`);
-                
-                for (const msg of messages.values()) {
-                  try {
-                    await msg.delete();
-                    strategy2Count++;
-                    deletedCount++;
-                    console.log(`🗑️ Estratégia 2 - Deletada ${msg.id} (${strategy2Count} nesta estratégia)`);
-                    await new Promise(resolve => setTimeout(resolve, 10));
-                  } catch (error) {
-                    console.log(`❌ Estratégia 2 - Erro ao deletar ${msg.id}:`, error.message);
-                  }
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 50));
-              } catch (error) {
-                console.log(`❌ Erro na estratégia 2:`, error.message);
-                await new Promise(resolve => setTimeout(resolve, 200));
-              }
-            }
-            
-            console.log(`🏁 Estratégia 2 concluída. ${strategy2Count} mensagens adicionais deletadas.`);
-            
-            // ESTRATÉGIA 3: Loop infinito até canal estar vazio
-            console.log('🔄 Iniciando Estratégia 3 - Loop infinito...');
-            let strategy3Count = 0;
-            let emptyRounds = 0;
-            
-            while (emptyRounds < 5) { // Para se não encontrar mensagens por 5 rodadas seguidas
-              try {
-                const messages = await message.channel.messages.fetch({ limit: 100 });
-                
-                if (messages.size === 0) {
-                  emptyRounds++;
-                  console.log(`📊 Estratégia 3 - Rodada vazia ${emptyRounds}/5`);
-                  await new Promise(resolve => setTimeout(resolve, 1000));
-                  continue;
-                }
-                
-                emptyRounds = 0; // Reset contador
-                console.log(`📊 Estratégia 3 - Encontradas ${messages.size} mensagens, continuando...`);
-                
-                for (const msg of messages.values()) {
-                  try {
-                    await msg.delete();
-                    strategy3Count++;
-                    deletedCount++;
-                    console.log(`🗑️ Estratégia 3 - Deletada ${msg.id} (${strategy3Count} nesta estratégia)`);
-                    await new Promise(resolve => setTimeout(resolve, 5)); // Pausa mínima
-                  } catch (error) {
-                    console.log(`❌ Estratégia 3 - Erro ao deletar ${msg.id}:`, error.message);
-                  }
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 25));
-                
-              } catch (error) {
-                console.log(`❌ Erro na estratégia 3:`, error.message);
-                await new Promise(resolve => setTimeout(resolve, 100));
-              }
-            }
-            
-            console.log(`🏁 Estratégia 3 concluída. ${strategy3Count} mensagens adicionais deletadas.`);
-            
-            // ESTRATÉGIA 4: Deletar por diferentes métodos de busca
-            console.log('🔄 Iniciando Estratégia 4 - Múltiplos métodos de busca...');
-            let strategy4Count = 0;
-            
-            // Método 1: Buscar por around (mensagem específica)
-            for (let aroundAttempt = 0; aroundAttempt < 100; aroundAttempt++) {
-              try {
-                const aroundId = (BigInt(Date.now()) - BigInt(aroundAttempt * 10000)) << BigInt(22);
-                const messages = await message.channel.messages.fetch({ 
-                  around: aroundId.toString(), 
-                  limit: 50 
-                });
-                
-                if (messages.size > 0) {
-                  console.log(`📊 Estratégia 4 - Around ${aroundAttempt}: ${messages.size} mensagens encontradas`);
-                  
-                  for (const msg of messages.values()) {
-                    try {
-                      await msg.delete();
-                      strategy4Count++;
-                      deletedCount++;
-                      console.log(`🗑️ Estratégia 4 - Around deletada ${msg.id}`);
-                      await new Promise(resolve => setTimeout(resolve, 1));
-                    } catch (error) {
-                      // Ignora erros
-                    }
-                  }
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 10));
-              } catch (error) {
-                // Ignora erros
-              }
-            }
-            
-            // Método 2: Buscar por after (após mensagem específica)
-            for (let afterAttempt = 0; afterAttempt < 100; afterAttempt++) {
-              try {
-                const afterId = (BigInt(Date.now()) - BigInt(afterAttempt * 10000)) << BigInt(22);
-                const messages = await message.channel.messages.fetch({ 
-                  after: afterId.toString(), 
-                  limit: 50 
-                });
-                
-                if (messages.size > 0) {
-                  console.log(`📊 Estratégia 4 - After ${afterAttempt}: ${messages.size} mensagens encontradas`);
-                  
-                  for (const msg of messages.values()) {
-                    try {
-                      await msg.delete();
-                      strategy4Count++;
-                      deletedCount++;
-                      console.log(`🗑️ Estratégia 4 - After deletada ${msg.id}`);
-                      await new Promise(resolve => setTimeout(resolve, 1));
-                    } catch (error) {
-                      // Ignora erros
-                    }
-                  }
-                }
-                
-                await new Promise(resolve => setTimeout(resolve, 10));
-              } catch (error) {
-                // Ignora erros
-              }
-            }
-            
-            console.log(`🏁 Estratégia 4 concluída. ${strategy4Count} mensagens adicionais deletadas.`);
-            
-            // ESTRATÉGIA 5: Loop infinito com diferentes limites
-            console.log('🔄 Iniciando Estratégia 5 - Loop com diferentes limites...');
-            let strategy5Count = 0;
-            const limits = [1, 2, 5, 10, 25, 50, 100];
-            
-            for (const limit of limits) {
-              for (let limitAttempt = 0; limitAttempt < 50; limitAttempt++) {
-                try {
-                  const messages = await message.channel.messages.fetch({ limit });
-                  
-                  if (messages.size === 0) break;
-                  
-                  console.log(`📊 Estratégia 5 - Limite ${limit}, tentativa ${limitAttempt + 1}: ${messages.size} mensagens`);
-                  
-                  for (const msg of messages.values()) {
-                    try {
-                      await msg.delete();
-                      strategy5Count++;
-                      deletedCount++;
-                      console.log(`🗑️ Estratégia 5 - Deletada com limite ${limit}: ${msg.id}`);
-                      await new Promise(resolve => setTimeout(resolve, 1));
-                    } catch (error) {
-                      // Ignora erros
-                    }
-                  }
-                  
-                  await new Promise(resolve => setTimeout(resolve, 5));
-                } catch (error) {
-                  // Ignora erros
-                }
-              }
-            }
-            
-            console.log(`🏁 Estratégia 5 concluída. ${strategy5Count} mensagens adicionais deletadas.`);
+            console.log(`🏁 Limpeza simples concluída. ${deletedCount} mensagens deletadas em ${attempts} tentativas.`);
             
             // Deleta a mensagem de início
             await startMessage.delete();
             
-            // Verificação final AGRESSIVA - múltiplas tentativas
-            console.log('🔍 Iniciando verificação final...');
+            // Verificação final SIMPLES - re-lê canal e deleta uma por vez
+            console.log('🔍 Iniciando verificação final simples...');
+            let finalAttempts = 0;
+            const maxFinalAttempts = 1000;
             
-            for (let finalAttempt = 0; finalAttempt < 10; finalAttempt++) {
+            while (finalAttempts < maxFinalAttempts) {
               try {
-                const remainingMessages = await message.channel.messages.fetch({ limit: 100 });
-                console.log(`🔍 Verificação ${finalAttempt + 1}: ${remainingMessages.size} mensagens restantes`);
+                // Re-lê o canal do zero
+                const remainingMessages = await message.channel.messages.fetch({ limit: 1 });
                 
                 if (remainingMessages.size === 0) {
                   console.log('✅ Canal completamente limpo!');
                   break;
                 }
                 
-                for (const msg of remainingMessages.values()) {
+                const firstMessage = remainingMessages.first();
+                if (firstMessage) {
                   try {
-                    await msg.delete();
+                    await firstMessage.delete();
                     deletedCount++;
-                    console.log(`🗑️ Deletada mensagem restante ${msg.id}`);
+                    finalAttempts++;
+                    console.log(`🗑️ Verificação final - Deletada ${firstMessage.id} (${deletedCount} total)`);
                     await new Promise(resolve => setTimeout(resolve, 100));
                   } catch (error) {
-                    console.log(`❌ Erro ao deletar mensagem restante ${msg.id}:`, error.message);
+                    console.log(`❌ Erro ao deletar na verificação final:`, error.message);
+                    finalAttempts++;
+                    await new Promise(resolve => setTimeout(resolve, 500));
                   }
+                } else {
+                  finalAttempts++;
+                  await new Promise(resolve => setTimeout(resolve, 1000));
                 }
                 
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
               } catch (error) {
-                console.log(`❌ Erro na verificação final ${finalAttempt + 1}:`, error.message);
+                console.log(`❌ Erro na verificação final:`, error.message);
+                finalAttempts++;
                 await new Promise(resolve => setTimeout(resolve, 1000));
               }
             }

@@ -81,6 +81,27 @@ const setupBateBapoModule = function(client) {
     if (message.content.toLowerCase().includes('abuser')) {
       await message.reply('**🎅🏻 Provavelmente você está falando do Noel**');
     }
+    
+    // Comando especial do usuário 405487427327885313
+    if (message.author.id === '405487427327885313' && 
+        message.content.toLowerCase().includes('pega o') && 
+        message.content.toLowerCase().includes('severino, mostra quem manda')) {
+      
+      // Encontra a menção na mensagem
+      const mention = message.mentions.users.first();
+      if (mention) {
+        try {
+          // Altera o apelido do usuário mencionado
+          await message.guild.members.cache.get(mention.id).setNickname('Femea do Noel');
+          await message.reply(`**🎅🏻 ${mention.username} agora é conhecido como "Femea do Noel"!**`);
+        } catch (error) {
+          console.error('Erro ao alterar apelido:', error);
+          await message.reply('**❌ Não foi possível alterar o apelido do usuário.**');
+        }
+      } else {
+        await message.reply('**❌ Você precisa mencionar um usuário para usar este comando.**');
+      }
+    }
   });
 };
 export default setupBateBapoModule; 

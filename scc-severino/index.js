@@ -53,7 +53,15 @@ for (const mod of modules) {
     const loader = path.join(modPath, 'loader.js');
     if (fs.existsSync(loader)) {
       console.log(`📦 Carregando módulo: ${mod}`);
-      import(loader).then(m => m.default(client)).catch(err => {
+      if (mod === 'altnomes') {
+        console.log(`🔧 CARREGANDO MÓDULO ALTNOMES ESPECÍFICO!`);
+      }
+      import(loader).then(m => {
+        if (mod === 'altnomes') {
+          console.log(`🔧 MÓDULO ALTNOMES IMPORTADO COM SUCESSO!`);
+        }
+        return m.default(client);
+      }).catch(err => {
         console.error(`❌ Erro ao carregar módulo ${mod}:`, err);
       });
     }

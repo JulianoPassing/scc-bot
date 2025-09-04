@@ -5,13 +5,15 @@ export default {
     name: 'altnomes',
     
     async execute(client) {
-        console.log('🔧 Módulo altnomes carregado!');
+        console.log('🔧 MÓDULO ALTNOMES CARREGADO!');
         console.log(`📍 Configurado para servidor: ${config.guildId}`);
         console.log(`📍 Configurado para canal: ${config.channelId}`);
         console.log(`📍 Emoji de confirmação: ${config.confirmEmoji}`);
+        console.log('🔧 Event listener registrado para MessageReactionAdd');
         
         // Evento para detectar reações em mensagens
         client.on(Events.MessageReactionAdd, async (reaction, user) => {
+            console.log('🎯 EVENTO MessageReactionAdd EXECUTADO PELO MÓDULO ALTNOMES!');
             // Ignorar reações de bots
             if (user.bot) return;
             

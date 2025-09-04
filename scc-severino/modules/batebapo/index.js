@@ -64,7 +64,7 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para "Noel"
     if (message.content.toLowerCase().trim() === 'noel') {
-      await message.reply('Esse cara é foda! 🎅🏻');
+      await message.reply('Noel é foda! 🎅🏻');
     }
     
     // Resposta para mensagens contendo "wipe"

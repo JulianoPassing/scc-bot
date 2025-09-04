@@ -44,11 +44,13 @@ const setupLimparchatModule = function(client) {
             // Mensagem de início da limpeza
             const startMessage = await message.channel.send('**🧹 Iniciando limpeza do canal...**');
             
-            // Busca e deleta todas as mensagens do canal
+            // Busca e deleta TODAS as mensagens do canal
             let deletedCount = 0;
             let lastMessageId = null;
+            let attempts = 0;
+            const maxAttempts = 100; // Limite de segurança
             
-            while (true) {
+            while (attempts < maxAttempts) {
               const messages = await message.channel.messages.fetch({ 
                 limit: 100, 
                 before: lastMessageId 
@@ -56,38 +58,52 @@ const setupLimparchatModule = function(client) {
               
               if (messages.size === 0) break;
               
-              // Filtra mensagens que podem ser deletadas (menos de 14 dias)
-              const deletableMessages = messages.filter(msg => 
-                Date.now() - msg.createdTimestamp < 14 * 24 * 60 * 60 * 1000
-              );
-              
-              if (deletableMessages.size > 0) {
-                await message.channel.bulkDelete(deletableMessages);
-                deletedCount += deletableMessages.size;
-              }
-              
-              // Para mensagens mais antigas, deleta uma por uma
-              const oldMessages = messages.filter(msg => 
-                Date.now() - msg.createdTimestamp >= 14 * 24 * 60 * 60 * 1000
-              );
-              
-              for (const oldMsg of oldMessages.values()) {
-                try {
-                  await oldMsg.delete();
-                  deletedCount++;
-                } catch (error) {
-                  // Ignora erros de mensagens que não podem ser deletadas
+              // Tenta deletar todas as mensagens em lote primeiro
+              try {
+                await message.channel.bulkDelete(messages);
+                deletedCount += messages.size;
+              } catch (error) {
+                // Se bulk delete falhar, deleta uma por uma
+                for (const msg of messages.values()) {
+                  try {
+                    await msg.delete();
+                    deletedCount++;
+                    // Pausa menor para mensagens individuais
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                  } catch (deleteError) {
+                    // Ignora erros de mensagens que não podem ser deletadas
+                    console.log(`Não foi possível deletar mensagem: ${msg.id}`);
+                  }
                 }
               }
               
               lastMessageId = messages.last().id;
+              attempts++;
               
-              // Pequena pausa para evitar rate limit
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              // Pausa menor para ser mais rápido
+              await new Promise(resolve => setTimeout(resolve, 500));
             }
             
             // Deleta a mensagem de início
             await startMessage.delete();
+            
+            // Verificação final - tenta deletar qualquer mensagem restante
+            try {
+              const remainingMessages = await message.channel.messages.fetch({ limit: 50 });
+              if (remainingMessages.size > 0) {
+                for (const msg of remainingMessages.values()) {
+                  try {
+                    await msg.delete();
+                    deletedCount++;
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                  } catch (error) {
+                    // Ignora erros
+                  }
+                }
+              }
+            } catch (error) {
+              // Ignora erros da verificação final
+            }
             
             // Mensagem final
             await message.channel.send(`**✅ Canal limpo com sucesso! ${deletedCount} mensagens foram removidas.**`);

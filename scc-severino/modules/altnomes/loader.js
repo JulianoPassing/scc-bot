@@ -79,13 +79,24 @@ export default {
                 }
                 
                 // Alterar o nome do usuário
-                const member = message.guild.members.cache.get(message.author.id);
+                let member = message.guild.members.cache.get(message.author.id);
+                if (!member) {
+                    console.log('❌ Membro não encontrado no cache, fazendo fetch...');
+                    try {
+                        member = await message.guild.members.fetch(message.author.id);
+                        console.log('✅ Membro encontrado via fetch');
+                    } catch (error) {
+                        console.error('❌ Erro ao fazer fetch do membro:', error);
+                        return;
+                    }
+                }
+                
                 if (member) {
                     console.log(`👤 Tentando alterar nome do usuário: ${member.user.tag}`);
                     await member.setNickname(formattedName);
                     console.log(`✅ Nome alterado com sucesso para: ${formattedName}`);
                 } else {
-                    console.log('❌ Membro não encontrado no cache');
+                    console.log('❌ Membro não encontrado após fetch');
                 }
                 
             } catch (error) {

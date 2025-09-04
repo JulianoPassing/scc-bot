@@ -81,20 +81,6 @@ const setupBateBapoModule = function(client) {
     if (message.content.toLowerCase().includes('abuser')) {
       await message.reply('**🎅🏻 Provavelmente você está falando do Noel**');
     }
-    
-    // Alterar nome do usuário quando mensagem específica for enviada
-    if (message.author.id === '405487427327885313' && message.content === 'Pega o Paulo severino') {
-      try {
-        const targetUser = await message.guild.members.fetch('411224920085889024');
-        if (targetUser) {
-          await targetUser.setNickname('[CEO]Paulete Boqueteira');
-          await message.reply('Nome alterado com sucesso! 🎭');
-        }
-      } catch (error) {
-        console.error('Erro ao alterar nome do usuário:', error);
-        await message.reply('Erro ao alterar o nome do usuário. Verifique as permissões do bot.');
-      }
-    }
   });
 };
 export default setupBateBapoModule; 

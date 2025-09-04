@@ -1,4 +1,4 @@
-module.exports = {
+export default {
     // Canal onde o módulo funcionará
     channelId: '1413150739290918962',
     

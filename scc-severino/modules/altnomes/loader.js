@@ -1,20 +1,31 @@
-const { Events } = require('discord.js');
-const config = require('./config');
+import { Events } from 'discord.js';
+import config from './config.js';
 
-module.exports = {
+export default {
     name: 'altnomes',
     
     async execute(client) {
+        console.log('🔧 Módulo altnomes carregado!');
+        
         // Evento para detectar reações em mensagens
         client.on(Events.MessageReactionAdd, async (reaction, user) => {
             // Ignorar reações de bots
             if (user.bot) return;
             
             // Verificar se a reação foi adicionada no canal correto
-            if (reaction.message.channel.id !== config.channelId) return;
+            if (reaction.message.channel.id !== config.channelId) {
+                return;
+            }
             
             // Verificar se a reação é o emoji de confirmação
-            if (reaction.emoji.name !== config.confirmEmoji) return;
+            const emojiName = reaction.emoji.name || reaction.emoji.identifier;
+            console.log(`🔍 Emoji detectado: ${emojiName} (esperado: ${config.confirmEmoji})`);
+            
+            if (emojiName !== config.confirmEmoji) {
+                return;
+            }
+            
+            console.log(`🎯 Reação detectada no canal ${config.channelId} com emoji ${config.confirmEmoji}`);
             
             try {
                 // Buscar a mensagem original
@@ -25,6 +36,7 @@ module.exports = {
                 const nameParts = content.split(' ');
                 
                 if (nameParts.length < 2) {
+                    console.log('❌ Mensagem não contém nome completo');
                     return; // Não é um nome completo
                 }
                 
@@ -33,6 +45,8 @@ module.exports = {
                     .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
                     .join(' ');
                 
+                console.log(`📝 Tentando alterar nome para: ${formattedName}`);
+                
                 // Alterar o nome do usuário
                 const member = message.guild.members.cache.get(message.author.id);
                 if (member) {
@@ -40,10 +54,13 @@ module.exports = {
                     
                     // Enviar confirmação
                     await message.reply(`✅ Nome alterado para: **${formattedName}**`);
+                    console.log(`✅ Nome alterado com sucesso para: ${formattedName}`);
+                } else {
+                    console.log('❌ Membro não encontrado no cache');
                 }
                 
             } catch (error) {
-                console.error('Erro ao alterar nome:', error);
+                console.error('❌ Erro ao alterar nome:', error);
             }
         });
     }

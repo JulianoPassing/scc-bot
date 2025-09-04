@@ -11,6 +11,18 @@ export default {
         console.log(`📍 Emoji de confirmação: ${config.confirmEmoji}`);
         console.log('🔧 Event listener registrado para MessageReactionAdd');
         
+        // Carregar mensagens antigas do canal
+        try {
+            const altnomesChannel = client.channels.cache.get(config.channelId);
+            if (altnomesChannel) {
+                console.log('📥 Carregando mensagens antigas do canal de altnomes...');
+                const messages = await altnomesChannel.messages.fetch({ limit: 100 });
+                console.log(`✅ ${messages.size} mensagens antigas carregadas do canal altnomes`);
+            }
+        } catch (error) {
+            console.error('❌ Erro ao carregar mensagens antigas do canal altnomes:', error);
+        }
+        
         // Evento para detectar reações em mensagens
         client.on(Events.MessageReactionAdd, async (reaction, user) => {
             console.log('🎯 EVENTO MessageReactionAdd EXECUTADO PELO MÓDULO ALTNOMES!');

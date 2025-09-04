@@ -51,11 +51,19 @@ const setupLimparchatModule = function(client) {
             
             console.log('🧹 Iniciando limpeza ULTRA-SIMPLES - Re-lendo canal a cada mensagem...');
             
-            // ESTRATÉGIA SIMPLES: Re-lê canal e deleta uma mensagem por vez
+            // ESTRATÉGIA ULTRA-SIMPLES: Força re-lê do canal a cada operação
             while (attempts < maxAttempts) {
               try {
-                // SEMPRE re-lê o canal do zero
-                const messages = await message.channel.messages.fetch({ limit: 1 });
+                // FORÇA re-lê do canal - limpa cache e busca dados frescos
+                message.channel.messages.cache.clear();
+                const messages = await message.channel.messages.fetch({ 
+                  limit: 1, 
+                  cache: false,
+                  force: true 
+                });
+                
+                console.log(`🔍 Tentativa ${attempts + 1}: Buscando mensagens no canal...`);
+                console.log(`📊 Mensagens encontradas: ${messages.size}`);
                 
                 if (messages.size === 0) {
                   console.log('✅ Nenhuma mensagem encontrada - canal limpo!');
@@ -64,22 +72,25 @@ const setupLimparchatModule = function(client) {
                 
                 // Pega a primeira (mais recente) mensagem
                 const firstMessage = messages.first();
+                console.log(`📝 Mensagem encontrada: ${firstMessage.id} de ${firstMessage.author.tag}`);
                 
                 if (firstMessage) {
                   try {
+                    console.log(`🗑️ Tentando deletar mensagem ${firstMessage.id}...`);
                     await firstMessage.delete();
                     deletedCount++;
                     attempts++;
-                    console.log(`🗑️ Deletada mensagem ${firstMessage.id} (${deletedCount} total, tentativa ${attempts})`);
+                    console.log(`✅ SUCESSO! Deletada mensagem ${firstMessage.id} (${deletedCount} total, tentativa ${attempts})`);
                     
                     // Pausa pequena para evitar rate limit
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    await new Promise(resolve => setTimeout(resolve, 200));
                   } catch (deleteError) {
-                    console.log(`❌ Erro ao deletar mensagem ${firstMessage.id}:`, deleteError.message);
+                    console.log(`❌ ERRO ao deletar mensagem ${firstMessage.id}:`, deleteError.message);
+                    console.log(`❌ Código do erro:`, deleteError.code);
                     attempts++;
                     
                     // Se não conseguiu deletar, tenta a próxima
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                   }
                 } else {
                   console.log('⚠️ Nenhuma mensagem válida encontrada');
@@ -87,15 +98,16 @@ const setupLimparchatModule = function(client) {
                   await new Promise(resolve => setTimeout(resolve, 1000));
                 }
                 
-                // Log de progresso a cada 100 tentativas
-                if (attempts % 100 === 0) {
+                // Log de progresso a cada 10 tentativas
+                if (attempts % 10 === 0) {
                   console.log(`📊 Progresso: ${attempts} tentativas, ${deletedCount} mensagens deletadas`);
                 }
                 
               } catch (fetchError) {
-                console.log(`❌ Erro ao buscar mensagens (tentativa ${attempts + 1}):`, fetchError.message);
+                console.log(`❌ ERRO ao buscar mensagens (tentativa ${attempts + 1}):`, fetchError.message);
+                console.log(`❌ Código do erro:`, fetchError.code);
                 attempts++;
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 2000));
               }
             }
             
@@ -104,15 +116,22 @@ const setupLimparchatModule = function(client) {
             // Deleta a mensagem de início
             await startMessage.delete();
             
-            // Verificação final SIMPLES - re-lê canal e deleta uma por vez
-            console.log('🔍 Iniciando verificação final simples...');
+            // Verificação final ULTRA-SIMPLES - força re-lê do canal
+            console.log('🔍 Iniciando verificação final ULTRA-SIMPLES...');
             let finalAttempts = 0;
             const maxFinalAttempts = 1000;
             
             while (finalAttempts < maxFinalAttempts) {
               try {
-                // Re-lê o canal do zero
-                const remainingMessages = await message.channel.messages.fetch({ limit: 1 });
+                // FORÇA re-lê do canal - limpa cache e busca dados frescos
+                message.channel.messages.cache.clear();
+                const remainingMessages = await message.channel.messages.fetch({ 
+                  limit: 1, 
+                  cache: false,
+                  force: true 
+                });
+                
+                console.log(`🔍 Verificação final ${finalAttempts + 1}: ${remainingMessages.size} mensagens encontradas`);
                 
                 if (remainingMessages.size === 0) {
                   console.log('✅ Canal completamente limpo!');
@@ -120,27 +139,33 @@ const setupLimparchatModule = function(client) {
                 }
                 
                 const firstMessage = remainingMessages.first();
+                console.log(`📝 Verificação final - Mensagem encontrada: ${firstMessage.id} de ${firstMessage.author.tag}`);
+                
                 if (firstMessage) {
                   try {
+                    console.log(`🗑️ Verificação final - Tentando deletar ${firstMessage.id}...`);
                     await firstMessage.delete();
                     deletedCount++;
                     finalAttempts++;
-                    console.log(`🗑️ Verificação final - Deletada ${firstMessage.id} (${deletedCount} total)`);
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    console.log(`✅ Verificação final - SUCESSO! Deletada ${firstMessage.id} (${deletedCount} total)`);
+                    await new Promise(resolve => setTimeout(resolve, 200));
                   } catch (error) {
-                    console.log(`❌ Erro ao deletar na verificação final:`, error.message);
+                    console.log(`❌ Verificação final - ERRO ao deletar ${firstMessage.id}:`, error.message);
+                    console.log(`❌ Código do erro:`, error.code);
                     finalAttempts++;
-                    await new Promise(resolve => setTimeout(resolve, 500));
+                    await new Promise(resolve => setTimeout(resolve, 1000));
                   }
                 } else {
+                  console.log('⚠️ Verificação final - Nenhuma mensagem válida encontrada');
                   finalAttempts++;
                   await new Promise(resolve => setTimeout(resolve, 1000));
                 }
                 
               } catch (error) {
-                console.log(`❌ Erro na verificação final:`, error.message);
+                console.log(`❌ Verificação final - ERRO ao buscar mensagens:`, error.message);
+                console.log(`❌ Código do erro:`, error.code);
                 finalAttempts++;
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 2000));
               }
             }
             

@@ -18,8 +18,16 @@ export default {
         // Evento para detectar reações em mensagens
         client.on(Events.MessageReactionAdd, async (reaction, user) => {
             console.log('🎯 EVENTO MessageReactionAdd EXECUTADO PELO MÓDULO ALTNOMES!');
+            console.log('🎯 Canal da reação:', reaction.message.channel.id);
+            console.log('🎯 Emoji da reação:', reaction.emoji.name);
+            console.log('🎯 Usuário que reagiu:', user.tag);
+            console.log('🎯 Autor da mensagem:', reaction.message.author.tag);
+            
             // Ignorar reações de bots
-            if (user.bot) return;
+            if (user.bot) {
+                console.log('🎯 Ignorando reação de bot');
+                return;
+            }
             
             // Verificar se a reação foi adicionada no canal correto
             console.log(`🔍 Reação detectada no canal: ${reaction.message.channel.id} (esperado: ${config.channelId})`);

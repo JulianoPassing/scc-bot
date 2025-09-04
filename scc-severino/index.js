@@ -55,14 +55,20 @@ for (const mod of modules) {
       console.log(`📦 Carregando módulo: ${mod}`);
       if (mod === 'altnomes') {
         console.log(`🔧 CARREGANDO MÓDULO ALTNOMES ESPECÍFICO!`);
+        console.log(`🔧 Caminho do loader: ${loader}`);
+        console.log(`🔧 Arquivo existe: ${fs.existsSync(loader)}`);
       }
       import(loader).then(m => {
         if (mod === 'altnomes') {
           console.log(`🔧 MÓDULO ALTNOMES IMPORTADO COM SUCESSO!`);
+          console.log(`🔧 Módulo altnomes:`, m);
         }
         return m.default(client);
       }).catch(err => {
         console.error(`❌ Erro ao carregar módulo ${mod}:`, err);
+        if (mod === 'altnomes') {
+          console.error(`❌ ERRO ESPECÍFICO NO MÓDULO ALTNOMES:`, err);
+        }
       });
     }
   }

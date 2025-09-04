@@ -31,9 +31,9 @@ export default {
             }
         }
 
-        // Verificar se é o canal específico
+        // Verificar se é o canal específico do módulo liberacao
         if (reaction.message.channel.id !== '1317096106844225586') {
-            console.log('❌ Canal incorreto, saindo...');
+            console.log('❌ Canal incorreto para módulo liberacao, saindo...');
             return;
         }
 

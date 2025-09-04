@@ -44,66 +44,92 @@ const setupLimparchatModule = function(client) {
             // Mensagem de início da limpeza
             const startMessage = await message.channel.send('**🧹 Iniciando limpeza do canal...**');
             
-            // Busca e deleta TODAS as mensagens do canal
+            // Busca e deleta TODAS as mensagens do canal - VERSÃO AGRESSIVA
             let deletedCount = 0;
             let lastMessageId = null;
             let attempts = 0;
-            const maxAttempts = 100; // Limite de segurança
+            const maxAttempts = 200; // Aumentei o limite
+            
+            console.log('🧹 Iniciando limpeza agressiva do canal...');
             
             while (attempts < maxAttempts) {
-              const messages = await message.channel.messages.fetch({ 
-                limit: 100, 
-                before: lastMessageId 
-              });
-              
-              if (messages.size === 0) break;
-              
-              // Tenta deletar todas as mensagens em lote primeiro
               try {
-                await message.channel.bulkDelete(messages);
-                deletedCount += messages.size;
-              } catch (error) {
-                // Se bulk delete falhar, deleta uma por uma
+                const messages = await message.channel.messages.fetch({ 
+                  limit: 100, 
+                  before: lastMessageId 
+                });
+                
+                console.log(`📊 Tentativa ${attempts + 1}: Encontradas ${messages.size} mensagens`);
+                
+                if (messages.size === 0) {
+                  console.log('✅ Nenhuma mensagem encontrada, parando...');
+                  break;
+                }
+                
+                // SEMPRE deleta uma por uma para garantir que funcione
                 for (const msg of messages.values()) {
                   try {
                     await msg.delete();
                     deletedCount++;
-                    // Pausa menor para mensagens individuais
-                    await new Promise(resolve => setTimeout(resolve, 100));
+                    console.log(`🗑️ Deletada mensagem ${msg.id} (${deletedCount} total)`);
+                    // Pausa muito pequena
+                    await new Promise(resolve => setTimeout(resolve, 50));
                   } catch (deleteError) {
-                    // Ignora erros de mensagens que não podem ser deletadas
-                    console.log(`Não foi possível deletar mensagem: ${msg.id}`);
+                    console.log(`❌ Erro ao deletar mensagem ${msg.id}:`, deleteError.message);
                   }
                 }
+                
+                lastMessageId = messages.last().id;
+                attempts++;
+                
+                // Pausa mínima
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+              } catch (fetchError) {
+                console.log(`❌ Erro ao buscar mensagens:`, fetchError.message);
+                attempts++;
+                await new Promise(resolve => setTimeout(resolve, 1000));
               }
-              
-              lastMessageId = messages.last().id;
-              attempts++;
-              
-              // Pausa menor para ser mais rápido
-              await new Promise(resolve => setTimeout(resolve, 500));
             }
+            
+            console.log(`🏁 Limpeza principal concluída. ${deletedCount} mensagens deletadas em ${attempts} tentativas.`);
             
             // Deleta a mensagem de início
             await startMessage.delete();
             
-            // Verificação final - tenta deletar qualquer mensagem restante
-            try {
-              const remainingMessages = await message.channel.messages.fetch({ limit: 50 });
-              if (remainingMessages.size > 0) {
+            // Verificação final AGRESSIVA - múltiplas tentativas
+            console.log('🔍 Iniciando verificação final...');
+            
+            for (let finalAttempt = 0; finalAttempt < 10; finalAttempt++) {
+              try {
+                const remainingMessages = await message.channel.messages.fetch({ limit: 100 });
+                console.log(`🔍 Verificação ${finalAttempt + 1}: ${remainingMessages.size} mensagens restantes`);
+                
+                if (remainingMessages.size === 0) {
+                  console.log('✅ Canal completamente limpo!');
+                  break;
+                }
+                
                 for (const msg of remainingMessages.values()) {
                   try {
                     await msg.delete();
                     deletedCount++;
-                    await new Promise(resolve => setTimeout(resolve, 200));
+                    console.log(`🗑️ Deletada mensagem restante ${msg.id}`);
+                    await new Promise(resolve => setTimeout(resolve, 100));
                   } catch (error) {
-                    // Ignora erros
+                    console.log(`❌ Erro ao deletar mensagem restante ${msg.id}:`, error.message);
                   }
                 }
+                
+                await new Promise(resolve => setTimeout(resolve, 500));
+                
+              } catch (error) {
+                console.log(`❌ Erro na verificação final ${finalAttempt + 1}:`, error.message);
+                await new Promise(resolve => setTimeout(resolve, 1000));
               }
-            } catch (error) {
-              // Ignora erros da verificação final
             }
+            
+            console.log(`🏁 Verificação final concluída. Total: ${deletedCount} mensagens deletadas.`);
             
             // Mensagem final
             await message.channel.send(`**✅ Canal limpo com sucesso! ${deletedCount} mensagens foram removidas.**`);

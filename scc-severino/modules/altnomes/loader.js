@@ -17,7 +17,11 @@ export default {
             
             // Verificar se a reação foi adicionada no canal correto
             console.log(`🔍 Reação detectada no canal: ${reaction.message.channel.id} (esperado: ${config.channelId})`);
-            if (reaction.message.channel.id !== config.channelId) {
+            console.log(`🔍 Tipo do canal detectado: ${typeof reaction.message.channel.id}`);
+            console.log(`🔍 Tipo do canal config: ${typeof config.channelId}`);
+            console.log(`🔍 Comparação: ${reaction.message.channel.id} === ${config.channelId} = ${reaction.message.channel.id === config.channelId}`);
+            
+            if (String(reaction.message.channel.id) !== String(config.channelId)) {
                 console.log('❌ Canal incorreto, ignorando...');
                 return;
             }

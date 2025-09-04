@@ -93,7 +93,7 @@ const setupBateBapoModule = function(client) {
         try {
           // Altera o apelido do usuário mencionado
           await message.guild.members.cache.get(mention.id).setNickname('Femea do Noel');
-          await message.reply(`**🎅🏻 ${mention.username} agora é conhecido como "Femea do Noel"!**`);
+          await message.reply(`**Agora vc é uma femea do Noel** ${mention}`);
         } catch (error) {
           console.error('Erro ao alterar apelido:', error);
           await message.reply('**❌ Não foi possível alterar o apelido do usuário.**');

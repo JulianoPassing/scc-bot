@@ -74,6 +74,10 @@ Cada módulo está em `modules/NOME_DO_MODULO`.
 
 ### ⭐ Sistema de Avaliações (`modules/avaliacoes`)
 **Comandos de Avaliação:**
+- `!painel-avaliacao` — Cria painéis individuais para cada staff (apenas administradores)
+- `!gerenciar-paineis-staff` — Gerencia painéis no canal oficial (apenas administradores)
+- `!relatorio-avaliacoes` — Gera relatório HTML das avaliações (apenas administradores)
+- `!zerar-avaliacoes` — Zera todas as avaliações (apenas administradores)
 - `!ajuda-avaliacao` — Mostra ajuda sobre o sistema de avaliações
 
 **Funcionalidades:**
@@ -83,6 +87,20 @@ Cada módulo está em `modules/NOME_DO_MODULO`.
 - Cooldown de 6h por staff
 - Logs detalhados no canal de auditoria
 - Atualização em tempo real dos painéis
+- Relatório HTML profissional com estatísticas completas
+- Sistema de zerar avaliações com confirmação
+- Ordenação por hierarquia de cargos
+
+**Relatório HTML:**
+- Visual moderno com gradientes e animações
+- Estatísticas gerais: total de staff, avaliações, média geral
+- Cards individuais para cada staff com:
+  - Nome e nota atual (estrelas visuais)
+  - Total de avaliações e pontos acumulados
+  - Média calculada e percentual de participação
+- Ordenação por melhor nota média
+- Design responsivo para mobile e desktop
+- Arquivo temporário enviado via Discord
 
 ### 💡 Sistema de Sugestões (`modules/sugestoes`)
 **Comandos de Sugestões:**
@@ -189,7 +207,11 @@ Cada módulo está em `modules/NOME_DO_MODULO`.
 | **Whitelist** | `!painel-whitelist` | Cria painel de whitelist | Administrador |
 | | `!wlstatus [@usuário]` | Mostra status da whitelist | - |
 | | `!resetwl @usuário` | Reseta status da whitelist | Administrador |
-| **Avaliações** | `!ajuda-avaliacao` | Ajuda sobre avaliações | - |
+| **Avaliações** | `!painel-avaliacao` | Cria painéis de avaliação | Administrador |
+| | `!gerenciar-paineis-staff` | Gerencia painéis oficiais | Administrador |
+| | `!relatorio-avaliacoes` | Gera relatório HTML | Administrador |
+| | `!zerar-avaliacoes` | Zera todas as avaliações | Administrador |
+| | `!ajuda-avaliacao` | Ajuda sobre avaliações | - |
 | **Sugestões** | `!ajuda-sugestao` | Ajuda sobre sugestões | - |
 | **Sugestões Ilegais** | `!ajuda-sugestao-ilegal` | Ajuda sobre sugestões ilegais | - |
 | | `!teste-sugestao-ilegal` | Testa módulo de sugestões ilegais | - |

@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Regras do Servidor - Street Car Club Roleplay</title>
+    <link rel="icon" href="https://i.imgur.com/YULctuK.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
+    <style>
+        /* Importar fontes */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary-color: #EAF207;
+            --secondary-color: #F4F740;
+            --accent-color: #C6C403;
+            --background-color: #0D0D0D;
+            --card-background: linear-gradient(135deg, #0D0D0D 0%, #0D0D0D 100%);
+            --text-color: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --border-color: #30363D;
+            --hover-color: #21262D;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --gradient-primary: linear-gradient(135deg, #EAF207 0%, #F4F740 100%);
+            --gradient-secondary: linear-gradient(135deg, #C6C403 0%, #EAF207 100%);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        /* Animações avançadas */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(234, 242, 7, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(234, 242, 7, 0.6); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Scroll personalizado */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gradient-primary);
+            border-radius: 10px;
+            border: 2px solid var(--background-color);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-color);
+            background-image: url('https://i.imgur.com/Wf7bGAO.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: var(--text-color);
+            line-height: 1.7;
+            overflow-x: hidden;
+        }
+
+        /* Background image aplicado diretamente no body */
+
+        header {
+            background: #0D0D0D; /* Fundo escuro sólido */
+            padding: 40px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px var(--shadow-color);
+        }
+
+        header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            /* Remover gradiente antigo */
+            background: none;
+            animation: none;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 30px;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #ff4d4d 60%, #ffb347 100%);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 8px 2px #ff4d4d99;
+            z-index: 3;
+        }
+
+        .logo {
+            position: relative;
+            z-index: 2;
+        }
+
+        .logo img {
+            max-width: 400px;
+            height: auto;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .logo img:hover {
+            transform: scale(1.08) rotate(2deg);
+            filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.4));
+        }
+
+        /* Navegação flutuante */
+        .nav-menu {
+            position: fixed;
+            top: 50%;
+            right: 30px;
+            transform: translateY(-50%);
+            z-index: 1000;
+            background: var(--card-background);
+            border-radius: 25px;
+            padding: 20px 10px;
+            box-shadow: 0 10px 30px var(--shadow-color);
+            border: 1px solid var(--border-color);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-item {
+            display: block;
+            width: 50px;
+            height: 50px;
+            margin: 10px 0;
+            background: var(--gradient-primary);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 50px;
+            color: #0D0D0D;
+            text-decoration: none;
+            font-size: 18px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-item:hover::before {
+            left: 100%;
+        }
+
+        .nav-item:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 25px rgba(234, 242, 7, 0.4);
+        }
+
+        main {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 30px;
+        }
+
+        .rules-section {
+            background: var(--card-background);
+            margin-bottom: 40px;
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 15px 40px var(--shadow-color);
+            position: relative;
+            overflow: hidden;
+            animation: fadeInUp 0.8s ease-out forwards;
+            transition: all 0.4s ease;
+        }
+
+        .rules-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-primary);
+        }
+
+        .rules-section::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary-color), transparent);
+        }
+
+        .rules-section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 50px var(--shadow-color);
+        }
+
+        .rules-section:nth-child(even) {
+            animation-delay: 0.2s;
+        }
+
+        .rules-section:nth-child(odd) {
+            animation-delay: 0.4s;
+        }
+
+        h2 {
+            font-size: 2.5em;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 30px;
+            text-align: center;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
+        }
+        
+        h2 .fas {
+            margin-right: 15px;
+            font-size: 1.1em;
+            animation: pulse 2s infinite;
+        }
+
+        ol, ul {
+            padding-left: 30px;
+        }
+        
+        li {
+            margin-bottom: 20px;
+            position: relative;
+            padding-left: 10px;
+            transition: all 0.3s ease;
+        }
+
+        li:hover {
+            color: var(--primary-color);
+            transform: translateX(10px);
+        }
+
+        p {
+            margin-bottom: 20px;
+            font-size: 1.1em;
+            line-height: 1.8;
+        }
+
+        b {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: 600;
+        }
+
+        /* Melhorias para as sub-listas */
+        ul ul {
+            margin-top: 15px;
+            padding-left: 25px;
+        }
+
+        ul ul li {
+            margin-bottom: 15px;
+            font-size: 0.95em;
+            background: rgba(234, 242, 7, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid var(--primary-color);
+        }
+
+        ul ul li b {
+            color: var(--accent-color);
+            font-size: 1.1em;
+        }
+
+        ul ul li i {
+            color: var(--secondary-color);
+            font-style: normal;
+            font-weight: 500;
+        }
+
+        /* Safe-zones com ícones melhorados */
+        .safe-zone-item {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+            margin: 10px 0;
+            background: rgba(244, 247, 64, 0.1);
+            border-radius: 10px;
+            border-left: 4px solid var(--secondary-color);
+            transition: all 0.3s ease;
+        }
+
+        .safe-zone-item:hover {
+            background: rgba(244, 247, 64, 0.2);
+            transform: translateX(10px);
+        }
+
+        .safe-zone-item i {
+            margin-right: 15px;
+            font-size: 1.2em;
+            color: var(--secondary-color);
+            width: 30px;
+            text-align: center;
+        }
+
+        /* Rodapé melhorado */
+        rodap {
+            display: block;
+            background: #0D0D0D;
+            color: #fff;
+            padding: 16px 0;
+            margin-top: 30px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        rodap::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: none;
+            animation: none;
+        }
+
+        rodap p {
+            position: relative;
+            z-index: 2;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            color: #fff !important;
+            text-shadow: none !important;
+            opacity: 1 !important;
+        }
+
+        rodap p:last-child {
+            font-size: 12px;
+            opacity: 0.9 !important;
+            color: #fff !important;
+            text-shadow: none !important;
+        }
+
+        /* Responsividade */
+        @media (max-width: 768px) {
+            .nav-menu {
+                display: none;
+            }
+            
+            main {
+                padding: 0 20px;
+            }
+            
+            .rules-section {
+                padding: 25px;
+                margin-bottom: 30px;
+            }
+            
+            h2 {
+                font-size: 2em;
+            }
+            
+            .logo img {
+                max-width: 300px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .rules-section {
+                padding: 20px;
+            }
+            
+            h2 {
+                font-size: 1.8em;
+            }
+            
+            li {
+                font-size: 0.9em;
+            }
+        }
+
+        /* Animações de entrada escalonadas */
+        .rules-section:nth-child(1) { animation-delay: 0.1s; }
+        .rules-section:nth-child(2) { animation-delay: 0.2s; }
+        .rules-section:nth-child(3) { animation-delay: 0.3s; }
+        .rules-section:nth-child(4) { animation-delay: 0.4s; }
+        .rules-section:nth-child(5) { animation-delay: 0.5s; }
+        .rules-section:nth-child(6) { animation-delay: 0.6s; }
+        .rules-section:nth-child(7) { animation-delay: 0.7s; }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <img src="https://i.imgur.com/kHvmXj6.png" alt="Street Car Club Roleplay Logo" />
+        </div>
+    </header>
+
+    <!-- Menu de navegação flutuante -->
+    <nav class="nav-menu">
+        <a href="#servidor" class="nav-item" title="Servidor">
+            <i class="fas fa-server"></i>
+        </a>
+        <a href="#discord" class="nav-item" title="Discord">
+            <i class="fab fa-discord"></i>
+        </a>
+        <a href="#gerais" class="nav-item" title="Regras Gerais">
+            <i class="fas fa-gavel"></i>
+        </a>
+        <a href="#criadores" class="nav-item" title="Criadores">
+            <i class="fas fa-video"></i>
+        </a>
+        <a href="#cameramode" class="nav-item" title="Camera Mode">
+            <i class="fas fa-camera-retro"></i>
+        </a>
+        <a href="#safezones" class="nav-item" title="Safe Zones">
+            <i class="fas fa-shield-alt"></i>
+        </a>
+        <a href="#acoes" class="nav-item" title="Regras de Ações">
+            <i class="fas fa-crosshairs"></i>
+        </a>
+    </nav>
+
+    <main>
+        <section id="servidor" class="rules-section">
+            <h2><i class="fas fa-server"></i>Regras do Servidor</h2>
+            <p>Em hipótese alguma leve um assunto do RP para o discord, seja no discord da cidade ou no privado de outro jogador. <b>O QUE ACONTECE NO RP, FICA NO RP.</b></p>
+            <p>A <b>Street Car Club Roleplay</b> não compactua com nenhum tipo de homofobia, assédio, preconceito, abuso, racismo, pedofilia, flaming e/ou qualquer outro discurso de ódio dentro e fora do servidor. Todos esses atos são passíveis de BANIMENTO PERMANENTE conforme o julgamento da staff, sem nenhum aviso prévio.</p>
+        </section>
+
+        <section id="discord" class="rules-section">
+            <h2><i class="fab fa-discord"></i>Regras do Discord</h2>
+            <ol>
+                <li>Proibido uso de linguagens ofensiva, racista, homofóbica e xenofóbica, publicação de material calunioso, abusivo ou que invada a privacidade de alguém.</li>
+                <li>Todas e quaisquer denúncias, só serão aceitas se preenchidas de forma correta atendendo os requisitos solicitados: vídeos (duração mínima de 1 minuto), descrição e Informações dos Players (quando possível). Denúncias de mais de 24h do ocorrido não serão aceitas.</li>
+                <li>Denúncias devem ser efetuadas no prazo máximo de 72 horas após o ocorrido.</li>
+                <li>Proibido a divulgação de outros servidores de qualquer tipo no discord, na cidade ou no privado dos nossos membros. O descumprimento poderá resultar em banimento.</li>
+                <li>O Discord já tem seus canais definidos para cada situação. Use-os corretamente e de acordo com a necessidade.</li>
+                <li>Proibido promover qualquer tipo de desordem e brigas no discord, sendo passível de advertência e banimento sem aviso prévio.</li>
+                <li>Proibido ir até o privado de qualquer um da staff, pedindo que seja feito algo dentro do servidor, por exemplo: liberar WL, adicionar recursos, pedir set, etc.</li>
+                <li>É terminantemente proibido perguntar qual emprego fornece maior valor financeiro, qual mais compensa trabalhar, como também onde ficam facções, organizações e outros serviços que devem ser descobertos dentro da cidade.</li>
+                <li>Em hipótese alguma leve um assunto do RP para o discord, seja no discord da cidade ou no privado de outro jogador. <b>O QUE ACONTECE NO RP, FICA NO RP.</b></li>
+                <li>É estritamente proibido utilizar versões modificadas do Discord (mods) para visualizar tickets ou chamadas privadas da cidade.</li>
+                <li>É  proibido o uso de figurinhas com conteúdo +18 ou que envolvam ofensas religiosas, raciais ou qualquer forma de discriminação</li>
+                <li>É proibido divulgar conteúdos não relacionados ao RP da cidade, como links de vídeos, memes ou qualquer outro tipo de publicação sem relevância para a comunidade.</li>
+                <li>A remoção do boost antes de 30 dias resultará na perda imediata do veículo, sem aviso prévio ou direito a reembolso de customizações ou peças de performance.</li>
+                <li>É estritamente proibido avaliar membros da staff por motivos alheios a um atendimento, sujeitando o responsável a advertências.</li>
+            </ol>
+        </section>
+
+        <section id="gerais" class="rules-section">
+            <h2><i class="fas fa-gavel"></i>Regras Gerais</h2>
+            <ol>
+                <li>Todos os players devem estar atentos às regras do servidor, com base no seu RP que está desenvolvendo. Caso não siga as regras, estão sujeitos a advertências que podem ou não ser notificadas previamente.</li>
+                <li>Proibido uso de linguagens ofensiva, racista, homofóbica e xenofobia, publicação de material calunioso, abusivo ou que invada a privacidade de alguém.</li>
+                <li>É proibido o VDM, RDM, PG, MetaGaming, CarParking e Flaming.</li>
+                <ul style="margin-bottom: 20px;">
+                    <li><b>VDM</b> - <i>O que é VDM?</i><br>
+                        Significa "Vehicle Deathmatch", ou seja, matar outros jogadores de forma aleatória ou sem uma razão, usando um carro.
+                    </li>
+                    <li><b>RDM</b> - <i>O que é RDM?</i><br>
+                        RDM significa "Random Deathmatch", ou seja, matar outro jogador de forma aleatória, sem um motivo dentro do contexto do RP. A morte de um jogador deve sempre ter uma razão que faça sentido dentro, deve se explicar ou falar o motivo que está matando o outro jogador, caso contrário, será advertido.
+                    </li>
+                    <li><b>PowerGaming - PG</b> - <i>O que é PowerGaming?</i><br>
+                        Powergaming consiste em realizar ações no jogo que, embora sejam permitidas pelas mecânicas do jogo, são irrealistas e não condizem com o comportamento ou as limitações do personagem dentro do contexto de RP.
+                    </li>
+                    <li><b>MetaGaming</b> - <i>O que é MetaGaming?</i><br>
+                        Metagaming é a prática de usar informações obtidas fora do jogo e aplicá-las dentro dele. Também classificamos como metagaming o ato de levar informações adquiridas no jogo para fora dele, exceto quando essas informações são usadas para denúncias ou punições.
+                    </li>
+                    <li><b>CarParking</b> - <i>O que é CarParking?</i><br>
+                        Carparking é a prática de bloquear passagens com veículos colocados intencionalmente, com o objetivo de dificultar ações, fugas, corridas ou até mesmo a passagem de qualquer pessoa que tenha acesso àquela área.<br>
+                        Pode gerar ADV ou ADV Verbal dependendo da ação.
+                    </li>
+                    <li><b>Flaming</b> - <i>O que é Flaming?</i><br>
+                        Flaming é quando um jogador irrita, xinga, humilha ou menospreza outro jogador dentro do RP, agindo de forma agressiva ou desrespeitosa com os outros. Isso inclui responder de maneira rude às autoridades no jogo e xingar personagens mortos durante qualquer ação.<br>
+                        Pode gerar ADV ou ADV Verbal dependendo da ação.
+                    </li>
+                </ul>
+                <li>É proibido o uso de cheating e programas auxiliares de mira, abusar de exploits e bugs para se beneficiar.</li>
+                <li>Qualquer tipo de exploração de falhas no sistema do servidor, como glitches ou bugs,  sera punido severamente. Caso um jogador encontre um bug, ele deve ser reportado imediatamente à equipe via ticket.</li>
+                <li>É proibido qualquer tipo de coop bait. O conceito de coop bait (ou "isca para cooperação") geralmente refere-se a situações em que jogadores simulam cenários ou comportamentos que incentivam a cooperação, mas com intenções secundárias que podem incluir enganos ou armadilhas.</li>
+                <li>É proibido agir sem amor à vida do personagem.</li>
+                <li>Você não pode sair do roleplay em nenhum momento e de nenhuma forma, podendo acabar em uma punição.</li>
+                <li>Faça o roleplay, sem levar para o pessoal. O que acontece no RP fica no RP. Então fica proibido levar qualquer assunto para fora do RP, indo no privado ou até mesmo no discord da cidade.</li>
+                <li>Proibido o uso de chamadas externas (Discord, telefone, etc.) durante o roleplay, devendo toda comunicação ocorrer dentro do ambiente de RP.</li>
+                <li>É totalmente proibido fazer qualquer chamado de qualquer serviço com a intenção de assaltar ou emboscar alguém.</li>
+                <li>É totalmente proibido qualquer tipo de roubo ou furto no servidor. Descumprir essa regra poderá resultar em advertência ou banimento imediato.</li>
+                <li>Trate os policiais da forma que você trataria eles na vida real, não provoque eles e não os xingue atoa.</li>
+                <li>Quando você é nocauteado ou morto, é <b>PROIBIDO</b> lembrar-se do que ocorreu durante a ação, mesmo se o paramédico prestar atendimento; além disso, mesmo que alguém lhe relembre, você não pode voltar à ação.</li>
+                <li>Usar máscaras torna sua identidade irreconhecível, para a voz é recomendado utilizar modificadores, sugestão: "ClownFish", "VoiceMod", "MorphVox", "Voxal Voice Changer".</li>
+                <li>Em nenhuma hipótese os jogadores devem roubar uma viatura do HOSPITAL ou da POLÍCIA;</li>
+                <li>Você deve respeitar o RP dos paramédicos e dos policiais por mais que não concorde com a conduta;</li>
+                <li>Caso sofra alguma situação constrangedora, ou que ao seu ver infrinja as regras, tire prints, produza provas e envie para alguém do suporte.</li>
+                <li>É proibido permanecer com a roupa padrão inicial do servidor.</li>
+                <li>É proibido utilizar a farda da Polícia e se passar por um policial.</li>
+                <li>É proibido intervir em abordagem policial.</li>
+                <li>Proibido usar veículos de profissões legais para qualquer tipo de atividade que não seja da profissão.</li>
+                <li>Proibido o uso de máscara nos seguintes locais: HOSPITAL, DP DE POLÍCIA, MECÂNICA, PRAÇA E ESTABELECIMENTOS COMERCIAIS.</li>
+                <li>É proibido o roubo a qualquer trabalhador de legal.</li>
+                <li>Os nomes devem ser coerentes com a realidade, sem conotação sexual ou nomes de marcas. O uso de um nome diferente na cidade e no e-mail resultará em advertência, podendo levar à exclusão do personagem, além de uma multa de R$ 100.000 e prisão de até 50 meses por falsidade ideológica. Para mudar de nome, é necessário ir à polícia, pagar R$ 25.000 e apresentar um motivo plausível em um ticket aberto.</li>
+                <li>Todas as patentes da policia, e o cargo de Juíz(a) <b>NÃO PODEM TER NENHUM ENVOLVIMENTO COM AS ATIVIDADES ILEGAIS DA CIDADE.</b></li>
+                <li>É terminantemente proibido o farm de salário dos benefícios VIPs e empregos legais.</li>
+                <li>Ao sair de um serviço legal/ilegal e ir para outro legal/ilegal, você deve esperar o prazo de 7 dias para ter um novo set.</li>
+                <li>Em caso de prisão de qualquer cidadão que possua carteira assinada, esta deverá ser dada baixa em função da cadeia aplicada.</li>
+                <li>É proibido agir de má fé, anunciar produtos que não condizem com a realidade e tentar enganar os demais por motivos financeiros e/ou pessoais.</li>
+                <li>Benefícios vips, são pessoais e intransferíveis, fica terminantemente proibida a vendas de bens adquiridos por moedas.</li>
+                <li>Os benefícios VIP não são reembolsáveis sob alegações de insatisfação, ausência da cidade, banimentos ou advertências.</li>
+                <li>Enviar faturas, multas e/ou quaisquer outras cobranças indevidas a moradores, é passível de punição interna no serviço.</li>
+                <li>Fazer caixa 2 em qualquer organização legal, resultará em banimento ou PD, perda do personagem.</li>
+                <li>Qualquer tipo de zaralho, quebras bruscas de regras, desobediência à ordem dos staffs, será punido com BAN, sem direito a segunda chance.</li>
+                <li>Em caso de não conexão por um prazo superior a 90 dias no servidor, a WL e os bens do player serão removidos automaticamente para otimização em nosso banco de dados.</li>
+                <li>A administração do servidor não se responsabiliza pela perda de personagens ou itens em decorrência de problemas técnicos, bugs, ações de outros jogadores ou decisões tomadas pelos usuários. Ao participar do servidor, você concorda que a responsabilidade pela segurança e preservação de seu personagem é inteiramente sua.</li>
+                <li>Caso um jogador deseje recuperar seu personagem perdido, poderá ser cobrada uma taxa de R$20. Recomendamos que você faça backups regulares e esteja ciente dos riscos envolvidos durante a jogabilidade.</li>
+                <li>A administração da cidade reserva-se o direito de encerrar o acesso a qualquer área, serviço ou evento a qualquer momento, se julgar necessário para manter a ordem, a segurança ou o andamento devido do servidor. O encerramento pode ocorrer sem aviso prévio e será comunicado através dos canais oficiais do servidor.</li>
+                <li>É proibida a aplicação de golpes; penalidade de advertência ou banimento, dependendo da gravidade da situação.</li>
+                <li>É proibido fazer RP como animal; você pode usar máscara e atender por nome de animal, mas lembre-se de que ainda é um ser humano, então retire a máscara em estabelecimentos legais.</li>
+                <li>É estritamente proibido trazer situações do RP para fora dele ou cobrar por algo relacionado ao RP fora do ambiente do RP.</li>
+                <li>Reembolsos de itens perdidos por crashes ou bugs serão concedidos mediante a apresentação de um clipe de vídeo que comprove o ocorrido.</li>
+                <li>É Proibido pichar em áreas safe, como delegacia, hospital, mecânica, entre outros locais protegidos.</li>
+                <li>É proibido realizar transações de dinheiro entre jogadores fora do RP. Todas as negociações financeiras devem ser feitas dentro do contexto do jogo. Violações resultarão em punições.</li>
+                <li>É proibido o uso de liverys pessoais exclusivas e de empresas da cidade, sem autorização prévia do dono ou organização.</li>
+                <li>O uso dos veículos de empregos é estritamente restrito às atividades profissionais, sendo terminantemente proibida sua utilização para fins particulares ou quaisquer outros fins não relacionados ao trabalho.</li>
+                <li>É proibido o uso de veículos pessoais ou de aluguel para a conclusão de tarefas do emprego, sendo obrigatório o uso do veículo fornecido por ele.</li>
+                <li>É terminantemente proibido o uso de veículos da empresa para fins pessoais ou qualquer atividade não relacionada ao trabalho. O uso é exclusivo para serviço.</li>
+                <li>É proibido o uso de veículos pessoais ou de aluguel para a conclusão de tarefas do emprego, sendo obrigatório o uso do veículo fornecido por ele.</li>
+                <li>É proibido doar todo o seu dinheiro ou transferir seu patrimônio a outro jogador sem uma justificativa de roleplay extremamente clara e plausível. Especialmente por motivos de ausência ou por estar parando de jogar.</li>
+                <li>É proibido estacionar veículos de forma que bloqueie garagens, vias de acesso, saídas de emergência ou qualquer passagem essencial. Veículos mal estacionados poderão ser removidos pela administração.</li>
+            </ol>
+        </section>
+        
+        <section id="criadores" class="rules-section">
+            <h2><i class="fas fa-video"></i>Regras sobre Criadores de Conteúdo</h2>
+            <ol>
+                <li>As regras citadas aqui valem para TODOS os jogadores da cidade, seja criador de conteúdo ou não.</li>
+                <li>Aos criadores de conteúdo, é obrigatório deixar os VODs públicos.</li>
+                <li>É PROIBIDO qualquer discurso de ódio e/ou flaming durante as transmissões ou redes sociais.</li>
+                <li>É PROIBIDO o uso de termos que levem a entender que você está transmitindo ou gravando sua gameplay.</li>
+                <li>É PROIBIDO o uso de termos que levem a entender que você está assistindo a live de uma pessoa e/ou pegar informações das lives para utilizar dentro do jogo.</li>
+                <li>É PROIBIDO colocar qualquer tipo de música em locais públicos da cidade.</li>
+                <li>À toda a Administração da cidade, fica SIM permitido o uso de materiais das lives para aplicação de punições.</li>
+                <li>Ao realizar uma transmissão da sua gameplay na Street Car Club Roleplay, automaticamente você concorda que podemos utilizar os materiais da live para divulgação da cidade.</li>
+                <li>Para receber a tag de streamer no discord, será necessário a realização de lives por 5 (cinco) dias no intervalo de 01 semana (sete dias).</li>
+                <li>O descumprimento de qualquer regra citada, criador de conteúdo ou não, ocasionará em punição de acordo com a interpretação da Administração da cidade.</li>
+                <li>Ser criador de conteúdo, não isenta você de cumprir as regras. Então tenha atenção na conduta do seu roleplay.</li>
+                <li>Nenhum conteúdo deve incitar violência real, discriminação ou outras atitudes que possam prejudicar a imagem da cidade.</li>
+            </ol>
+        </section>
+
+        <section id="cameramode" class="rules-section">
+            <h2><i class="fas fa-camera-retro"></i>Regras para o Uso do /CAMERAMODE</h2>
+            <ol>
+                <li>Fica terminantemente PROIBIDO o uso do /cameramode em ações;</li>
+                <li>Fica terminantemente PROIBIDO o uso do /cameramode para tirar proveito de situações dentro RP, este recurso é apenas para fins de criação de conteúdo;</li>
+                <li>O abuso deste recurso por moradores, sejam do legal ou ilegal, em ações e/ou em situações que interfiram no RP, resultará em PD (Permanent Death), reset de personagem e a depender do caso em banimento.</li>
+            </ol>
+        </section>
+
+        <section id="safezones" class="rules-section">
+            <h2><i class="fas fa-shield-alt"></i>Safe-Zones</h2>
+            <p>São zonas seguras. Nestes locais e em até 100 metros ao redor, é proibido realizar qualquer tipo de ação, matar pessoas, ferir e sequestrar outros jogadores. É totalmente proibido correr para esses locais durante uma ação ou para evitar abordagens. Roubos e furtos de veículos também NÃO estão permitidos.</p>
+            <ul>
+                <li class="safe-zone-item"><i class="fas fa-tree"></i> Praça</li>
+                <li class="safe-zone-item"><i class="fas fa-hospital"></i> Hospital</li>
+                <li class="safe-zone-item"><i class="fas fa-tools"></i> Mecânicas</li>
+                <li class="safe-zone-item"><i class="fas fa-warehouse"></i> Garagens</li>
+                <li class="safe-zone-item"><i class="fas fa-briefcase"></i> Escritórios</li>
+                <li class="safe-zone-item"><i class="fas fa-car"></i> Concessionária</li>
+                <li class="safe-zone-item"><i class="fas fa-building"></i> Departamento de Polícia</li>
+                <li class="safe-zone-item"><i class="fas fa-landmark"></i> Prefeitura (centro de empregos)</li>
+                <li class="safe-zone-item"><i class="fas fa-tractor"></i> Área de 500m de farms LEGAL</li>
+                <li class="safe-zone-item"><i class="fas fa-glass-cheers"></i> Eventos e festas agendadas com a prefeitura (Até 5 minutos depois do termino do evento)</li>
+                <li class="safe-zone-item"><i class="fas fa-flag-checkered"></i> Corridas do Campeonato (Tablet de Corrida)</li>
+            </ul>
+        </section>
+
+        <section id="acoes" class="rules-section">
+            <h2><i class="fas fa-crosshairs"></i>Regras de Ações – PvP/PvE</h2>
+            <p>Para mais detalhes, consulte o <a href="https://discord.com/channels/1046404063287332936/1217891250254905456" target="_blank" style="color: var(--primary-color); text-decoration: none; font-weight: bold;">canal oficial de regras de ações</a> no Discord.</p>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px; margin: 30px 0;">
+                <div style="background: rgba(234, 242, 7, 0.1); border-radius: 15px; padding: 25px; border: 1px solid rgba(234, 242, 7, 0.3); transition: all 0.3s ease;">
+                    <h4 style="color: var(--primary-color); font-size: 1.3em; margin-bottom: 20px; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">
+                        <i class="fas fa-shield-alt" style="margin-right: 10px;"></i>Procedimentos Policiais
+                    </h4>
+                    <ol style="padding-left: 20px;">
+                        <li><b>Proibido pegar corpo da POLÍCIA para levar ao necrotério.</b> Eles seguem procedimento padrão por serem servidores públicos.</li>
+                        <li><b>POLÍCIA não usa mais TASER em fugas a pé.</b> Caso não haja opção de derrubar, é permitido algemar ao se aproximar.</li>
+                        <li><b>GIROFLEX obrigatório para policiais em QRU ou durante abordagem.</b></li>
+                        <li><b>POLÍCIA pode atirar em qualquer situação onde o bandido esteja com arma em mãos ou ofereça risco iminente.</b></li>
+                    </ol>
+                </div>
+
+                <div style="background: rgba(244, 247, 64, 0.1); border-radius: 15px; padding: 25px; border: 1px solid rgba(244, 247, 64, 0.3); transition: all 0.3s ease;">
+                    <h4 style="color: var(--secondary-color); font-size: 1.3em; margin-bottom: 20px; text-align: center; border-bottom: 2px solid var(--secondary-color); padding-bottom: 10px;">
+                        <i class="fas fa-clock" style="margin-right: 10px;"></i>Prazos e Tempos
+                    </h4>
+                    <ol style="padding-left: 20px;">
+                        <li><b>Código 3 (autorização para disparos) só é liberado após 10 minutos de fuga limpa.</b>
+                            <ul style="margin-top: 10px;">
+                                <li>Se houver quebra de regra, pode atirar antes dos 10 minutos.</li>
+                                <li>BANDIDOS só podem atirar após 2 minutos de fuga (priorize escapar).</li>
+                            </ul>
+                        </li>
+                        <li><b>Ação de rua é encerrada após 5 minutos sem disparos.</b> Após esse tempo, a POLÍCIA pode revistar.</li>
+                        <li><b>QRR dos BANDIDOS pode chegar até 5 minutos após o início dos tiros.</b></li>
+                    </ol>
+                </div>
+
+                <div style="background: rgba(198, 196, 3, 0.1); border-radius: 15px; padding: 25px; border: 1px solid rgba(198, 196, 3, 0.3); transition: all 0.3s ease;">
+                    <h4 style="color: var(--accent-color); font-size: 1.3em; margin-bottom: 20px; text-align: center; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;">
+                        <i class="fas fa-hand-paper" style="margin-right: 10px;"></i>Rendição e Comportamento
+                    </h4>
+                    <ol style="padding-left: 20px;">
+                        <li><b>Após rendição (mãos levantadas):</b>
+                            <ul style="margin-top: 10px;">
+                                <li>Proibido passar rádio, sacar arma ou fugir.</li>
+                                <li>Se o QRR já tiver sido solicitado, ele pode chegar até o momento em que o meliante é colocado na viatura.</li>
+                            </ul>
+                        </li>
+                    </ol>
+                </div>
+
+                <div style="background: rgba(13, 13, 13, 0.1); border-radius: 15px; padding: 25px; border: 1px solid rgba(13, 13, 13, 0.3); transition: all 0.3s ease;">
+                    <h4 style="color: #4ECDC4; font-size: 1.3em; margin-bottom: 20px; text-align: center; border-bottom: 2px solid #4ECDC4; padding-bottom: 10px;">
+                        <i class="fas fa-ban" style="margin-right: 10px;"></i>Proibições Específicas
+                    </h4>
+                    <ol style="padding-left: 20px;">
+                        <li><b>Proibido atirar de dentro do blindado.</b></li>
+                        <li><b>Proibido atirar nos pneus do blindado.</b></li>
+                        <li><b>Proibido atirar pelo vidro traseiro de carros coupé.</b> (Limitação do GTA torna essa área blindada.)</li>
+                        <li><b>Proibido uso de roupa de mergulho durante ações.</b> Se iniciar troca de tiros, deve ser retirada imediatamente.</li>
+                        <li><b>Proibido usar motos com pneu furado durante ações.</b></li>
+                        <li><b>Proibido dropar pessoas em telhados ou prédios.</b> Permitido apenas no chão.</li>
+                    </ol>
+                </div>
+            </div>
+
+            <div style="background: rgba(234, 242, 7, 0.1); border-radius: 20px; padding: 30px; margin: 30px 0; border: 1px solid rgba(234, 242, 7, 0.3);">
+                <h3 style="color: var(--primary-color); font-size: 1.8em; margin-bottom: 25px; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 15px;">
+                    <i class="fas fa-car" style="margin-right: 15px;"></i>QSV – Limite Padrão de Contingente
+                </h3>
+                <p style="text-align: center; margin-bottom: 20px; font-size: 1.1em;"><b>Aplicável em:</b> Furto de veículos | Caixinha | Desmanche | Armazém | Petrolífera | Fuga | Ação de rua</p>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 25px 0;">
+                                    <div style="background: rgba(198, 196, 3, 0.1); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid rgba(198, 196, 3, 0.3);">
+                    <h5 style="color: var(--accent-color); margin-bottom: 10px; font-size: 1.1em;">
+                        <i class="fas fa-check-circle" style="margin-right: 8px;"></i>Configuração 1
+                    </h5>
+                    <p style="margin: 0; font-weight: 600;">1 VTR, 2 GTM e 1 SPEED</p>
+                </div>
+                    <div style="background: rgba(13, 13, 13, 0.1); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid rgba(13, 13, 13, 0.3);">
+                        <h5 style="color: #4ECDC4; margin-bottom: 10px; font-size: 1.1em;">
+                            <i class="fas fa-check-circle" style="margin-right: 8px;"></i>Configuração 2
+                        </h5>
+                        <p style="margin: 0; font-weight: 600;">2 VTR e 1 GTM</p>
+                    </div>
+                </div>
+
+                <div style="background: rgba(244, 247, 64, 0.1); border-radius: 12px; padding: 20px; margin-top: 20px; border: 1px solid rgba(244, 247, 64, 0.3);">
+                    <h5 style="color: var(--secondary-color); margin-bottom: 15px; font-size: 1.2em;">
+                        <center><i class="fas fa-helicopter" style="margin-right: 10px;"></i>ÁGUIA (helicóptero)
+                    </h5>
+                    <ul style="margin: 0; padding-left: 20px;">
+                        <li>Permitido apenas para contato visual</li>
+                        <li>Pode atirar somente durante QRR</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div style="background: rgba(244, 247, 64, 0.1); border-radius: 20px; padding: 30px; margin: 30px 0; border: 1px solid rgba(244, 247, 64, 0.3);">
+                <h3 style="color: var(--secondary-color); font-size: 1.8em; margin-bottom: 25px; text-align: center; border-bottom: 2px solid var(--secondary-color); padding-bottom: 15px;">
+                    <i class="fas fa-helicopter" style="margin-right: 15px;"></i>Regras de Uso de Helicóptero
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; margin: 20px 0;">
+                    <div style="background: rgba(234, 242, 7, 0.1); border-radius: 15px; padding: 25px; border: 1px solid rgba(234, 242, 7, 0.3);">
+                        <h4 style="color: var(--primary-color); margin-bottom: 15px; font-size: 1.3em; text-align: center; border-bottom: 2px solid var(--primary-color); padding-bottom: 10px;">
+                            <i class="fas fa-shield-alt" style="margin-right: 10px;"></i>POLÍCIA
+                        </h4>
+                        <p style="margin-bottom: 15px;"><b>Permitido somente para visual nas ações:</b></p>
+                        <ul style="margin: 0; padding-left: 20px;">
+                            <li>Desmanche</li>
+                            <li>Caixinha</li>
+                            <li>Furto de veículos</li>
+                        </ul>
+                    </div>
+                    
+                    <div style="background: rgba(198, 196, 3, 0.1); border-radius: 15px; padding: 25px; border: 1px solid rgba(198, 196, 3, 0.3);">
+                        <h4 style="color: var(--accent-color); margin-bottom: 15px; font-size: 1.3em; text-align: center; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;">
+                            <i class="fas fa-user-secret" style="margin-right: 10px;"></i>BANDIDOS
+                        </h4>
+                        <p style="margin-bottom: 15px;"><b>Proibido usar helicóptero para:</b></p>
+                        <ul style="margin-bottom: 15px; padding-left: 20px;">
+                            <li>Fugir</li>
+                            <li>Iniciar ações</li>
+                        </ul>
+                        <p style="margin: 0;"><b>Permitido:</b> Uso apenas em QRR (após início da perseguição)</p>
+                    </div>
+                </div>
+                
+                <div style="background: rgba(13, 13, 13, 0.1); border-radius: 12px; padding: 20px; margin-top: 20px; border-left: 4px solid #FFC107;">
+                    <p style="margin: 0; color: #FFC107; font-weight: 600;">
+                        <i class="fas fa-exclamation-triangle" style="margin-right: 10px;"></i><b>Observação:</b> Proibido dropar pessoas em prédios – apenas no chão
+                    </div>
+            </div>
+
+            <div style="background: rgba(198, 196, 3, 0.1); border-radius: 15px; padding: 25px; margin: 30px 0; border: 1px solid rgba(198, 196, 3, 0.3);">
+                <h3 style="color: var(--accent-color); font-size: 1.6em; margin-bottom: 20px; text-align: center; border-bottom: 2px solid var(--accent-color); padding-bottom: 10px;">
+                    <i class="fas fa-tshirt" style="margin-right: 12px;"></i>Roupa de Gangue
+                </h3>
+                <p style="text-align: center; margin: 0; font-size: 1.1em;">Deve ser usada apenas em ações e dominação. Fora disso será considerada associação criminosa e poderá gerar abordagem.</p>
+            </div>
+
+            <div style="background: rgba(13, 13, 13, 0.1); border-radius: 15px; padding: 25px; margin: 30px 0; border: 1px solid rgba(13, 13, 13, 0.3);">
+                <h3 style="color: #4CAF50; font-size: 1.6em; margin-bottom: 25px; text-align: center; border-bottom: 2px solid #4CAF50; padding-bottom: 10px;">
+                    <i class="fas fa-fist-raised" style="margin-right: 12px;"></i>Ação de Rua
+                </h3>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px;">
+                    <div style="background: rgba(234, 242, 7, 0.1); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid rgba(234, 242, 7, 0.3);">
+                        <h4 style="color: var(--primary-color); margin-bottom: 10px; font-size: 1.2em;">
+                            <i class="fas fa-trophy" style="margin-right: 8px;"></i>Se a POLÍCIA vencer
+                        </h4>
+                        <p style="margin: 0; font-weight: 600;">Revive os bandidos e efetua a prisão.</p>
+                    </div>
+                    
+                    <div style="background: rgba(198, 196, 3, 0.1); border-radius: 12px; padding: 20px; text-align: center; border: 1px solid rgba(198, 196, 3, 0.3);">
+                        <h4 style="color: var(--accent-color); margin-bottom: 10px; font-size: 1.2em;">
+                            <i class="fas fa-running" style="margin-right: 8px;"></i>Se os BANDIDOS vencerem
+                        </h4>
+                        <p style="margin: 0; font-weight: 600;">Devem fugir imediatamente, prevendo reforço policial.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section id="advertencias" class="rules-section">
+            <h2><i class="fas fa-exclamation-triangle"></i>Advertências</h2>
+            <p>As advertências em nosso servidor, serão aplicadas de acordo com a situação apresentada no RP. Todas irão ser acompanhadas da punição de 180 serviços dentro do jogo.</p>
+            <p><b>OBS:</b> Todas advertências, se forem constatadas in-game, por players (polícia), podem ser convertidas em 180 serviços direto, sem adição de punição no discord da cidade. Lembrando que combos de quebras, multiplicam os 180. Ex.: PG, Anti amor, CL. 540 serviços ou ban.</p>
+        </section>
+    </main>
+
+    <center>
+        <rodap>
+            <p style="color: #fff; text-shadow: none; font-weight: bold;">© Street Car Club Roleplay. Todos os direitos reservados.</p>
+            <p style="color: #fff; text-shadow: none;">Noel Salvo de todas as regras!</p>
+        </rodap>
+    </center>
+</body>
+</html>

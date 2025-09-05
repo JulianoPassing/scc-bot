@@ -775,29 +775,264 @@ export const execute = async function(interaction) {
       const staffTag = user.tag;
       const staffAvatar = user.displayAvatarURL();
       // HTML transcript
-      let html = `<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'><title>Transcript Ticket</title><style>
-      body{font-family:sans-serif;background:#18191c;color:#eee;margin:0;padding:0;}
-      .header{background:#23272a;padding:20px 30px;display:flex;align-items:center;gap:20px;}
-      .header img{border-radius:50%;width:64px;height:64px;}
-      .info{margin:20px 30px;}
-      .info strong{color:#fff;}
-      .msg{background:#23272a;margin:16px 30px;padding:16px 20px;border-radius:8px;box-shadow:0 2px 8px #0002;}
-      .msg.staff{border-left:4px solid #43b581;}
-      .msg .meta{font-size:13px;color:#aaa;margin-bottom:6px;}
-      .msg .content{font-size:15px;white-space:pre-wrap;word-break:break-word;}
-      .msg .attachments img{max-width:200px;max-height:120px;margin:4px 0;display:block;}
-      .msg .attachments a{color:#00b0f4;text-decoration:underline;display:block;}
-      .msg .embed{background:#2f3136;padding:8px 12px;border-radius:6px;margin:8px 0;}
-      .msg .reply{color:#faa61a;font-size:13px;}
-      .footer{margin:30px 0 0 0;text-align:center;color:#888;font-size:13px;}
-      </style></head><body>`;
-      html += `<div class='header'>`;
-      if (autorAvatar) html += `<img src='${autorAvatar}' alt='Criador'>`;
-      html += `<div><div><strong>Criador:</strong> ${autorTag ? autorTag : autorId || 'Desconhecido'}</div>`;
-      html += `<div><strong>Staff responsável:</strong> ${staffTag}</div>`;
-      html += `<div><strong>Motivo do fechamento:</strong> ${motivo}</div></div>`;
-      if (staffAvatar) html += `<img src='${staffAvatar}' alt='Staff' style='margin-left:auto;'>`;
-      html += `</div><div class='info'><strong>Canal:</strong> #${channel.name} | <strong>Data de Fechamento:</strong> ${new Date().toLocaleString('pt-BR')}</div>`;
+      let html = `<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'><title>Transcript Ticket - Street Car Club</title>
+      <link rel="icon" href="https://i.imgur.com/YULctuK.png" type="image/png">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+      <style>
+      @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+      
+      :root {
+        --primary-color: #EAF207;
+        --secondary-color: #F4F740;
+        --accent-color: #C6C403;
+        --background-color: #0D0D0D;
+        --card-background: linear-gradient(135deg, #0D0D0D 0%, #0D0D0D 100%);
+        --text-color: #FFFFFF;
+        --text-secondary: #B0B0B0;
+        --border-color: #30363D;
+        --shadow-color: rgba(0, 0, 0, 0.4);
+        --gradient-primary: linear-gradient(135deg, #EAF207 0%, #F4F740 100%);
+      }
+      
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      
+      body {
+        font-family: 'Poppins', sans-serif;
+        background: var(--background-color);
+        background-image: url('https://i.imgur.com/Wf7bGAO.png');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        color: var(--text-color);
+        line-height: 1.7;
+        min-height: 100vh;
+        padding: 20px;
+      }
+      
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: var(--card-background);
+        border-radius: 20px;
+        box-shadow: 0 20px 40px var(--shadow-color);
+        overflow: hidden;
+        border: 1px solid var(--border-color);
+      }
+      
+      .header {
+        background: var(--card-background);
+        padding: 40px;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px var(--shadow-color);
+      }
+      
+      .header::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: 30px;
+        width: 10px;
+        height: 10px;
+        background: radial-gradient(circle, #ff4d4d 60%, #ffb347 100%);
+        border-radius: 50%;
+        transform: translateY(-50%);
+        box-shadow: 0 0 8px 2px #ff4d4d99;
+        z-index: 3;
+      }
+      
+      .logo {
+        position: relative;
+        z-index: 2;
+        margin-bottom: 20px;
+      }
+      
+      .logo img {
+        max-width: 300px;
+        height: auto;
+        filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      }
+      
+      .header h1 {
+        font-size: 2.5em;
+        font-weight: 700;
+        background: var(--gradient-primary);
+        -webkit-background-clip: text;
+        background-clip: text;
+        -webkit-text-fill-color: transparent;
+        margin-bottom: 10px;
+        position: relative;
+        padding-bottom: 20px;
+      }
+      
+      .header h1::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 3px;
+        background: var(--gradient-primary);
+        border-radius: 2px;
+      }
+      
+      .header p {
+        font-size: 1.2em;
+        color: var(--text-secondary);
+        opacity: 0.9;
+      }
+      
+      .info {
+        margin: 20px 30px;
+        padding: 20px;
+        background: rgba(234, 242, 7, 0.1);
+        border-radius: 15px;
+        border: 1px solid rgba(234, 242, 7, 0.3);
+      }
+      
+      .info strong {
+        color: var(--primary-color);
+        font-weight: 600;
+      }
+      
+      .msg {
+        background: var(--card-background);
+        margin: 16px 30px;
+        padding: 20px;
+        border-radius: 15px;
+        box-shadow: 0 5px 15px var(--shadow-color);
+        border: 1px solid var(--border-color);
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+      
+      .msg::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 1px;
+        height: 100%;
+        background: linear-gradient(to bottom, var(--primary-color), transparent);
+      }
+      
+      .msg:hover {
+        transform: translateX(5px);
+        box-shadow: 0 10px 25px var(--shadow-color);
+      }
+      
+      .msg.staff {
+        border-left: 5px solid var(--primary-color);
+        background: rgba(234, 242, 7, 0.05);
+      }
+      
+      .msg .meta {
+        font-size: 13px;
+        color: var(--text-secondary);
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      
+      .msg .meta img {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid var(--primary-color);
+      }
+      
+      .msg .content {
+        font-size: 15px;
+        white-space: pre-wrap;
+        word-break: break-word;
+        color: var(--text-color);
+        line-height: 1.6;
+      }
+      
+      .msg .attachments img {
+        max-width: 200px;
+        max-height: 120px;
+        margin: 8px 0;
+        display: block;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+      }
+      
+      .msg .attachments a {
+        color: var(--primary-color);
+        text-decoration: none;
+        display: block;
+        padding: 8px 12px;
+        background: rgba(234, 242, 7, 0.1);
+        border-radius: 8px;
+        margin: 4px 0;
+        transition: all 0.3s ease;
+      }
+      
+      .msg .attachments a:hover {
+        background: rgba(234, 242, 7, 0.2);
+        transform: translateX(5px);
+      }
+      
+      .msg .embed {
+        background: rgba(234, 242, 7, 0.1);
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin: 12px 0;
+        border: 1px solid rgba(234, 242, 7, 0.3);
+      }
+      
+      .msg .reply {
+        color: var(--accent-color);
+        font-size: 13px;
+        font-style: italic;
+        margin-bottom: 8px;
+        padding: 8px 12px;
+        background: rgba(198, 196, 3, 0.1);
+        border-radius: 8px;
+        border-left: 3px solid var(--accent-color);
+      }
+      
+      .footer {
+        margin: 30px 0 0 0;
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 13px;
+        padding: 20px;
+        background: var(--card-background);
+        border-top: 1px solid var(--border-color);
+      }
+      
+      .footer i {
+        color: var(--primary-color);
+        margin-right: 8px;
+      }
+      </style></head><body>
+      <div class="container">
+        <div class="header">
+          <div class="logo">
+            <img src="https://i.imgur.com/kHvmXj6.png" alt="Street Car Club Roleplay Logo" />
+          </div>
+          <h1><i class="fas fa-ticket-alt"></i> Transcript do Ticket</h1>
+          <p>Street Car Club • Sistema de Atendimento</p>
+        </div>`;
+      html += `<div class='info'>
+        <div style='display: flex; align-items: center; gap: 15px; margin-bottom: 15px;'>
+          ${autorAvatar ? `<img src='${autorAvatar}' alt='Criador' style='width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--primary-color);'>` : ''}
+          <div>
+            <div><strong><i class="fas fa-user"></i> Criador:</strong> ${autorTag ? autorTag : autorId || 'Desconhecido'}</div>
+            <div><strong><i class="fas fa-shield-alt"></i> Staff responsável:</strong> ${staffTag}</div>
+            <div><strong><i class="fas fa-comment"></i> Motivo do fechamento:</strong> ${motivo}</div>
+          </div>
+          ${staffAvatar ? `<img src='${staffAvatar}' alt='Staff' style='width: 48px; height: 48px; border-radius: 50%; border: 2px solid var(--primary-color); margin-left: auto;'>` : ''}
+        </div>
+        <div><strong><i class="fas fa-hashtag"></i> Canal:</strong> #${channel.name} | <strong><i class="fas fa-calendar-alt"></i> Data de Fechamento:</strong> ${new Date().toLocaleString('pt-BR')}</div>
+      </div>`;
       for (const msg of sorted) {
         const isStaff = msg.member && msg.member.permissions.has('ManageChannels');
         html += `<div class='msg${isStaff ? ' staff' : ''}'>`;
@@ -836,7 +1071,9 @@ export const execute = async function(interaction) {
         }
         html += `</div>`;
       }
-      html += `<div class='footer'>Transcript gerado automaticamente pelo sistema de tickets StreetCarClub.</div></body></html>`;
+      html += `<div class='footer'><i class="fas fa-robot"></i> Transcript gerado automaticamente pelo sistema de tickets Street Car Club.</div>
+      </div>
+      </body></html>`;
       // Enviar para canal de logs
       const embed = new EmbedBuilder()
         .setColor('#FFA500')

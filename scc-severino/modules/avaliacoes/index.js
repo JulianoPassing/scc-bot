@@ -127,16 +127,104 @@ function generateAvaliacoesRelatorio(votes, guild) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório de Avaliações - Street Car Club</title>
+    <link rel="icon" href="https://i.imgur.com/YULctuK.png" type="image/png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    
     <style>
+        /* Importar fontes */
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --primary-color: #EAF207;
+            --secondary-color: #F4F740;
+            --accent-color: #C6C403;
+            --background-color: #0D0D0D;
+            --card-background: linear-gradient(135deg, #0D0D0D 0%, #0D0D0D 100%);
+            --text-color: #FFFFFF;
+            --text-secondary: #B0B0B0;
+            --border-color: #30363D;
+            --hover-color: #21262D;
+            --shadow-color: rgba(0, 0, 0, 0.4);
+            --gradient-primary: linear-gradient(135deg, #EAF207 0%, #F4F740 100%);
+            --gradient-secondary: linear-gradient(135deg, #C6C403 0%, #EAF207 100%);
+        }
+
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
 
+        /* Animações avançadas */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-100px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(234, 242, 7, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(234, 242, 7, 0.6); }
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Scroll personalizado */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--background-color);
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gradient-primary);
+            border-radius: 10px;
+            border: 2px solid var(--background-color);
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--secondary-color);
+        }
+
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            font-family: 'Poppins', sans-serif;
+            background: var(--background-color);
+            background-image: url('https://i.imgur.com/Wf7bGAO.png');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            background-repeat: no-repeat;
+            color: var(--text-color);
+            line-height: 1.7;
+            overflow-x: hidden;
             min-height: 100vh;
             padding: 20px;
         }
@@ -144,28 +232,95 @@ function generateAvaliacoesRelatorio(votes, guild) {
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background: rgba(255, 255, 255, 0.95);
+            background: var(--card-background);
             border-radius: 20px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 20px 40px var(--shadow-color);
             overflow: hidden;
+            border: 1px solid var(--border-color);
+            animation: fadeInUp 0.8s ease-out forwards;
         }
 
         .header {
-            background: linear-gradient(135deg, #EAF207 0%, #FFD700 100%);
-            padding: 30px;
+            background: var(--card-background);
+            padding: 40px;
             text-align: center;
-            color: #333;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px var(--shadow-color);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: none;
+            animation: none;
+        }
+
+        .header::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            right: 30px;
+            width: 10px;
+            height: 10px;
+            background: radial-gradient(circle, #ff4d4d 60%, #ffb347 100%);
+            border-radius: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 8px 2px #ff4d4d99;
+            z-index: 3;
+        }
+
+        .logo {
+            position: relative;
+            z-index: 2;
+            margin-bottom: 20px;
+        }
+
+        .logo img {
+            max-width: 300px;
+            height: auto;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .logo img:hover {
+            transform: scale(1.08) rotate(2deg);
+            filter: drop-shadow(0 15px 30px rgba(0, 0, 0, 0.4));
         }
 
         .header h1 {
             font-size: 2.5em;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .header h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
         }
 
         .header p {
             font-size: 1.2em;
-            opacity: 0.8;
+            color: var(--text-secondary);
+            opacity: 0.9;
         }
 
         .stats-grid {
@@ -173,31 +328,48 @@ function generateAvaliacoesRelatorio(votes, guild) {
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 20px;
             padding: 30px;
-            background: #f8f9fa;
+            background: rgba(13, 13, 13, 0.8);
         }
 
         .stat-card {
-            background: white;
+            background: var(--card-background);
             padding: 25px;
             border-radius: 15px;
             text-align: center;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            transition: all 0.4s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: var(--gradient-primary);
         }
 
         .stat-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 15px 30px var(--shadow-color);
         }
 
         .stat-number {
             font-size: 2.5em;
             font-weight: bold;
-            color: #EAF207;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
             margin-bottom: 10px;
         }
 
         .stat-label {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 1.1em;
             text-transform: uppercase;
             letter-spacing: 1px;
@@ -205,28 +377,77 @@ function generateAvaliacoesRelatorio(votes, guild) {
 
         .staff-list {
             padding: 30px;
+            background: rgba(13, 13, 13, 0.6);
         }
 
         .staff-list h2 {
-            color: #333;
+            color: var(--text-color);
             margin-bottom: 25px;
             font-size: 1.8em;
             text-align: center;
+            font-weight: 700;
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .staff-list h2::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 3px;
+            background: var(--gradient-primary);
+            border-radius: 2px;
+        }
+
+        .hierarchy-info {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(234, 242, 7, 0.1);
+            border-radius: 15px;
+            border: 1px solid rgba(234, 242, 7, 0.3);
+            color: var(--text-secondary);
+            font-size: 1.1em;
+        }
+
+        .hierarchy-info strong {
+            color: var(--primary-color);
+            font-weight: 600;
         }
 
         .staff-card {
-            background: white;
+            background: var(--card-background);
             margin-bottom: 20px;
             border-radius: 15px;
             padding: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            border-left: 5px solid #EAF207;
-            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px var(--shadow-color);
+            border-left: 5px solid var(--primary-color);
+            transition: all 0.4s ease;
+            border: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .staff-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 1px;
+            height: 100%;
+            background: linear-gradient(to bottom, var(--primary-color), transparent);
         }
 
         .staff-card:hover {
             transform: translateX(10px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+            box-shadow: 0 15px 30px var(--shadow-color);
         }
 
         .staff-header {
@@ -241,7 +462,18 @@ function generateAvaliacoesRelatorio(votes, guild) {
         .staff-name {
             font-size: 1.4em;
             font-weight: bold;
-            color: #333;
+            color: var(--text-color);
+        }
+
+        .staff-name .cargo {
+            font-size: 1.1em;
+            color: var(--primary-color);
+            margin-bottom: 5px;
+            font-weight: 600;
+        }
+
+        .staff-name .name {
+            color: var(--text-color);
         }
 
         .staff-rating {
@@ -258,7 +490,7 @@ function generateAvaliacoesRelatorio(votes, guild) {
         .rating-number {
             font-size: 1.3em;
             font-weight: bold;
-            color: #EAF207;
+            color: var(--primary-color);
         }
 
         .staff-stats {
@@ -271,41 +503,55 @@ function generateAvaliacoesRelatorio(votes, guild) {
         .stat-item {
             text-align: center;
             padding: 15px;
-            background: #f8f9fa;
+            background: rgba(234, 242, 7, 0.1);
             border-radius: 10px;
+            border: 1px solid rgba(234, 242, 7, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .stat-item:hover {
+            background: rgba(234, 242, 7, 0.2);
+            transform: translateY(-2px);
         }
 
         .stat-item-value {
             font-size: 1.5em;
             font-weight: bold;
-            color: #333;
+            color: var(--text-color);
             margin-bottom: 5px;
         }
 
         .stat-item-label {
-            color: #666;
+            color: var(--text-secondary);
             font-size: 0.9em;
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
 
         .footer {
-            background: #333;
-            color: white;
+            background: var(--card-background);
+            color: var(--text-color);
             padding: 20px;
             text-align: center;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer p {
+            color: var(--text-secondary);
+            margin-bottom: 5px;
         }
 
         .no-data {
             text-align: center;
             padding: 50px;
-            color: #666;
+            color: var(--text-secondary);
             font-size: 1.2em;
         }
 
         .no-data-icon {
             font-size: 4em;
             margin-bottom: 20px;
+            color: var(--primary-color);
         }
 
         @media (max-width: 768px) {
@@ -326,13 +572,20 @@ function generateAvaliacoesRelatorio(votes, guild) {
             .staff-stats {
                 grid-template-columns: 1fr;
             }
+            
+            .logo img {
+                max-width: 250px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1>⭐ Relatório de Avaliações</h1>
+            <div class="logo">
+                <img src="https://i.imgur.com/kHvmXj6.png" alt="Street Car Club Roleplay Logo" />
+            </div>
+            <h1><i class="fas fa-star"></i> Relatório de Avaliações</h1>
             <p>Street Car Club • Gerado em ${formattedDate}</p>
         </div>
 
@@ -356,8 +609,8 @@ function generateAvaliacoesRelatorio(votes, guild) {
         </div>
 
         <div class="staff-list">
-            <h2>📊 Avaliações por Staff</h2>
-            <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; color: #666;">
+            <h2><i class="fas fa-chart-bar"></i> Avaliações por Staff</h2>
+            <div class="hierarchy-info">
                 <strong>Hierarquia de Cargos:</strong> CEO → CM → MOD → CRD → SEG → SUP → AJD
             </div>
             ${staffWithVotes.length === 0 ? `
@@ -402,8 +655,8 @@ function generateAvaliacoesRelatorio(votes, guild) {
                     <div class="staff-card">
                         <div class="staff-header">
                             <div class="staff-name">
-                                <div style="font-size: 1.1em; color: #EAF207; margin-bottom: 5px;">[${cargo}]</div>
-                                <div>${staffName}</div>
+                                <div class="cargo">[${cargo}]</div>
+                                <div class="name">${staffName}</div>
                             </div>
                             <div class="staff-rating">
                                 <div class="rating-stars">${starString}</div>
@@ -434,8 +687,8 @@ function generateAvaliacoesRelatorio(votes, guild) {
         </div>
 
         <div class="footer">
-            <p>Relatório gerado automaticamente pelo Sistema de Avaliações do Street Car Club</p>
-            <p>Data: ${formattedDate}</p>
+            <p><i class="fas fa-robot"></i> Relatório gerado automaticamente pelo Sistema de Avaliações do Street Car Club</p>
+            <p><i class="fas fa-calendar-alt"></i> Data: ${formattedDate}</p>
         </div>
     </div>
 </body>

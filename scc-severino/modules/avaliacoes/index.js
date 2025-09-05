@@ -92,8 +92,22 @@ function generateAvaliacoesRelatorio(votes, guild) {
     // Filtrar apenas staff com avaliações
     const staffWithVotes = Array.from(votes.entries()).filter(([staffId, data]) => data.count > 0);
     
-    // Ordenar por nota média (maior para menor)
+    // Ordenar por hierarquia primeiro, depois por nota média
     staffWithVotes.sort((a, b) => {
+        const memberA = guild ? guild.members.cache.get(a[0]) : null;
+        const memberB = guild ? guild.members.cache.get(b[0]) : null;
+        
+        if (!memberA || !memberB) return 0;
+        
+        // Ordenar por hierarquia primeiro
+        const hierarchyA = getMemberHierarchyLevel(memberA);
+        const hierarchyB = getMemberHierarchyLevel(memberB);
+        
+        if (hierarchyA !== hierarchyB) {
+            return hierarchyA - hierarchyB;
+        }
+        
+        // Se mesma hierarquia, ordenar por nota média (maior para menor)
         const avgA = a[1].total / a[1].count;
         const avgB = b[1].total / b[1].count;
         return avgB - avgA;
@@ -343,6 +357,9 @@ function generateAvaliacoesRelatorio(votes, guild) {
 
         <div class="staff-list">
             <h2>📊 Avaliações por Staff</h2>
+            <div style="text-align: center; margin-bottom: 20px; padding: 15px; background: #f8f9fa; border-radius: 10px; color: #666;">
+                <strong>Hierarquia de Cargos:</strong> CEO → CM → MOD → CRD → SEG → SUP → AJD
+            </div>
             ${staffWithVotes.length === 0 ? `
                 <div class="no-data">
                     <div class="no-data-icon">📭</div>
@@ -357,10 +374,24 @@ function generateAvaliacoesRelatorio(votes, guild) {
                 const emptyStars = 5 - fullStars - halfStar;
                 const starString = '⭐'.repeat(fullStars) + (halfStar ? '✬' : '') + '☆'.repeat(emptyStars);
                 
+                // Determinar cargo do staff
+                let cargo = 'Staff';
+                if (member) {
+                    for (let i = 0; i < ROLE_HIERARCHY.length; i++) {
+                        if (member.roles.cache.has(ROLE_HIERARCHY[i].id)) {
+                            cargo = ROLE_HIERARCHY[i].name;
+                            break;
+                        }
+                    }
+                }
+                
                 return `
                     <div class="staff-card">
                         <div class="staff-header">
-                            <div class="staff-name">${staffName}</div>
+                            <div class="staff-name">
+                                <div style="font-size: 1.1em; color: #EAF207; margin-bottom: 5px;">[${cargo}]</div>
+                                <div>${staffName}</div>
+                            </div>
                             <div class="staff-rating">
                                 <div class="rating-stars">${starString}</div>
                                 <div class="rating-number">${average.toFixed(2)}</div>

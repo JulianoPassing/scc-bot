@@ -905,6 +905,10 @@ const setupAvaliacaoModule = function(client) {
                 const hasVotes = Array.from(votes.values()).some(data => data.count > 0);
                 console.log('Debug - hasVotes:', hasVotes);
                 
+                // Debug adicional
+                const staffWithVotes = Array.from(votes.values()).filter(data => data.count > 0);
+                console.log('Debug - Staff com avaliações:', staffWithVotes.length);
+                
                 if (!hasVotes) {
                     return message.reply('❌ Nenhuma avaliação encontrada para zerar.');
                 }
@@ -942,10 +946,20 @@ const setupAvaliacaoModule = function(client) {
                 const collector = message.channel.createMessageCollector({ filter, time: 30000, max: 1 });
                 
                 collector.on('collect', async (response) => {
+                    console.log('Debug - Resposta recebida:', response.content);
+                    console.log('Debug - Resposta em maiúsculo:', response.content.toUpperCase());
+                    
                     if (response.content.toUpperCase() === 'CONFIRMAR') {
                         try {
+                            console.log('Debug - Iniciando processo de zerar avaliações');
+                            
                             // Zerar o arquivo de avaliações
                             fs.writeFileSync(FILE_PATH, '[]');
+                            console.log('Debug - Arquivo zerado com sucesso');
+                            
+                            // Limpar o Map em memória também
+                            votes.clear();
+                            console.log('Debug - Map limpo, tamanho atual:', votes.size);
                             
                             const successEmbed = new EmbedBuilder()
                                 .setColor(0x00FF00)
@@ -962,12 +976,16 @@ const setupAvaliacaoModule = function(client) {
                                 .setTimestamp();
                             
                             await response.reply({ embeds: [successEmbed] });
+                            console.log('Debug - Embed de sucesso enviado');
                             
                             // Deletar mensagens de confirmação
                             try {
                                 await confirmMessage.delete();
                                 await response.delete();
-                            } catch (error) {}
+                                console.log('Debug - Mensagens de confirmação deletadas');
+                            } catch (error) {
+                                console.error('Erro ao deletar mensagens:', error);
+                            }
                             
                         } catch (error) {
                             console.error('Erro ao zerar avaliações:', error);

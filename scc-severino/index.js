@@ -39,12 +39,12 @@ const modules = [
   'instagram',
   'liberacao',
   'limparchat',
+  'sugestoes',
   'sugestoes-ilegal',
   'tagseason',
   'ticket',
   'ticket-s-wl',
-  'wl',
-  'wipe'
+  'wl'
 ];
 
 for (const mod of modules) {

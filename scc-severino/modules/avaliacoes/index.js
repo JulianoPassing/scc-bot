@@ -36,7 +36,21 @@ const COOLDOWN = 6 * 60 * 60 * 1000;
 const userCooldown = new Map();
 
 function saveVotes(votes) { try { const data = Object.fromEntries(votes); fs.writeFileSync(FILE_PATH, JSON.stringify(data, null, 2)); } catch (error) { } }
-function loadVotes() { try { if (fs.existsSync(FILE_PATH)) { const data = fs.readFileSync(FILE_PATH, 'utf-8'); if (data.length === 0) { return new Map(); } const jsonObject = JSON.parse(data); return new Map(Object.entries(jsonObject)); } } catch (error) { } return new Map(); }
+function loadVotes() { 
+    try { 
+        if (fs.existsSync(FILE_PATH)) { 
+            const data = fs.readFileSync(FILE_PATH, 'utf-8'); 
+            if (data.length === 0 || data.trim() === '[]') { 
+                return new Map(); 
+            } 
+            const jsonObject = JSON.parse(data); 
+            return new Map(Object.entries(jsonObject)); 
+        } 
+    } catch (error) { 
+        console.error('Erro ao carregar avaliações:', error);
+    } 
+    return new Map(); 
+}
 const votes = loadVotes();
 
 function createStaffPanelEmbed(staffMember, ratingData) {
@@ -854,12 +868,43 @@ const setupAvaliacaoModule = function(client) {
                 await message.reply('❌ Erro ao gerar o relatório. Verifique os logs para mais detalhes.');
             }
         }
+        if (message.content === '!debug-avaliacoes') {
+            if (!message.member.roles.cache.has(ADMIN_ROLE_ID)) return message.reply('❌ Você não tem permissão para usar este comando.');
+            
+            try {
+                const fileContent = fs.readFileSync(FILE_PATH, 'utf-8');
+                const fileExists = fs.existsSync(FILE_PATH);
+                
+                const debugEmbed = new EmbedBuilder()
+                    .setColor(0x3498DB)
+                    .setTitle('🔍 Debug - Sistema de Avaliações')
+                    .addFields(
+                        { name: '📁 Arquivo existe:', value: fileExists ? '✅ Sim' : '❌ Não', inline: true },
+                        { name: '📄 Tamanho do arquivo:', value: `${fileContent.length} caracteres`, inline: true },
+                        { name: '📊 Tamanho do Map votes:', value: `${votes.size} entradas`, inline: true },
+                        { name: '📝 Conteúdo do arquivo:', value: `\`\`\`json\n${fileContent.substring(0, 500)}\n\`\`\``, inline: false },
+                        { name: '🗂️ Entradas do Map:', value: votes.size > 0 ? `\`\`\`json\n${JSON.stringify(Array.from(votes.entries()).slice(0, 3), null, 2)}\n\`\`\`` : 'Map vazio', inline: false }
+                    )
+                    .setTimestamp();
+                
+                await message.reply({ embeds: [debugEmbed] });
+            } catch (error) {
+                console.error('Erro no debug:', error);
+                await message.reply(`❌ Erro no debug: ${error.message}`);
+            }
+        }
         if (message.content === '!zerar-avaliacoes') {
             if (!message.member.roles.cache.has(ADMIN_ROLE_ID)) return message.reply('❌ Você não tem permissão para usar este comando.');
             
             try {
+                console.log('Debug - Comando zerar-avaliacoes executado');
+                console.log('Debug - Tamanho do Map votes:', votes.size);
+                console.log('Debug - Conteúdo do Map votes:', Array.from(votes.entries()));
+                
                 // Verificar se há avaliações
                 const hasVotes = Array.from(votes.values()).some(data => data.count > 0);
+                console.log('Debug - hasVotes:', hasVotes);
+                
                 if (!hasVotes) {
                     return message.reply('❌ Nenhuma avaliação encontrada para zerar.');
                 }

@@ -367,23 +367,36 @@ function generateAvaliacoesRelatorio(votes, guild) {
                 </div>
             ` : staffWithVotes.map(([staffId, data]) => {
                 const member = guild ? guild.members.cache.get(staffId) : null;
-                const staffName = member ? member.displayName : `Staff ${staffId}`;
-                const average = data.total / data.count;
-                const fullStars = Math.floor(average);
-                const halfStar = (average - fullStars) >= 0.5 ? 1 : 0;
-                const emptyStars = 5 - fullStars - halfStar;
-                const starString = '⭐'.repeat(fullStars) + (halfStar ? '✬' : '') + '☆'.repeat(emptyStars);
-                
-                // Determinar cargo do staff
+                let staffName = `Staff ${staffId}`;
                 let cargo = 'Staff';
+                
                 if (member) {
+                    staffName = member.displayName || member.user.username || `Staff ${staffId}`;
+                    
+                    // Determinar cargo do staff
                     for (let i = 0; i < ROLE_HIERARCHY.length; i++) {
                         if (member.roles.cache.has(ROLE_HIERARCHY[i].id)) {
                             cargo = ROLE_HIERARCHY[i].name;
                             break;
                         }
                     }
+                } else if (guild) {
+                    // Tentar buscar o usuário se não estiver no cache
+                    try {
+                        const user = guild.client.users.cache.get(staffId);
+                        if (user) {
+                            staffName = user.username || `Staff ${staffId}`;
+                        }
+                    } catch (error) {
+                        console.error('Erro ao buscar usuário:', error);
+                    }
                 }
+                
+                const average = data.total / data.count;
+                const fullStars = Math.floor(average);
+                const halfStar = (average - fullStars) >= 0.5 ? 1 : 0;
+                const emptyStars = 5 - fullStars - halfStar;
+                const starString = '⭐'.repeat(fullStars) + (halfStar ? '✬' : '') + '☆'.repeat(emptyStars);
                 
                 return `
                     <div class="staff-card">
@@ -535,6 +548,13 @@ const setupAvaliacaoModule = function(client) {
                 // Gerar nome do arquivo com timestamp
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
                 const filename = `relatorio-avaliacoes-${timestamp}.html`;
+                
+                // Buscar todos os membros do servidor antes de gerar o relatório
+                try {
+                    await message.guild.members.fetch();
+                } catch (error) {
+                    console.error('Erro ao buscar membros:', error);
+                }
                 
                 // Gerar HTML do relatório
                 const html = generateAvaliacoesRelatorio(votes, message.guild);

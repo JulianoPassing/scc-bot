@@ -151,68 +151,75 @@ ${conteudo}
       // Salvar votos
       saveVotes();
       
-      // Atualizar botões com novos contadores
-      const row = ActionRowBuilder.from(message.components[0]);
+      // Calcular contadores
       const totalVotos = voto.yes.size + voto.no.size;
       const porcentagemSim = totalVotos > 0 ? Math.round((voto.yes.size / totalVotos) * 100) : 0;
       const porcentagemNao = totalVotos > 0 ? Math.round((voto.no.size / totalVotos) * 100) : 0;
       
+      // Atualizar botões com novos contadores
+      const row = ActionRowBuilder.from(message.components[0]);
       row.components[0].setLabel(`👍 (${voto.yes.size}) - ${porcentagemSim}%`);
       row.components[1].setLabel(`👎 (${voto.no.size}) - ${porcentagemNao}%`);
       
+      // Atualizar a interação PRIMEIRO
       await interaction.update({ components: [row] });
       
-      // Enviar log para canal de logs
-      const votesChannel = interaction.guild.channels.cache.get(VOTES_CHANNEL_ID);
-      if (votesChannel) {
-        let logMessageId = logsMessages.get(message.id);
-        let logMessage = null;
-        
-        if (logMessageId) {
-          try {
-            logMessage = await votesChannel.messages.fetch(logMessageId);
-          } catch (error) {
-            logsMessages.delete(message.id);
-            logMessageId = null;
+      // Enviar log para canal de logs (após atualizar a interação)
+      try {
+        const votesChannel = interaction.guild.channels.cache.get(VOTES_CHANNEL_ID);
+        if (votesChannel) {
+          let logMessageId = logsMessages.get(message.id);
+          let logMessage = null;
+          
+          if (logMessageId) {
+            try {
+              logMessage = await votesChannel.messages.fetch(logMessageId);
+            } catch (error) {
+              logsMessages.delete(message.id);
+              logMessageId = null;
+            }
+          }
+          
+          const votesEmbed = new EmbedBuilder()
+            .setColor('#FF6B6B')
+            .setTitle('📊 Votação da Sugestão Ilegal')
+            .setDescription(`**Sugestão:** ${message.embeds[0].description}`)
+            .addFields(
+              { name: '👤 Autor Original', value: message.embeds[0].fields.find(f => f.name.includes('Autor'))?.value || 'N/A', inline: true },
+              { name: '📅 Data', value: message.embeds[0].fields.find(f => f.name.includes('Data'))?.value || 'N/A', inline: true },
+              { name: '📈 Total de Votos', value: `${totalVotos}`, inline: true }
+            )
+            .setFooter({ text: `Sugestão Ilegal ID: ${message.id}` })
+            .setTimestamp();
+          
+          if (voto.yes.size > 0) {
+            const votantesSim = Array.from(voto.yes).map(id => `<@${id}>`).join(', ');
+            votesEmbed.addFields({ 
+              name: `✅ Votaram Sim (${voto.yes.size}) - ${porcentagemSim}%`, 
+              value: votantesSim, 
+              inline: false 
+            });
+          }
+          
+          if (voto.no.size > 0) {
+            const votantesNao = Array.from(voto.no).map(id => `<@${id}>`).join(', ');
+            votesEmbed.addFields({ 
+              name: `❌ Votaram Não (${voto.no.size}) - ${porcentagemNao}%`, 
+              value: votantesNao, 
+              inline: false 
+            });
+          }
+          
+          if (logMessage) {
+            await logMessage.edit({ embeds: [votesEmbed] });
+          } else {
+            const newLogMessage = await votesChannel.send({ embeds: [votesEmbed] });
+            logsMessages.set(message.id, newLogMessage.id);
           }
         }
-        
-        const votesEmbed = new EmbedBuilder()
-          .setColor('#FF6B6B')
-          .setTitle('📊 Votação da Sugestão Ilegal')
-          .setDescription(`**Sugestão:** ${message.embeds[0].description}`)
-          .addFields(
-            { name: '👤 Autor Original', value: message.embeds[0].fields.find(f => f.name.includes('Autor'))?.value || 'N/A', inline: true },
-            { name: '📅 Data', value: message.embeds[0].fields.find(f => f.name.includes('Data'))?.value || 'N/A', inline: true },
-            { name: '📈 Total de Votos', value: `${totalVotos}`, inline: true }
-          )
-          .setFooter({ text: `Sugestão Ilegal ID: ${message.id}` })
-          .setTimestamp();
-        
-        if (voto.yes.size > 0) {
-          const votantesSim = Array.from(voto.yes).map(id => `<@${id}>`).join(', ');
-          votesEmbed.addFields({ 
-            name: `✅ Votaram Sim (${voto.yes.size}) - ${porcentagemSim}%`, 
-            value: votantesSim, 
-            inline: false 
-          });
-        }
-        
-        if (voto.no.size > 0) {
-          const votantesNao = Array.from(voto.no).map(id => `<@${id}>`).join(', ');
-          votesEmbed.addFields({ 
-            name: `❌ Votaram Não (${voto.no.size}) - ${porcentagemNao}%`, 
-            value: votantesNao, 
-            inline: false 
-          });
-        }
-        
-        if (logMessage) {
-          await logMessage.edit({ embeds: [votesEmbed] });
-        } else {
-          const newLogMessage = await votesChannel.send({ embeds: [votesEmbed] });
-          logsMessages.set(message.id, newLogMessage.id);
-        }
+      } catch (logError) {
+        console.error('❌ Erro ao enviar log de votação:', logError);
+        // Não re-lançar o erro para não interferir na interação
       }
       
     } catch (error) {

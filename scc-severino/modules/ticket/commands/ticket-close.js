@@ -40,7 +40,7 @@ export async function execute(message, args, client) {
     try {
       const ticketCreator = await client.users.fetch(ticketCreatorId);
       const staffMember = message.member;
-      const staffDisplayName = staffMember.displayName || staffMember.user.username;
+      const staffDisplayName = staffMember.nickname || staffMember.user.displayName || staffMember.user.username;
       
       const evaluationEmbed = new EmbedBuilder()
         .setColor('#FF6B6B')

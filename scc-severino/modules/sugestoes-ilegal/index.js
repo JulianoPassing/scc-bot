@@ -220,7 +220,11 @@ ${conteudo}
       
       // Verificar se a interação ainda não foi reconhecida
       if (!interaction.replied && !interaction.deferred) {
-        await interaction.reply({ content: 'Erro ao processar seu voto. Tente novamente.', ephemeral: true });
+        try {
+          await interaction.reply({ content: 'Erro ao processar seu voto. Tente novamente.', ephemeral: true });
+        } catch (replyError) {
+          console.error('❌ Erro ao responder à interação:', replyError);
+        }
       } else {
         // Se já foi reconhecida, tentar editar a resposta
         try {

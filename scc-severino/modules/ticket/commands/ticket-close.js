@@ -39,18 +39,20 @@ export async function execute(message, args, client) {
   if (ticketCreatorId) {
     try {
       const ticketCreator = await client.users.fetch(ticketCreatorId);
+      const staffMember = message.member;
+      const staffDisplayName = staffMember.displayName || staffMember.user.username;
+      
       const evaluationEmbed = new EmbedBuilder()
         .setColor('#FF6B6B')
-        .setTitle('🎫 Ticket Fechado - Avalie seu Atendimento')
+        .setTitle('🎫 Ticket Encerrado')
         .setDescription(
-          'Olá! Seu ticket foi fechado pela nossa equipe.\n\n' +
-          '**Não se esqueça de avaliar seu último atendimento!**\n\n' +
+          '**Seu ticket foi encerrado, não esqueça de avaliar o staff que lhe atendeu.**\n\n' +
           'Sua opinião é muito importante para continuarmos melhorando nossos serviços.\n\n' +
-          '📝 **Avalie aqui:** https://discord.com/channels/1046404063287332936/1394727160991842324'
+          '📝 **Avalie aqui:** <#1394727160991842324>'
         )
         .addFields(
-          { name: 'Categoria do Ticket', value: ticketCategory ? ticketCategory.charAt(0).toUpperCase() + ticketCategory.slice(1) : 'Suporte', inline: true },
-          { name: 'Fechado por', value: message.author.tag, inline: true }
+          { name: '👤 Staff Responsável', value: staffDisplayName, inline: true },
+          { name: '📋 Categoria', value: ticketCategory ? ticketCategory.charAt(0).toUpperCase() + ticketCategory.slice(1) : 'Suporte', inline: true }
         )
         .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade' })
         .setTimestamp();

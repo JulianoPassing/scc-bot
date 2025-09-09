@@ -40,7 +40,23 @@ export async function execute(message, args, client) {
     try {
       const ticketCreator = await client.users.fetch(ticketCreatorId);
       const staffMember = message.member;
-      const staffDisplayName = staffMember.displayName || staffMember.user.displayName || staffMember.user.username;
+      // Tentar pegar o nome de exibição completo do servidor
+      let staffDisplayName = staffMember.displayName;
+      
+      // Se não tiver displayName ou for igual ao username, tentar pegar o nickname
+      if (!staffDisplayName || staffDisplayName === staffMember.user.username) {
+        staffDisplayName = staffMember.nickname;
+      }
+      
+      // Se ainda não tiver, usar o displayName global do usuário
+      if (!staffDisplayName) {
+        staffDisplayName = staffMember.user.displayName;
+      }
+      
+      // Último fallback: username
+      if (!staffDisplayName) {
+        staffDisplayName = staffMember.user.username;
+      }
       
       const evaluationEmbed = new EmbedBuilder()
         .setColor('#FF6B6B')
@@ -63,7 +79,23 @@ export async function execute(message, args, client) {
     }
   }
 
-  const staffDisplayName = message.member.displayName || message.member.user.displayName || message.member.user.username;
+  // Tentar pegar o nome de exibição completo do servidor
+  let staffDisplayName = message.member.displayName;
+  
+  // Se não tiver displayName ou for igual ao username, tentar pegar o nickname
+  if (!staffDisplayName || staffDisplayName === message.member.user.username) {
+    staffDisplayName = message.member.nickname;
+  }
+  
+  // Se ainda não tiver, usar o displayName global do usuário
+  if (!staffDisplayName) {
+    staffDisplayName = message.member.user.displayName;
+  }
+  
+  // Último fallback: username
+  if (!staffDisplayName) {
+    staffDisplayName = message.member.user.username;
+  }
   
   const confirmEmbed = new EmbedBuilder()
     .setColor('#FFA500')

@@ -40,7 +40,7 @@ export async function execute(message, args, client) {
     try {
       const ticketCreator = await client.users.fetch(ticketCreatorId);
       const staffMember = message.member;
-      const staffDisplayName = staffMember.nickname || staffMember.user.displayName || staffMember.user.username;
+      const staffDisplayName = staffMember.displayName || staffMember.user.displayName || staffMember.user.username;
       
       const evaluationEmbed = new EmbedBuilder()
         .setColor('#FF6B6B')
@@ -63,11 +63,13 @@ export async function execute(message, args, client) {
     }
   }
 
+  const staffDisplayName = message.member.displayName || message.member.user.displayName || message.member.user.username;
+  
   const confirmEmbed = new EmbedBuilder()
     .setColor('#FFA500')
     .setTitle('🔒 Fechando Ticket')
     .setDescription('Este ticket será deletado em 5 segundos...')
-    .setFooter({ text: `Fechado por ${message.author.tag}` })
+    .setFooter({ text: `Fechado por ${staffDisplayName}` })
     .setTimestamp();
   
   await message.reply({ embeds: [confirmEmbed] });

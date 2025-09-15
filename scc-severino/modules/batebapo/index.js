@@ -67,10 +67,6 @@ const setupBateBapoModule = function(client) {
       await message.reply('Noel é foda! 🎅🏻');
     }
     
-    // Resposta para mensagens contendo "wipe"
-    if (message.content.toLowerCase().includes('wipe')) {
-      await message.reply('**🗓️ Wipe previsto para 07/09**\n\n📋 Mais informações e spoilers em: https://discord.com/channels/1046404063287332936/1406109950769627176\n\n*Lembrando: o Noel é foda e o PH é uma moça.*');
-    }
     
     // Resposta para "PH"
     if (message.content.toLowerCase().trim() === 'ph') {
@@ -79,7 +75,7 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para "abuser"
     if (message.content.toLowerCase().includes('abuser')) {
-      await message.reply('**🎅🏻 Provavelmente você está falando do Noel**');
+      await message.reply('**🎅🏻 Abuser? Provavelmente você está falando do Noel**');
     }
     
     // Comando especial do usuário 405487427327885313

@@ -73,6 +73,11 @@ const setupBateBapoModule = function(client) {
       await message.reply('**🏳️‍🌈 PH, esse se deita com iguais**');
     }
     
+    // Resposta para "Jeeh"
+    if (message.content.toLowerCase().trim() === 'jeeh') {
+      await message.reply('🐊 **JEEEEHCARE!** 🐊');
+    }
+    
     // Resposta para "abuser"
     if (message.content.toLowerCase().includes('abuser')) {
       await message.reply('**🎅🏻 Abuser? Provavelmente você está falando do Noel**');

@@ -130,6 +130,9 @@ ${conteudo}
     const { customId, message, user } = interaction;
     if (!['vote_yes', 'vote_no'].includes(customId)) return;
     
+    // Verificar se a mensagem é do canal de sugestões ilegais
+    if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
+    
     console.log(`🗳️ Voto registrado: ${customId} na sugestão ${message.id} por ${user.username}`);
     
     try {

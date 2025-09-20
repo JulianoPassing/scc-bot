@@ -224,22 +224,7 @@ ${conteudo}
       
     } catch (error) {
       console.error('❌ Erro ao processar voto:', error);
-      
-      // Verificar se a interação ainda não foi reconhecida
-      if (!interaction.replied && !interaction.deferred) {
-        try {
-          await interaction.reply({ content: 'Erro ao processar seu voto. Tente novamente.', ephemeral: true });
-        } catch (replyError) {
-          console.error('❌ Erro ao responder à interação:', replyError);
-        }
-      } else {
-        // Se já foi reconhecida, tentar editar a resposta
-        try {
-          await interaction.editReply({ content: 'Erro ao processar seu voto. Tente novamente.' });
-        } catch (editError) {
-          console.error('❌ Erro ao editar resposta:', editError);
-        }
-      }
+      // Não enviar mensagem de erro para o usuário para evitar problemas de interação
     }
   });
   

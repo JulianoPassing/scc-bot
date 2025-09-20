@@ -147,6 +147,7 @@ ${conteudo}
     if (!interaction.isButton()) return;
     const { customId, message, user } = interaction;
     if (!['vote_yes', 'vote_no'].includes(customId)) return;
+    
     try {
       if (!votos.has(message.id)) {
         votos.set(message.id, { yes: new Set(), no: new Set() });
@@ -166,7 +167,9 @@ ${conteudo}
       const porcentagemNao = totalVotos > 0 ? Math.round((voto.no.size / totalVotos) * 100) : 0;
       row.components[0].setLabel(`👍 (${voto.yes.size}) - ${porcentagemSim}%`);
       row.components[1].setLabel(`👎 (${voto.no.size}) - ${porcentagemNao}%`);
+      
       await interaction.update({ components: [row] });
+      
       const votesChannel = interaction.guild.channels.cache.get(VOTES_CHANNEL_ID);
       if (votesChannel) {
         let logMessageId = logsMessages.get(message.id);
@@ -214,7 +217,8 @@ ${conteudo}
         }
       }
     } catch (error) {
-      await interaction.reply({ content: 'Erro ao processar seu voto. Tente novamente.', ephemeral: true });
+      console.error('Erro ao processar voto:', error);
+      // Não enviar mensagem de erro para o usuário para evitar problemas de interação
     }
   });
 };

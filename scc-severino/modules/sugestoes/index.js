@@ -148,6 +148,9 @@ ${conteudo}
     const { customId, message, user } = interaction;
     if (!['vote_yes', 'vote_no'].includes(customId)) return;
     
+    // Verificar se a mensagem é do canal de sugestões normais
+    if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
+    
     try {
       if (!votos.has(message.id)) {
         votos.set(message.id, { yes: new Set(), no: new Set() });

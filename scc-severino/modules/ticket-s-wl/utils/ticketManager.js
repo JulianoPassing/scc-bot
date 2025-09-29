@@ -52,13 +52,24 @@ export async function createTicketChannel(guild, channelName, user, reason, tick
     console.log('[DEBUG] Criando canal com permissões:', permissionOverwrites.length, 'overwrites');
     console.log('[DEBUG] Permissões para usuário:', user.id, 'Staff Role:', config.staffRoleId);
     
-    const ticketChannel = await guild.channels.create({
-      name: channelName,
-      type: ChannelType.GuildText,
-      parent: selectedCategoryId,
-      topic: `Ticket de Segurança #${ticketNumber} | ${user.tag} | ${reason}`,
-      permissionOverwrites
-    });
+    let ticketChannel;
+    try {
+      ticketChannel = await guild.channels.create({
+        name: channelName,
+        type: ChannelType.GuildText,
+        parent: selectedCategoryId,
+        topic: `Ticket de Segurança #${ticketNumber} | ${user.tag} | ${reason}`,
+        permissionOverwrites
+      });
+    } catch (channelError) {
+      // Verificar se é erro de limite de canais atingido
+      if (channelError.code === 30013) {
+        const error = new Error('Limite de canais atingido! O servidor atingiu o limite máximo de canais.');
+        error.code = 30013;
+        throw error;
+      }
+      throw channelError;
+    }
     
     console.log('[DEBUG] Canal criado com sucesso:', ticketChannel.id);
     console.log('[DEBUG] Permissões do canal criado:', ticketChannel.permissionOverwrites.cache.size, 'overwrites');

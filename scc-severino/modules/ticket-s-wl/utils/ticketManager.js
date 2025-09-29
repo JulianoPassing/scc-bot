@@ -64,7 +64,7 @@ export async function createTicketChannel(guild, channelName, user, reason, tick
     } catch (channelError) {
       // Verificar se é erro de limite de canais atingido
       if (channelError.code === 30013) {
-        const error = new Error('Limite de canais atingido! O servidor atingiu o limite máximo de 500 canais.');
+        const error = new Error('Limite de canais atingido! O servidor atingiu o limite máximo de canais.');
         error.code = 30013;
         throw error;
       }

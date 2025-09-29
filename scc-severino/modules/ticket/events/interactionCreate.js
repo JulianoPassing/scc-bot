@@ -509,7 +509,7 @@ export const execute = async function(interaction) {
         // Verificar se é erro de limite de canais atingido
         if (err.code === 30013) {
           await interaction.editReply({ 
-            content: '❌ **Limite de canais atingido!**\n\nO servidor atingiu o limite máximo de 500 canais. Entre em contato com a administração para resolver esta situação.' 
+            content: '❌ **Limite de canais atingido!**\n\nO servidor atingiu o limite máximo de canais. Entre em contato com a administração para resolver esta situação.' 
           });
           return;
         }

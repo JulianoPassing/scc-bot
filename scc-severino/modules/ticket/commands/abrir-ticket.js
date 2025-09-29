@@ -32,13 +32,27 @@ export async function execute(message, args, client) {
   const categoriaId = '1386490182085382294'; // ID da categoria de suporte
   const categoryName = 'suporte'; // Nome da categoria para registro
   
-  const ticketResult = await createTicketChannelWithCategoryCheck(
-    guild,
-    channelName,
-    categoriaId,
-    user.id,
-    `Ticket de Suporte | ${user.tag} | ${reason}`
-  );
+  let ticketResult;
+  try {
+    ticketResult = await createTicketChannelWithCategoryCheck(
+      guild,
+      channelName,
+      categoriaId,
+      user.id,
+      `Ticket de Suporte | ${user.tag} | ${reason}`
+    );
+  } catch (err) {
+    console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
+    
+    // Verificar se é erro de limite de canais atingido
+    if (err.code === 30013) {
+      return message.reply({ 
+        content: '❌ **Limite de canais atingido!**\n\nO servidor atingiu o limite máximo de 500 canais. Entre em contato com a administração para resolver esta situação.' 
+      });
+    }
+    
+    return message.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se a categoria existe, se o bot tem permissão e se o ID está correto.' });
+  }
   
   const ticketChannel = ticketResult.channel;
   const categoryFull = ticketResult.categoryFull;

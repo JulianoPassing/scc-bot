@@ -114,6 +114,16 @@ export const execute = async function(interaction) {
         console.error('[ERRO] Falha ao criar canal do ticket de segurança:', err);
         console.error('[ERRO] Stack trace:', err.stack);
         console.error('[ERRO] Categoria:', SEGURANCA_CATEGORY_ID, 'Guild:', guild.id);
+        
+        // Verificar se é erro de limite de canais atingido
+        if (err.code === 30013) {
+          await interaction.reply({ 
+            content: '❌ **Limite de canais atingido!**\n\nO servidor atingiu o limite máximo de 500 canais. Entre em contato com a administração para resolver esta situação.', 
+            flags: 64 
+          });
+          return;
+        }
+        
         await interaction.reply({ content: `❌ Erro ao criar o canal do ticket. Detalhe: ${err.message}`, flags: 64 });
         return;
       }

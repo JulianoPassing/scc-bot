@@ -23,7 +23,22 @@ export async function execute(message, args, client) {
 
   const ticketNumber = await getNextTicketNumber();
   const channelName = `seg-${user.username.toLowerCase()}`;
-  const ticketChannel = await createTicketChannel(guild, channelName, user, reason, ticketNumber, client);
+  
+  let ticketChannel;
+  try {
+    ticketChannel = await createTicketChannel(guild, channelName, user, reason, ticketNumber, client);
+  } catch (err) {
+    console.error('Erro ao criar canal do ticket de segurança:', err);
+    
+    // Verificar se é erro de limite de canais atingido
+    if (err.code === 30013) {
+      return message.reply({ 
+        content: '❌ **Limite de canais atingido!**\n\nO servidor atingiu o limite máximo de 500 canais. Entre em contato com a administração para resolver esta situação.' 
+      });
+    }
+    
+    return message.reply({ content: '❌ Erro ao criar o canal do ticket. Verifique se a categoria existe, se o bot tem permissão e se o ID está correto.' });
+  }
 
   const welcomeEmbed = new EmbedBuilder()
             .setColor('#EAF207')

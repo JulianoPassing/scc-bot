@@ -505,6 +505,15 @@ export const execute = async function(interaction) {
         );
       } catch (err) {
         console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
+        
+        // Verificar se é erro de limite de canais atingido
+        if (err.code === 30013) {
+          await interaction.editReply({ 
+            content: '❌ **Limite de canais atingido!**\n\nO servidor atingiu o limite máximo de 500 canais. Entre em contato com a administração para resolver esta situação.' 
+          });
+          return;
+        }
+        
         await interaction.editReply({ content: '❌ Erro ao criar o canal do ticket. Verifique se a categoria existe, se o bot tem permissão e se o ID está correto.' });
         return;
       }

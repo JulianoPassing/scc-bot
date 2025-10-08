@@ -1,4 +1,6 @@
 import { formatName } from '../utils/nameFormatter.js';
+import { EmbedBuilder } from 'discord.js';
+import config from '../config.json' assert { type: 'json' };
 
 export default {
     name: 'messageReactionAdd',
@@ -137,6 +139,31 @@ export default {
             
             console.log(`✅ Usuário ${messageAuthor.tag} liberado com sucesso!`);
             console.log(`✅ Processo concluído silenciosamente para ${user.tag}`);
+            
+            // Enviar log para o canal de logs
+            try {
+                const logChannel = await guild.channels.fetch(config.canalLog);
+                if (logChannel) {
+                    const logEmbed = new EmbedBuilder()
+                        .setColor('#00ff00')
+                        .setTitle('📋 Liberação Aprovada')
+                        .setDescription(`Um staff aprovou a liberação de um usuário`)
+                        .addFields(
+                            { name: '👤 Usuário Liberado', value: `${messageAuthor} (${messageAuthor.tag})`, inline: true },
+                            { name: '✅ Staff Aprovador', value: `${user} (${user.tag})`, inline: true },
+                            { name: '📝 Nome Aplicado', value: `\`${processedName}\``, inline: false },
+                            { name: '🆔 ID do Usuário', value: `\`${messageAuthor.id}\``, inline: true },
+                            { name: '🆔 ID do Staff', value: `\`${user.id}\``, inline: true }
+                        )
+                        .setTimestamp()
+                        .setFooter({ text: 'Sistema de Liberação' });
+                    
+                    await logChannel.send({ embeds: [logEmbed] });
+                    console.log(`📋 Log enviado para o canal ${config.canalLog}`);
+                }
+            } catch (logError) {
+                console.error('❌ Erro ao enviar log:', logError);
+            }
             
         } catch (error) {
             console.error('❌ Erro ao processar liberação:', error);

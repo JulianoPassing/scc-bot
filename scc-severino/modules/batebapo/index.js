@@ -83,6 +83,11 @@ const setupBateBapoModule = function(client) {
       await message.reply('**🎅🏻 Abuser? Provavelmente você está falando do Noel**');
     }
     
+    // Resposta para "Jack"
+    if (message.content.toLowerCase().includes('jack')) {
+      await message.reply('Jack, esse gosta de sortear o caneco 🍺');
+    }
+    
     // Comando especial do usuário 405487427327885313
     if (message.author.id === '405487427327885313' && 
         message.content.toLowerCase().includes('pega o') && 

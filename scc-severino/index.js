@@ -39,6 +39,7 @@ const modules = [
   'instagram',
   'liberacao',
   'limparchat',
+  'notificacao-mencoes',
   'sugestoes',
   'sugestoes-ilegal',
   'tagseason',

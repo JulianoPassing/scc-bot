@@ -1,10 +1,10 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import fs from 'fs';
 
-const GUILD_ID = '1414984054406774987'; // Servidor específico
-const SUGGESTION_CHANNEL_ID = '1414984055866523768'; // Canal de sugestões ilegais
-const VOTES_CHANNEL_ID = '1414984056310861915'; // Canal de logs
-const VOTES_FILE = './modules/sugestoes-ilegal/votes.json';
+const GUILD_ID = '1328895149392265287'; // Servidor específico
+const SUGGESTION_CHANNEL_ID = '1429874270644731945'; // Canal de sugestões PRS
+const VOTES_CHANNEL_ID = '1429874311635795998'; // Canal de logs
+const VOTES_FILE = './modules/sugestoes-prs/votes.json';
 
 const votos = new Map();
 const logsMessages = new Map();
@@ -20,7 +20,7 @@ const saveVotes = () => {
     }
     fs.writeFileSync(VOTES_FILE, JSON.stringify(votesData, null, 2));
   } catch (error) {
-    console.error('Erro ao salvar votos:', error);
+    console.error('Erro ao salvar votos (PRS):', error);
   }
 };
 
@@ -34,27 +34,27 @@ const loadVotes = () => {
           no: new Set(voteData.no)
         });
       }
-      console.log(`✅ Votos carregados: ${Object.keys(votesData).length} sugestões ilegais`);
+      console.log(`✅ Votos carregados (PRS): ${Object.keys(votesData).length} sugestões`);
     }
   } catch (error) {
-    console.error('Erro ao carregar votos:', error);
+    console.error('Erro ao carregar votos (PRS):', error);
   }
 };
 
-const setupSugestoesIlegalModule = function(client) {
-  console.log('🚨 Iniciando módulo sugestoes-ilegal...');
+const setupSugestoesPRSModule = function(client) {
+  console.log('🏁 Iniciando módulo sugestoes-prs...');
   
   // Carregar votos existentes
   loadVotes();
   
-  // Evento para mensagens no canal de sugestões ilegais
+  // Evento para mensagens no canal de sugestões PRS
   client.on('messageCreate', async (message) => {
     // Verificar se é bot, não é o servidor correto ou não é o canal correto
     if (message.author.bot) return;
     if (message.guild?.id !== GUILD_ID) return;
     if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
     
-    console.log(`🚨 Nova mensagem no canal de sugestões ilegais: ${message.content}`);
+    console.log(`🏁 Nova mensagem no canal de sugestões PRS: ${message.content}`);
     
     try {
       const conteudo = message.content;
@@ -62,16 +62,16 @@ const setupSugestoesIlegalModule = function(client) {
       // Deletar a mensagem original
       await message.delete();
       
-      // Criar embed da sugestão ilegal
+      // Criar embed da sugestão PRS
       const embed = new EmbedBuilder()
-        .setColor('#FF6B6B')
+        .setColor('#9B59B6')
         .setAuthor({
           name: `${message.author.username} - ${message.author.id}`,
           iconURL: message.author.displayAvatarURL({ dynamic: true, size: 64 })
         })
-        .setTitle('🚨 Sugestão Ilegal')
+        .setTitle('🏁 Sugestão PRS')
         .setDescription(`
-\`\`\`sugestao-ilegal
+\`\`\`sugestao-prs
 ${conteudo}
 \`\`\`
 `)
@@ -80,7 +80,7 @@ ${conteudo}
           { name: '📅 Data', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true }
         )
         .setFooter({ 
-          text: 'Sistema de Sugestões Ilegais • SCC', 
+          text: 'Sistema de Sugestões PRS • SCC', 
           iconURL: message.guild.iconURL({ dynamic: true }) 
         })
         .setTimestamp();
@@ -88,12 +88,12 @@ ${conteudo}
       // Criar botões de votação
       const row = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId('vote_yes')
+          .setCustomId('vote_yes_prs')
           .setLabel('👍 (0) - 0%')
           .setStyle(ButtonStyle.Success)
           .setEmoji('✅'),
         new ButtonBuilder()
-          .setCustomId('vote_no')
+          .setCustomId('vote_no_prs')
           .setLabel('👎 (0) - 0%')
           .setStyle(ButtonStyle.Danger)
           .setEmoji('❌')
@@ -106,22 +106,22 @@ ${conteudo}
       votos.set(sentMessage.id, { yes: new Set(), no: new Set() });
       saveVotes();
       
-      console.log(`✅ Sugestão ilegal criada com sucesso: ${sentMessage.id}`);
+      console.log(`✅ Sugestão PRS criada com sucesso: ${sentMessage.id}`);
       
       // Criar thread para debate
       try {
         await sentMessage.startThread({
           name: `💬 Debate: ${conteudo.substring(0, 50)}${conteudo.length > 50 ? '...' : ''}`,
           autoArchiveDuration: 60,
-          reason: 'Tópico de debate criado automaticamente para a sugestão ilegal'
+          reason: 'Tópico de debate criado automaticamente para a sugestão PRS'
         });
-        console.log(`✅ Thread criado para a sugestão ilegal`);
+        console.log(`✅ Thread criado para a sugestão PRS`);
       } catch (threadError) {
-        console.error('❌ Erro ao criar thread:', threadError);
+        console.error('❌ Erro ao criar thread (PRS):', threadError);
       }
       
     } catch (error) {
-      console.error('❌ Erro ao processar sugestão ilegal:', error);
+      console.error('❌ Erro ao processar sugestão PRS:', error);
     }
   });
   
@@ -130,13 +130,13 @@ ${conteudo}
     if (!interaction.isButton()) return;
     
     const { customId, message, user } = interaction;
-    if (!['vote_yes', 'vote_no'].includes(customId)) return;
+    if (!['vote_yes_prs', 'vote_no_prs'].includes(customId)) return;
     
-    // Verificar se é do servidor correto e do canal de sugestões ilegais
+    // Verificar se é do servidor correto e do canal de sugestões PRS
     if (interaction.guild?.id !== GUILD_ID) return;
     if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
     
-    console.log(`🗳️ Voto registrado: ${customId} na sugestão ${message.id} por ${user.username}`);
+    console.log(`🗳️ Voto registrado (PRS): ${customId} na sugestão ${message.id} por ${user.username}`);
     
     try {
       // Inicializar votos se não existir
@@ -151,8 +151,8 @@ ${conteudo}
       voto.no.delete(user.id);
       
       // Adicionar novo voto
-      if (customId === 'vote_yes') voto.yes.add(user.id);
-      if (customId === 'vote_no') voto.no.add(user.id);
+      if (customId === 'vote_yes_prs') voto.yes.add(user.id);
+      if (customId === 'vote_no_prs') voto.no.add(user.id);
       
       // Salvar votos
       saveVotes();
@@ -187,15 +187,15 @@ ${conteudo}
           }
           
           const votesEmbed = new EmbedBuilder()
-            .setColor('#FF6B6B')
-            .setTitle('📊 Votação da Sugestão Ilegal')
+            .setColor('#9B59B6')
+            .setTitle('📊 Votação da Sugestão PRS')
             .setDescription(`**Sugestão:** ${message.embeds[0].description}`)
             .addFields(
               { name: '👤 Autor Original', value: message.embeds[0].fields.find(f => f.name.includes('Autor'))?.value || 'N/A', inline: true },
               { name: '📅 Data', value: message.embeds[0].fields.find(f => f.name.includes('Data'))?.value || 'N/A', inline: true },
               { name: '📈 Total de Votos', value: `${totalVotos}`, inline: true }
             )
-            .setFooter({ text: `Sugestão Ilegal ID: ${message.id}` })
+            .setFooter({ text: `Sugestão PRS ID: ${message.id}` })
             .setTimestamp();
           
           if (voto.yes.size > 0) {
@@ -224,17 +224,18 @@ ${conteudo}
           }
         }
       } catch (logError) {
-        console.error('❌ Erro ao enviar log de votação:', logError);
+        console.error('❌ Erro ao enviar log de votação (PRS):', logError);
         // Não re-lançar o erro para não interferir na interação
       }
       
     } catch (error) {
-      console.error('❌ Erro ao processar voto:', error);
+      console.error('❌ Erro ao processar voto (PRS):', error);
       // Não enviar mensagem de erro para o usuário para evitar problemas de interação
     }
   });
   
-  console.log('🚨 Módulo sugestoes-ilegal configurado com sucesso!');
+  console.log('🏁 Módulo sugestoes-prs configurado com sucesso!');
 };
 
-export default setupSugestoesIlegalModule;
+export default setupSugestoesPRSModule;
+

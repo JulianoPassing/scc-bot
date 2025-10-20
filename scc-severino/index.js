@@ -42,6 +42,8 @@ const modules = [
   'notificacao-mencoes',
   'sugestoes',
   'sugestoes-ilegal',
+  'sugestoes-pm',
+  'sugestoes-prs',
   'tagseason',
   'ticket',
   'ticket-s-wl',

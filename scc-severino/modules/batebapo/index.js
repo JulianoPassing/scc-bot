@@ -40,7 +40,7 @@ const setupBateBapoModule = function(client) {
     if (message.content.toLowerCase().includes('caiu') || 
         message.content.toLowerCase().trim() === 'f' || 
         message.content.toLowerCase().includes('servidor ta off')) {
-      await message.reply('Tente acessar pelo <#1046404064004558923>, caso não resolva, tenta fazer os procedimentos de <#1332835981874827304>.\nCaso persista <@1387031132343763086> ou entrar na call <#1046404065241862193>. PS: Provavelmente foi o Noel');
+      await message.reply('Tente acessar pelo <#1046404064004558923>, caso não resolve, tente fazer os procedimentos do <#1332835981874827304>. Caso persista abra um ticket <#1387031132343763086>, ou entre na call <#1046404065241862193> e aguarde.');
     }
     
     // Resposta para "an" (mensagem exata)

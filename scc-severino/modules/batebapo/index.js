@@ -13,7 +13,7 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para "staff" (inclui em qualquer parte)
     if (message.content.toLowerCase().includes('staff')) {
-      await message.reply('Se estiver precisando de ajuda, <@1387031132343763086> ou entre no canal <#1046404065241862193> e aguarde.');
+      await message.reply('Se estiver precisando de ajuda abra um ticket no canal <#1387031132343763086> ou entre no canal <#1046404065241862193> e aguarde.');
     }
     
     // Resposta para "comando" ou "comandos" (inclui em qualquer parte)

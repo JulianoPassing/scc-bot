@@ -1,0 +1,21 @@
+# Environment variables
+.env
+
+# Node modules
+node_modules/
+
+# PM2 logs
+.pm2/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log
+logs/
+

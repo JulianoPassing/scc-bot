@@ -1,5 +1,6 @@
 import { Events } from 'discord.js';
 
+// Módulo Bate-Bapo - Respostas automáticas no canal de suporte
 const setupBateBapoModule = function(client) {
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;

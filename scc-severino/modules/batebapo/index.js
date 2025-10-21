@@ -5,8 +5,8 @@ const setupBateBapoModule = function(client) {
     if (message.author.bot) return;
     if (message.channel.id !== '1046404065690652745') return;
     
-    // Resposta para "." (inclui em qualquer parte)
-    if (message.content.trim().includes('.')) {
+    // Resposta para "." (mensagem exata)
+    if (message.content.trim() === '.') {
       await message.reply('Se for pra contratação, me contrata também, **Noel 🎅🏻** me escravizou aqui.');
     }
     
@@ -35,9 +35,9 @@ const setupBateBapoModule = function(client) {
       await message.reply('Se sua dúvida for referente a tutorias da cidade, aqui temos alguns <#1317105357453266995>');
     }
     
-    // Resposta para "caiu", "F" ou "servidor ta off" (inclui em qualquer parte)
+    // Resposta para "caiu", "F" ou "servidor ta off"
     if (message.content.toLowerCase().includes('caiu') || 
-        message.content.toLowerCase().includes('f') || 
+        message.content.toLowerCase().trim() === 'f' || 
         message.content.toLowerCase().includes('servidor ta off')) {
       await message.reply('Tente acessar pelo <#1046404064004558923>, caso não resolva, tenta fazer os procedimentos de <#1332835981874827304>.\nCaso persista <@1387031132343763086> ou entrar na call <#1046404065241862193>. PS: Provavelmente foi o Noel');
     }

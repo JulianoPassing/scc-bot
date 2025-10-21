@@ -1,3 +1,1230 @@
 {
-  "activeTickets": {}
+  "activeTickets": {
+    "325982697157558274": {
+      "suporte": {
+        "channelId": "1415454875122274334",
+        "channelName": "📁suporte-clowna",
+        "createdAt": "2025-09-10T21:44:24.276Z"
+      }
+    },
+    "510048526684651533": {
+      "suporte": {
+        "channelId": "1417197641770471516",
+        "channelName": "📁suporte-zalber",
+        "createdAt": "2025-09-15T17:09:01.061Z"
+      }
+    },
+    "151087607617421323": {
+      "bugs": {
+        "channelId": "1422469392817590283",
+        "channelName": "🦠bugs-lucasoluiz",
+        "createdAt": "2025-09-30T06:15:29.896Z"
+      },
+      "suporte": {
+        "channelId": "1424980693863235736",
+        "channelName": "📁suporte-lucasoluiz",
+        "createdAt": "2025-10-07T04:33:45.725Z"
+      }
+    },
+    "862561984373456897": {
+      "suporte": {
+        "channelId": "1416204840027029525",
+        "channelName": "📁suporte-clevertonsc",
+        "createdAt": "2025-09-12T23:24:16.441Z"
+      }
+    },
+    "872292785238200322": {
+      "suporte": {
+        "channelId": "1416230879193333880",
+        "channelName": "📁suporte-gwenzinhaaa",
+        "createdAt": "2025-09-13T01:07:44.517Z"
+      }
+    },
+    "285752151651647490": {
+      "bugs": {
+        "channelId": "1417641482327953480",
+        "channelName": "🦠bugs-rphferrao",
+        "createdAt": "2025-09-16T22:32:32.957Z"
+      }
+    },
+    "410594235063074817": {
+      "bugs": {
+        "channelId": "1421604177838080172",
+        "channelName": "🦠bugs-wazerk",
+        "createdAt": "2025-09-27T20:57:42.125Z"
+      }
+    },
+    "368544833008173056": {
+      "suporte": {
+        "channelId": "1418008458426318898",
+        "channelName": "📁suporte-kurilindo",
+        "createdAt": "2025-09-17T22:50:40.274Z"
+      }
+    },
+    "882669887661690921": {
+      "suporte": {
+        "channelId": "1418769387485266012",
+        "channelName": "📁suporte-lkboladao",
+        "createdAt": "2025-09-20T01:14:06.308Z"
+      }
+    },
+    "680656191285887036": {
+      "denuncias": {
+        "channelId": "1418816647309037628",
+        "channelName": "⚠️denuncias-grubiiel",
+        "createdAt": "2025-09-20T04:21:53.045Z"
+      }
+    },
+    "342714748334505987": {
+      "suporte": {
+        "channelId": "1419526081710653563",
+        "channelName": "📁suporte-piacentini_",
+        "createdAt": "2025-09-22T03:20:42.605Z"
+      }
+    },
+    "458739664573169667": {
+      "suporte": {
+        "channelId": "1419759285306654730",
+        "channelName": "📁suporte-juanitto0",
+        "createdAt": "2025-09-22T18:47:18.489Z"
+      }
+    },
+    "771403127500439583": {
+      "revisao": {
+        "channelId": "1419816144071823466",
+        "channelName": "🔍revisao-zelbio",
+        "createdAt": "2025-09-22T22:33:13.744Z"
+      }
+    },
+    "490114590772953089": {
+      "suporte": {
+        "channelId": "1419829414828576848",
+        "channelName": "📁suporte-soaresk82",
+        "createdAt": "2025-09-22T23:25:57.423Z"
+      },
+      "doacoes": {
+        "channelId": "1428977612881006752",
+        "channelName": "💎doacoes-soaresk82",
+        "createdAt": "2025-10-18T05:14:53.840Z"
+      }
+    },
+    "1046562695534608506": {
+      "suporte": {
+        "channelId": "1421107012686577704",
+        "channelName": "📁suporte-mafumagofa",
+        "createdAt": "2025-09-26T12:02:17.611Z"
+      }
+    },
+    "272883839771213826": {
+      "bugs": {
+        "channelId": "1421697356025434213",
+        "channelName": "🦠bugs-dardodo38",
+        "createdAt": "2025-09-28T03:07:55.865Z"
+      },
+      "denuncias": {
+        "channelId": "1428193943719252101",
+        "channelName": "⚠️denuncias-dardodo38",
+        "createdAt": "2025-10-16T01:21:06.650Z"
+      }
+    },
+    "951407946540142602": {
+      "denuncias": {
+        "channelId": "1421569777104851024",
+        "channelName": "⚠️denuncias-silascando",
+        "createdAt": "2025-09-27T18:41:00.937Z"
+      }
+    },
+    "737847604221706311": {
+      "denuncias": {
+        "channelId": "1421671817625735259",
+        "channelName": "⚠️denuncias-didiroxxx",
+        "createdAt": "2025-09-28T01:26:27.635Z"
+      },
+      "bugs": {
+        "channelId": "1423796799315116093",
+        "channelName": "🦠bugs-didiroxxx",
+        "createdAt": "2025-10-03T22:09:44.530Z"
+      }
+    },
+    "894160841702776894": {
+      "suporte": {
+        "channelId": "1421810664162459658",
+        "channelName": "📁suporte-francisco02919",
+        "createdAt": "2025-09-28T10:38:08.618Z"
+      }
+    },
+    "874447413966954556": {
+      "suporte": {
+        "channelId": "1421812640350474320",
+        "channelName": "📁suporte-franklin__8512",
+        "createdAt": "2025-09-28T10:45:59.768Z"
+      }
+    },
+    "199710872002756608": {
+      "bugs": {
+        "channelId": "1422371575390273729",
+        "channelName": "🦠bugs-niquera",
+        "createdAt": "2025-09-29T23:46:50.235Z"
+      }
+    },
+    "198186711912546306": {
+      "suporte": {
+        "channelId": "1422573435099549726",
+        "channelName": "📁suporte-scaife",
+        "createdAt": "2025-09-30T13:08:53.888Z"
+      }
+    },
+    "573569847204511744": {
+      "denuncias": {
+        "channelId": "1422619756950716446",
+        "channelName": "⚠️denuncias-wolf1bs",
+        "createdAt": "2025-09-30T16:12:56.824Z"
+      },
+      "boost": {
+        "channelId": "1430156307054330007",
+        "channelName": "🚀boost-wolf1bs",
+        "createdAt": "2025-10-21T11:18:15.416Z"
+      }
+    },
+    "986154192253108254": {
+      "revisao": {
+        "channelId": "1422631692639801434",
+        "channelName": "🔍revisao-miguel6830",
+        "createdAt": "2025-09-30T17:00:22.290Z"
+      }
+    },
+    "110057231336116224": {
+      "suporte": {
+        "channelId": "1422748290126188644",
+        "channelName": "📁suporte-deds0807",
+        "createdAt": "2025-10-01T00:43:39.221Z"
+      }
+    },
+    "614937093407506443": {
+      "suporte": {
+        "channelId": "1423034847550636123",
+        "channelName": "📁suporte-alvesz3",
+        "createdAt": "2025-10-01T19:42:14.713Z"
+      }
+    },
+    "229648567357276161": {
+      "bugs": {
+        "channelId": "1425329707595071560",
+        "channelName": "🦠bugs-nubzinhobr",
+        "createdAt": "2025-10-08T03:40:30.833Z"
+      }
+    },
+    "659519631685582878": {
+      "bugs": {
+        "channelId": "1426262408783200338",
+        "channelName": "🦠bugs-rafaelmatos7549",
+        "createdAt": "2025-10-10T17:26:27.418Z"
+      }
+    },
+    "916848610698739753": {
+      "bugs": {
+        "channelId": "1424044427856318605",
+        "channelName": "🦠bugs-nielmovi",
+        "createdAt": "2025-10-04T14:33:39.556Z"
+      }
+    },
+    "482284554649075762": {
+      "suporte": {
+        "channelId": "1424058260784287744",
+        "channelName": "📁suporte-denny_lima09",
+        "createdAt": "2025-10-04T15:28:37.119Z"
+      }
+    },
+    "1240436990051356672": {
+      "suporte": {
+        "channelId": "1424401123246211264",
+        "channelName": "📁suporte-jakep69",
+        "createdAt": "2025-10-05T14:10:55.743Z"
+      },
+      "doacoes": {
+        "channelId": "1428459468114624623",
+        "channelName": "💎doacoes-jakep69",
+        "createdAt": "2025-10-16T18:56:07.776Z"
+      },
+      "casas": {
+        "channelId": "1429204895491166311",
+        "channelName": "🏠casas-jakep69",
+        "createdAt": "2025-10-18T20:17:58.181Z"
+      }
+    },
+    "751428246750494831": {
+      "suporte": {
+        "channelId": "1424463971561509046",
+        "channelName": "📁suporte-luigibn",
+        "createdAt": "2025-10-05T18:20:38.825Z"
+      }
+    },
+    "998580175547674664": {
+      "suporte": {
+        "channelId": "1424558732448235581",
+        "channelName": "📁suporte-zeca_souza",
+        "createdAt": "2025-10-06T00:37:09.861Z"
+      }
+    },
+    "571472559690874896": {
+      "suporte": {
+        "channelId": "1424797739308290249",
+        "channelName": "📁suporte-l3irgab",
+        "createdAt": "2025-10-06T16:26:49.232Z"
+      }
+    },
+    "468975035457994772": {
+      "doacoes": {
+        "channelId": "1424820869896601610",
+        "channelName": "💎doacoes-taldorafa",
+        "createdAt": "2025-10-06T17:58:43.598Z"
+      }
+    },
+    "795164897519730718": {
+      "suporte": {
+        "channelId": "1424823717153869955",
+        "channelName": "📁suporte-mzdump",
+        "createdAt": "2025-10-06T18:10:02.378Z"
+      },
+      "bugs": {
+        "channelId": "1428935830029865063",
+        "channelName": "🦠bugs-mzdump",
+        "createdAt": "2025-10-18T02:28:52.854Z"
+      }
+    },
+    "423611686511968257": {
+      "suporte": {
+        "channelId": "1424837724480733284",
+        "channelName": "📁suporte-dgar_22",
+        "createdAt": "2025-10-06T19:05:41.710Z"
+      }
+    },
+    "812466100914749460": {
+      "suporte": {
+        "channelId": "1424910223524495441",
+        "channelName": "📁suporte-quatorze_serrado",
+        "createdAt": "2025-10-06T23:53:45.554Z"
+      }
+    },
+    "335878928973430784": {
+      "suporte": {
+        "channelId": "1424913343524769882",
+        "channelName": "📁suporte-duduzinsz",
+        "createdAt": "2025-10-07T00:06:09.371Z"
+      }
+    },
+    "1303532550177685526": {
+      "suporte": {
+        "channelId": "1425264596859748452",
+        "channelName": "📁suporte-duartdvj",
+        "createdAt": "2025-10-07T23:21:48.482Z"
+      }
+    },
+    "1357787865328783413": {
+      "suporte": {
+        "channelId": "1425270785764753490",
+        "channelName": "📁suporte-teaga98",
+        "createdAt": "2025-10-07T23:46:23.899Z"
+      }
+    },
+    "261284248873467907": {
+      "bugs": {
+        "channelId": "1425297015234887720",
+        "channelName": "🦠bugs-evigomes",
+        "createdAt": "2025-10-08T01:30:37.057Z"
+      },
+      "doacoes": {
+        "channelId": "1429949527971860510",
+        "channelName": "💎doacoes-evigomes",
+        "createdAt": "2025-10-20T21:36:39.007Z"
+      }
+    },
+    "691491814829588510": {
+      "suporte": {
+        "channelId": "1425307348351844466",
+        "channelName": "📁suporte-purpledryy4",
+        "createdAt": "2025-10-08T02:11:40.377Z"
+      }
+    },
+    "1117580945990631435": {
+      "bugs": {
+        "channelId": "1425889946899841115",
+        "channelName": "🦠bugs-indianodelas",
+        "createdAt": "2025-10-09T16:46:32.330Z"
+      }
+    },
+    "369843006741938178": {
+      "bugs": {
+        "channelId": "1425936769634926632",
+        "channelName": "🦠bugs-hangm4n",
+        "createdAt": "2025-10-09T19:52:34.821Z"
+      }
+    },
+    "289258807782277120": {
+      "suporte": {
+        "channelId": "1425974276816637962",
+        "channelName": "📁suporte-xdawn_",
+        "createdAt": "2025-10-09T22:21:36.572Z"
+      }
+    },
+    "245664836111826954": {
+      "casas": {
+        "channelId": "1426042485158842498",
+        "channelName": "🏠casas-d_senna",
+        "createdAt": "2025-10-10T02:52:37.517Z"
+      }
+    },
+    "531132498692800530": {
+      "denuncias": {
+        "channelId": "1426070144387383327",
+        "channelName": "⚠️denuncias-sonhodelas",
+        "createdAt": "2025-10-10T04:42:31.469Z"
+      }
+    },
+    "965826234242187305": {
+      "suporte": {
+        "channelId": "1426205189651697806",
+        "channelName": "📁suporte-iuri_20",
+        "createdAt": "2025-10-10T13:39:06.337Z"
+      },
+      "bugs": {
+        "channelId": "1430010665736736798",
+        "channelName": "🦠bugs-iuri_20",
+        "createdAt": "2025-10-21T01:39:34.299Z"
+      }
+    },
+    "1081324095494443019": {
+      "bugs": {
+        "channelId": "1426321627414790155",
+        "channelName": "🦠bugs-prositobr",
+        "createdAt": "2025-10-10T21:21:45.203Z"
+      }
+    },
+    "254598156401115136": {
+      "bugs": {
+        "channelId": "1426613831756677192",
+        "channelName": "🦠bugs-yanhideki",
+        "createdAt": "2025-10-11T16:42:46.988Z"
+      },
+      "suporte": {
+        "channelId": "1429298406345670676",
+        "channelName": "📁suporte-yanhideki",
+        "createdAt": "2025-10-19T02:29:31.185Z"
+      }
+    },
+    "951621052746829854": {
+      "bugs": {
+        "channelId": "1426784701540204604",
+        "channelName": "🦠bugs-kadson_83",
+        "createdAt": "2025-10-12T04:01:42.376Z"
+      }
+    },
+    "656500893369499674": {
+      "casas": {
+        "channelId": "1427001133947289660",
+        "channelName": "🏠casas-kayop1",
+        "createdAt": "2025-10-12T18:21:39.988Z"
+      }
+    },
+    "232850495826427905": {
+      "bugs": {
+        "channelId": "1427128046216806452",
+        "channelName": "🦠bugs-morezon",
+        "createdAt": "2025-10-13T02:45:56.043Z"
+      }
+    },
+    "1302012944426733660": {
+      "suporte": {
+        "channelId": "1427349465773379716",
+        "channelName": "📁suporte-rapnxx",
+        "createdAt": "2025-10-13T17:25:42.618Z"
+      },
+      "bugs": {
+        "channelId": "1429531438402769109",
+        "channelName": "🦠bugs-rapnxx",
+        "createdAt": "2025-10-19T17:55:26.197Z"
+      }
+    },
+    "630237771100848148": {
+      "bugs": {
+        "channelId": "1427373513274298510",
+        "channelName": "🦠bugs-praianadesoci",
+        "createdAt": "2025-10-13T19:01:15.534Z"
+      }
+    },
+    "528386935769530388": {
+      "suporte": {
+        "channelId": "1427499467371843627",
+        "channelName": "📁suporte-rm_player",
+        "createdAt": "2025-10-14T03:21:43.301Z"
+      }
+    },
+    "1406676514056962212": {
+      "revisao": {
+        "channelId": "1427742786123337780",
+        "channelName": "🔍revisao-bully_the_35033",
+        "createdAt": "2025-10-14T19:28:30.361Z"
+      }
+    },
+    "311388975514517504": {
+      "bugs": {
+        "channelId": "1427818939005796383",
+        "channelName": "🦠bugs-thalesl",
+        "createdAt": "2025-10-15T00:31:05.261Z"
+      }
+    },
+    "1306810974551932981": {
+      "bugs": {
+        "channelId": "1427854112703250564",
+        "channelName": "🦠bugs-nathanfranca0766",
+        "createdAt": "2025-10-15T02:50:50.723Z"
+      }
+    },
+    "1398089590535098369": {
+      "suporte": {
+        "channelId": "1427996377950191679",
+        "channelName": "📁suporte-ds_k59",
+        "createdAt": "2025-10-15T12:16:06.892Z"
+      }
+    },
+    "1086784887203307531": {
+      "suporte": {
+        "channelId": "1428066232971559085",
+        "channelName": "📁suporte-gabriel_silva_12",
+        "createdAt": "2025-10-15T16:53:40.493Z"
+      }
+    },
+    "955110516790026270": {
+      "suporte": {
+        "channelId": "1428148104015773878",
+        "channelName": "📁suporte-turco01",
+        "createdAt": "2025-10-15T22:18:58.491Z"
+      }
+    },
+    "768517370716880976": {
+      "suporte": {
+        "channelId": "1428159203473887312",
+        "channelName": "📁suporte-rdzinlindo",
+        "createdAt": "2025-10-15T23:03:04.571Z"
+      }
+    },
+    "231892022909206539": {
+      "suporte": {
+        "channelId": "1428178327495114842",
+        "channelName": "📁suporte-rafaeldias7231",
+        "createdAt": "2025-10-16T00:19:03.725Z"
+      }
+    },
+    "975837811435507784": {
+      "bugs": {
+        "channelId": "1428180609603211304",
+        "channelName": "🦠bugs-miara_",
+        "createdAt": "2025-10-16T00:28:07.821Z"
+      }
+    },
+    "692772637805641808": {
+      "suporte": {
+        "channelId": "1428189193804447796",
+        "channelName": "📁suporte-aristoteles272",
+        "createdAt": "2025-10-16T01:02:14.212Z"
+      }
+    },
+    "1203112715242045530": {
+      "suporte": {
+        "channelId": "1428220673209274449",
+        "channelName": "📁suporte-gallivr46_38070",
+        "createdAt": "2025-10-16T03:07:18.959Z"
+      }
+    },
+    "773566592264568863": {
+      "casas": {
+        "channelId": "1428253289471803443",
+        "channelName": "🏠casas-regrinha",
+        "createdAt": "2025-10-16T05:16:54.691Z"
+      }
+    },
+    "617749786954563586": {
+      "denuncias": {
+        "channelId": "1428453785101139978",
+        "channelName": "⚠️denuncias-roquebalada",
+        "createdAt": "2025-10-16T18:33:33.093Z"
+      }
+    },
+    "1220904889006166118": {
+      "suporte": {
+        "channelId": "1428472902826856699",
+        "channelName": "📁suporte-domingo335",
+        "createdAt": "2025-10-16T19:49:30.722Z"
+      }
+    },
+    "298223627843928066": {
+      "suporte": {
+        "channelId": "1428474777714299000",
+        "channelName": "📁suporte-sweetzl",
+        "createdAt": "2025-10-16T19:56:57.730Z"
+      }
+    },
+    "1128437654455865448": {
+      "bugs": {
+        "channelId": "1428483414797058280",
+        "channelName": "🦠bugs-mascaisa2003",
+        "createdAt": "2025-10-16T20:31:16.744Z"
+      }
+    },
+    "842544386805203004": {
+      "denuncias": {
+        "channelId": "1428495883225530588",
+        "channelName": "⚠️denuncias-flashzin8348",
+        "createdAt": "2025-10-16T21:20:49.286Z"
+      }
+    },
+    "356557117215473674": {
+      "denuncias": {
+        "channelId": "1428504233166114961",
+        "channelName": "⚠️denuncias-suzuki1574",
+        "createdAt": "2025-10-16T21:53:59.854Z"
+      },
+      "suporte": {
+        "channelId": "1429198980574613514",
+        "channelName": "📁suporte-suzuki1574",
+        "createdAt": "2025-10-18T19:54:28.030Z"
+      }
+    },
+    "358024300827115540": {
+      "bugs": {
+        "channelId": "1428507702946168852",
+        "channelName": "🦠bugs-akapjl",
+        "createdAt": "2025-10-16T22:07:47.001Z"
+      }
+    },
+    "1199558027091652670": {
+      "bugs": {
+        "channelId": "1428532180912574578",
+        "channelName": "🦠bugs-coldzaoo_24681",
+        "createdAt": "2025-10-16T23:45:02.648Z"
+      }
+    },
+    "761387198611456003": {
+      "bugs": {
+        "channelId": "1428543332656611412",
+        "channelName": "🦠bugs-di_menor",
+        "createdAt": "2025-10-17T00:29:21.277Z"
+      }
+    },
+    "552190047772737569": {
+      "bugs": {
+        "channelId": "1428557197222351038",
+        "channelName": "🦠bugs-lucianoandrade",
+        "createdAt": "2025-10-17T01:24:26.655Z"
+      }
+    },
+    "262976027024687104": {
+      "suporte": {
+        "channelId": "1428592410635665478",
+        "channelName": "📁suporte-vitao4594",
+        "createdAt": "2025-10-17T03:44:21.458Z"
+      }
+    },
+    "763946719493750814": {
+      "casas": {
+        "channelId": "1428786033645981756",
+        "channelName": "🏠casas-ferreira4406",
+        "createdAt": "2025-10-17T16:33:41.276Z"
+      }
+    },
+    "930529018703409272": {
+      "suporte": {
+        "channelId": "1429821098312204369",
+        "channelName": "📁suporte-gsilva046",
+        "createdAt": "2025-10-20T13:06:21.290Z"
+      }
+    },
+    "1095531233334792213": {
+      "denuncias": {
+        "channelId": "1428787626793504808",
+        "channelName": "⚠️denuncias-daniel_15_ad",
+        "createdAt": "2025-10-17T16:40:01.003Z"
+      }
+    },
+    "1116770617870524477": {
+      "casas": {
+        "channelId": "1428806046562127872",
+        "channelName": "🏠casas-seveenten",
+        "createdAt": "2025-10-17T17:53:12.376Z"
+      }
+    },
+    "619984512247660604": {
+      "casas": {
+        "channelId": "1428811724802363594",
+        "channelName": "🏠casas-patrick_dias",
+        "createdAt": "2025-10-17T18:15:46.023Z"
+      }
+    },
+    "310066400343359491": {
+      "bugs": {
+        "channelId": "1428833196363219109",
+        "channelName": "🦠bugs-otaldodark",
+        "createdAt": "2025-10-17T19:41:04.838Z"
+      }
+    },
+    "1091021569893072978": {
+      "suporte": {
+        "channelId": "1428869861827678208",
+        "channelName": "📁suporte-maex00",
+        "createdAt": "2025-10-17T22:06:46.110Z"
+      }
+    },
+    "647856289371652096": {
+      "suporte": {
+        "channelId": "1428875275961106442",
+        "channelName": "📁suporte-paulo_",
+        "createdAt": "2025-10-17T22:28:16.676Z"
+      },
+      "casas": {
+        "channelId": "1429514118238572544",
+        "channelName": "🏠casas-paulo_",
+        "createdAt": "2025-10-19T16:46:37.101Z"
+      }
+    },
+    "1368835460847374466": {
+      "boost": {
+        "channelId": "1428879708870672424",
+        "channelName": "🚀boost-mtzin_rlk007",
+        "createdAt": "2025-10-17T22:45:53.454Z"
+      }
+    },
+    "1277734674579460221": {
+      "bugs": {
+        "channelId": "1428890654863265903",
+        "channelName": "🦠bugs-paulogrif",
+        "createdAt": "2025-10-17T23:29:23.029Z"
+      }
+    },
+    "532643451192213515": {
+      "suporte": {
+        "channelId": "1428930353904484404",
+        "channelName": "📁suporte-gordodrama152",
+        "createdAt": "2025-10-18T02:07:07.253Z"
+      }
+    },
+    "695797355928354963": {
+      "suporte": {
+        "channelId": "1429081621302087680",
+        "channelName": "📁suporte-fabiosabariego87",
+        "createdAt": "2025-10-18T12:08:09.499Z"
+      }
+    },
+    "728266275381444700": {
+      "bugs": {
+        "channelId": "1429106388747161620",
+        "channelName": "🦠bugs-tiao3428",
+        "createdAt": "2025-10-18T13:46:34.067Z"
+      }
+    },
+    "212618550886531073": {
+      "boost": {
+        "channelId": "1429107230111694921",
+        "channelName": "🚀boost-gabirujb",
+        "createdAt": "2025-10-18T13:49:55.537Z"
+      }
+    },
+    "616564779187830786": {
+      "suporte": {
+        "channelId": "1429111919511343347",
+        "channelName": "📁suporte-degusr",
+        "createdAt": "2025-10-18T14:08:32.609Z"
+      }
+    },
+    "1008851002021130290": {
+      "casas": {
+        "channelId": "1429149061315035221",
+        "channelName": "🏠casas-willsouza",
+        "createdAt": "2025-10-18T16:36:07.320Z"
+      }
+    },
+    "1105206931112607744": {
+      "casas": {
+        "channelId": "1429186225486696631",
+        "channelName": "🏠casas-andrejunio",
+        "createdAt": "2025-10-18T19:03:47.229Z"
+      },
+      "boost": {
+        "channelId": "1429925501119762572",
+        "channelName": "🚀boost-andrejunio",
+        "createdAt": "2025-10-20T20:01:11.033Z"
+      }
+    },
+    "1038929143418585148": {
+      "suporte": {
+        "channelId": "1429200893965897933",
+        "channelName": "📁suporte-gustavo40wf5473",
+        "createdAt": "2025-10-18T20:02:04.359Z"
+      }
+    },
+    "903208522995630090": {
+      "suporte": {
+        "channelId": "1429226264455282792",
+        "channelName": "📁suporte-meu_nome_e_david",
+        "createdAt": "2025-10-18T21:42:52.570Z"
+      },
+      "casas": {
+        "channelId": "1429942519944445972",
+        "channelName": "🏠casas-meu_nome_e_david",
+        "createdAt": "2025-10-20T21:08:48.286Z"
+      }
+    },
+    "172076520288944128": {
+      "bugs": {
+        "channelId": "1429235815070044190",
+        "channelName": "🦠bugs-douglinhas7472",
+        "createdAt": "2025-10-18T22:20:49.378Z"
+      }
+    },
+    "1211127060433739878": {
+      "bugs": {
+        "channelId": "1429251747041247303",
+        "channelName": "🦠bugs-brayan733",
+        "createdAt": "2025-10-18T23:24:07.736Z"
+      }
+    },
+    "977203359587115038": {
+      "revisao": {
+        "channelId": "1429517119376199761",
+        "channelName": "🔍revisao-lucaaas4i20",
+        "createdAt": "2025-10-19T16:58:32.637Z"
+      }
+    },
+    "464543624651341825": {
+      "suporte": {
+        "channelId": "1429277716385104023",
+        "channelName": "📁suporte-_elonmuskito",
+        "createdAt": "2025-10-19T01:07:18.701Z"
+      }
+    },
+    "757243045170380871": {
+      "denuncias": {
+        "channelId": "1429323776520228924",
+        "channelName": "⚠️denuncias-uzumaki7940",
+        "createdAt": "2025-10-19T04:10:19.443Z"
+      }
+    },
+    "553418175124078612": {
+      "casas": {
+        "channelId": "1429330927498170379",
+        "channelName": "🏠casas-ervaodoidao6504",
+        "createdAt": "2025-10-19T04:38:44.379Z"
+      }
+    },
+    "1199371339383984168": {
+      "suporte": {
+        "channelId": "1429355475220041748",
+        "channelName": "📁suporte-andrehenrique0898",
+        "createdAt": "2025-10-19T06:16:16.444Z"
+      }
+    },
+    "759549286970818561": {
+      "suporte": {
+        "channelId": "1429470204227747992",
+        "channelName": "📁suporte-juniormendes457",
+        "createdAt": "2025-10-19T13:52:07.932Z"
+      }
+    },
+    "377862544699949056": {
+      "casas": {
+        "channelId": "1429503483597422652",
+        "channelName": "🏠casas-vinicius_lopo",
+        "createdAt": "2025-10-19T16:04:21.755Z"
+      }
+    },
+    "480410869071609856": {
+      "bugs": {
+        "channelId": "1429511160226644038",
+        "channelName": "🦠bugs-fawkziny_",
+        "createdAt": "2025-10-19T16:34:51.932Z"
+      }
+    },
+    "809475788856229988": {
+      "suporte": {
+        "channelId": "1429512843232805007",
+        "channelName": "📁suporte-jefao",
+        "createdAt": "2025-10-19T16:41:33.107Z"
+      }
+    },
+    "630060143693922315": {
+      "doacoes": {
+        "channelId": "1429522247424544989",
+        "channelName": "💎doacoes-menorhl",
+        "createdAt": "2025-10-19T17:18:55.169Z"
+      }
+    },
+    "1199726910964506684": {
+      "bugs": {
+        "channelId": "1429524706209435678",
+        "channelName": "🦠bugs-doroba778",
+        "createdAt": "2025-10-19T17:28:41.220Z"
+      }
+    },
+    "614152970170531849": {
+      "bugs": {
+        "channelId": "1429551844069347510",
+        "channelName": "🦠bugs-lucasbong",
+        "createdAt": "2025-10-19T19:16:30.900Z"
+      }
+    },
+    "696887020852871288": {
+      "bugs": {
+        "channelId": "1429557038899400764",
+        "channelName": "🦠bugs-kaio_martins",
+        "createdAt": "2025-10-19T19:37:09.469Z"
+      }
+    },
+    "327519483507900418": {
+      "bugs": {
+        "channelId": "1429567586097561710",
+        "channelName": "🦠bugs-bck13",
+        "createdAt": "2025-10-19T20:19:03.815Z"
+      }
+    },
+    "435065493238448142": {
+      "casas": {
+        "channelId": "1429665112586981598",
+        "channelName": "🏠casas-junior_correaa",
+        "createdAt": "2025-10-20T02:46:34.211Z"
+      },
+      "bugs": {
+        "channelId": "1430036826885849208",
+        "channelName": "🦠bugs-junior_correaa",
+        "createdAt": "2025-10-21T03:23:31.184Z"
+      }
+    },
+    "661409592424529921": {
+      "denuncias": {
+        "channelId": "1429684313141809193",
+        "channelName": "⚠️denuncias-hiagosantana",
+        "createdAt": "2025-10-20T04:02:51.741Z"
+      }
+    },
+    "1284288446239739915": {
+      "suporte": {
+        "channelId": "1429694372097560679",
+        "channelName": "📁suporte-felipericardo94",
+        "createdAt": "2025-10-20T04:42:51.047Z"
+      }
+    },
+    "798642934412476436": {
+      "bugs": {
+        "channelId": "1429831561108389899",
+        "channelName": "🦠bugs-hz5drift",
+        "createdAt": "2025-10-20T13:47:56.050Z"
+      }
+    },
+    "603935286396977196": {
+      "suporte": {
+        "channelId": "1429834144506052618",
+        "channelName": "📁suporte-jparlz_",
+        "createdAt": "2025-10-20T13:58:11.509Z"
+      }
+    },
+    "1208200590354554990": {
+      "bugs": {
+        "channelId": "1429848278194982932",
+        "channelName": "🦠bugs-pezaosk8420",
+        "createdAt": "2025-10-20T14:54:20.997Z"
+      }
+    },
+    "895767687693750343": {
+      "suporte": {
+        "channelId": "1429851832343199745",
+        "channelName": "📁suporte-durbandream1337",
+        "createdAt": "2025-10-20T15:08:28.380Z"
+      }
+    },
+    "761848968757903361": {
+      "suporte": {
+        "channelId": "1429856116145262712",
+        "channelName": "📁suporte-pobreloko2024",
+        "createdAt": "2025-10-20T15:25:29.563Z"
+      }
+    },
+    "650532478338990161": {
+      "boost": {
+        "channelId": "1429861868649971868",
+        "channelName": "🚀boost-ruttzx",
+        "createdAt": "2025-10-20T15:48:20.976Z"
+      }
+    },
+    "387369126487916544": {
+      "suporte": {
+        "channelId": "1429872489219096698",
+        "channelName": "📁suporte-pedroelias3905567",
+        "createdAt": "2025-10-20T16:30:32.932Z"
+      }
+    },
+    "1362205047265431582": {
+      "suporte": {
+        "channelId": "1429912765081845920",
+        "channelName": "📁suporte-brennoguima",
+        "createdAt": "2025-10-20T19:10:34.707Z"
+      }
+    },
+    "614833924736155670": {
+      "bugs": {
+        "channelId": "1429918393024385136",
+        "channelName": "🦠bugs-thur_61",
+        "createdAt": "2025-10-20T19:32:56.543Z"
+      }
+    },
+    "397029371581562881": {
+      "doacoes": {
+        "channelId": "1429950095163658281",
+        "channelName": "💎doacoes-clebinholight",
+        "createdAt": "2025-10-20T21:38:54.224Z"
+      }
+    },
+    "780522749126639676": {
+      "bugs": {
+        "channelId": "1429951698801266718",
+        "channelName": "🦠bugs-_ferrar1_",
+        "createdAt": "2025-10-20T21:45:16.558Z"
+      }
+    },
+    "934449813381083156": {
+      "bugs": {
+        "channelId": "1429969508910759947",
+        "channelName": "🦠bugs-jiraya_08",
+        "createdAt": "2025-10-20T22:56:02.486Z"
+      }
+    },
+    "618603884444778527": {
+      "suporte": {
+        "channelId": "1429976808698282024",
+        "channelName": "📁suporte-douglasorg",
+        "createdAt": "2025-10-20T23:25:02.811Z"
+      }
+    },
+    "612777321962930189": {
+      "denuncias": {
+        "channelId": "1429978288809578568",
+        "channelName": "⚠️denuncias-arthurmaranhao",
+        "createdAt": "2025-10-20T23:30:55.729Z"
+      }
+    },
+    "1330890567910948978": {
+      "suporte": {
+        "channelId": "1429985055840927948",
+        "channelName": "📁suporte-sgt_eduardo",
+        "createdAt": "2025-10-20T23:57:48.912Z"
+      }
+    },
+    "900024010115547178": {
+      "denuncias": {
+        "channelId": "1429992337559523398",
+        "channelName": "⚠️denuncias-aim_ml",
+        "createdAt": "2025-10-21T00:26:44.851Z"
+      }
+    },
+    "1382911477001748491": {
+      "suporte": {
+        "channelId": "1429996515652534354",
+        "channelName": "📁suporte-nicosagatsu",
+        "createdAt": "2025-10-21T00:43:20.902Z"
+      }
+    },
+    "992501250853716080": {
+      "casas": {
+        "channelId": "1430000929964560394",
+        "channelName": "🏠casas-jucabala0071",
+        "createdAt": "2025-10-21T01:00:53.311Z"
+      }
+    },
+    "658514501452431360": {
+      "doacoes": {
+        "channelId": "1430007118563512350",
+        "channelName": "💎doacoes-lucasstojan",
+        "createdAt": "2025-10-21T01:25:28.617Z"
+      }
+    },
+    "941026890410512404": {
+      "suporte": {
+        "channelId": "1430012794912378890",
+        "channelName": "📁suporte-pataquinho_",
+        "createdAt": "2025-10-21T01:48:02.006Z"
+      }
+    },
+    "450443153070358539": {
+      "denuncias": {
+        "channelId": "1430013634662371368",
+        "channelName": "⚠️denuncias-timotioidv",
+        "createdAt": "2025-10-21T01:51:22.066Z"
+      }
+    },
+    "1063317229296431104": {
+      "bugs": {
+        "channelId": "1430020679528349896",
+        "channelName": "🦠bugs-sharkzinxl",
+        "createdAt": "2025-10-21T02:19:21.649Z"
+      }
+    },
+    "411617069923172352": {
+      "suporte": {
+        "channelId": "1430023514877853796",
+        "channelName": "📁suporte-ruancezar5085",
+        "createdAt": "2025-10-21T02:30:37.529Z"
+      }
+    },
+    "392863371306991617": {
+      "bugs": {
+        "channelId": "1430023597430280243",
+        "channelName": "🦠bugs-shakira9579",
+        "createdAt": "2025-10-21T02:30:57.258Z"
+      }
+    },
+    "644362402732703775": {
+      "bugs": {
+        "channelId": "1430032302364430346",
+        "channelName": "🦠bugs-thekinho",
+        "createdAt": "2025-10-21T03:05:32.493Z"
+      }
+    },
+    "440938436367613953": {
+      "bugs": {
+        "channelId": "1430037840527360070",
+        "channelName": "🦠bugs-barroso1307",
+        "createdAt": "2025-10-21T03:27:32.760Z"
+      }
+    },
+    "1044343385839898768": {
+      "denuncias": {
+        "channelId": "1430076192488292382",
+        "channelName": "⚠️denuncias-thyfreire",
+        "createdAt": "2025-10-21T05:59:55.991Z"
+      }
+    },
+    "851609920071794759": {
+      "revisao": {
+        "channelId": "1430079888035024987",
+        "channelName": "🔍revisao-silva031",
+        "createdAt": "2025-10-21T06:14:36.894Z"
+      }
+    },
+    "1017852643000975391": {
+      "suporte": {
+        "channelId": "1430095720244969603",
+        "channelName": "📁suporte-falken9290",
+        "createdAt": "2025-10-21T07:17:31.346Z"
+      }
+    },
+    "465785007865331713": {
+      "suporte": {
+        "channelId": "1430123153384013844",
+        "channelName": "📁suporte-hugo_dias_18",
+        "createdAt": "2025-10-21T09:06:31.410Z"
+      }
+    },
+    "291320680723644417": {
+      "suporte": {
+        "channelId": "1430159730650910731",
+        "channelName": "📁suporte-kaianxzp1",
+        "createdAt": "2025-10-21T11:31:51.469Z"
+      }
+    },
+    "887160577624002592": {
+      "boost": {
+        "channelId": "1430164064000020480",
+        "channelName": "🚀boost-juniorbrz1",
+        "createdAt": "2025-10-21T11:49:04.625Z"
+      }
+    },
+    "226096029236330497": {
+      "casas": {
+        "channelId": "1430182228155039754",
+        "channelName": "🏠casas-feduarte",
+        "createdAt": "2025-10-21T13:01:14.933Z"
+      }
+    },
+    "626411163910930442": {
+      "boost": {
+        "channelId": "1430186892518887464",
+        "channelName": "🚀boost-careca_fps01",
+        "createdAt": "2025-10-21T13:19:46.924Z"
+      }
+    },
+    "652890588802318359": {
+      "bugs": {
+        "channelId": "1430195025790369964",
+        "channelName": "🦠bugs-alessandrofg3",
+        "createdAt": "2025-10-21T13:52:05.849Z"
+      }
+    },
+    "731635263192694884": {
+      "doacoes": {
+        "channelId": "1430206892843729047",
+        "channelName": "💎doacoes-gugasagat",
+        "createdAt": "2025-10-21T14:39:15.043Z"
+      }
+    },
+    "422561772440911874": {
+      "boost": {
+        "channelId": "1430214902416408576",
+        "channelName": "🚀boost-rzdsx",
+        "createdAt": "2025-10-21T15:11:04.624Z"
+      }
+    },
+    "571156049516691469": {
+      "revisao": {
+        "channelId": "1430221847852613653",
+        "channelName": "🔍revisao-ilang6213",
+        "createdAt": "2025-10-21T15:38:40.308Z"
+      }
+    },
+    "332503662868037632": {
+      "denuncias": {
+        "channelId": "1430222134709583882",
+        "channelName": "⚠️denuncias-keltonr",
+        "createdAt": "2025-10-21T15:39:48.641Z"
+      }
+    },
+    "390859682735980565": {
+      "bugs": {
+        "channelId": "1430227531273076767",
+        "channelName": "🦠bugs-10k2258",
+        "createdAt": "2025-10-21T16:01:15.205Z"
+      }
+    },
+    "410809640964587521": {
+      "suporte": {
+        "channelId": "1430227631730720941",
+        "channelName": "📁suporte-gohu04",
+        "createdAt": "2025-10-21T16:01:39.153Z"
+      }
+    },
+    "1008707152229183608": {
+      "suporte": {
+        "channelId": "1430227989462908968",
+        "channelName": "📁suporte-anderzin",
+        "createdAt": "2025-10-21T16:03:04.394Z"
+      }
+    },
+    "305144362038329344": {
+      "suporte": {
+        "channelId": "1430235040364757002",
+        "channelName": "📁suporte-suziraiolaser",
+        "createdAt": "2025-10-21T16:31:05.440Z"
+      }
+    },
+    "807754720206651432": {
+      "suporte": {
+        "channelId": "1430236597273628683",
+        "channelName": "📁suporte-rudeboy91x",
+        "createdAt": "2025-10-21T16:37:16.552Z"
+      }
+    },
+    "1180904193268121701": {
+      "suporte": {
+        "channelId": "1430238316690673725",
+        "channelName": "📁suporte-zinagoat",
+        "createdAt": "2025-10-21T16:44:06.433Z"
+      }
+    }
+  }
 }

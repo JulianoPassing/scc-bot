@@ -65,12 +65,20 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para "noel" (mensagem exata)
     if (message.content.toLowerCase().trim() === 'noel') {
+<<<<<<< HEAD
+      await message.reply('Esse viadinho deve estar pensando em como derrubar a cidade hoje');
+=======
       await message.reply('Noel deve estar pensando em como derrubar a cidade hoje');
+>>>>>>> f9e152d844be080d1b67c591adea206d0c1f682d
     }
     
     // Resposta para "ph" (mensagem exata)
     if (message.content.toLowerCase().trim() === 'ph') {
+<<<<<<< HEAD
+      await message.reply('**🏳️‍🌈 PH, esse nasceu pra mamar o Noel!**');
+=======
       await message.reply('🏳️‍🌈 PH, esse se deita com iguais!');
+>>>>>>> f9e152d844be080d1b67c591adea206d0c1f682d
     }
     
     // Resposta para "jeeh" (mensagem exata)
@@ -83,8 +91,13 @@ const setupBateBapoModule = function(client) {
       await message.reply('🎅🏻 Abuser? Provavelmente você está falando do Noel');
     }
     
+<<<<<<< HEAD
+    // Resposta para "Jack"
+    if (message.content.toLowerCase().includes('jack')) {
+=======
     // Resposta para "jack" (mensagem exata)
     if (message.content.toLowerCase().trim() === 'jack') {
+>>>>>>> f9e152d844be080d1b67c591adea206d0c1f682d
       await message.reply('Jack, esse cara é o melhor em sortear o caneco!');
     }
     

@@ -39,7 +39,7 @@ const setupBateBapoModule = function(client) {
     if (message.content.toLowerCase().trim() === 'caiu' || 
         message.content.toLowerCase().trim() === 'f' || 
         message.content.toLowerCase().includes('servidor ta off')) {
-      await message.reply('Tente acessar pelo <#1046404064004558923>, caso não resolva, tenta fazer os procedimentos de <#1332835981874827304>.\nCaso persista <@1387031132343763086> ou entrar na call <#1046404065241862193>.');
+      await message.reply('Tente acessar pelo <#1046404064004558923>, caso não resolva, tenta fazer os procedimentos de <#1332835981874827304>.\nCaso persista <@1387031132343763086> ou entrar na call <#1046404065241862193>. PS: Provavelmente foi o Noel');
     }
     
     // Resposta para "An"
@@ -64,13 +64,13 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para "Noel"
     if (message.content.toLowerCase().trim() === 'noel') {
-      await message.reply('Noel é foda! 🎅🏻');
+      await message.reply('Esse viadinho deve estar pensando em como derrubar a cidade hoje');
     }
     
     
     // Resposta para "PH"
     if (message.content.toLowerCase().trim() === 'ph') {
-      await message.reply('**🏳️‍🌈 PH, esse se deita com iguais**');
+      await message.reply('**🏳️‍🌈 PH, esse nasceu pra mamar o Noel!**');
     }
     
     // Resposta para "Jeeh"
@@ -85,7 +85,7 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para "Jack"
     if (message.content.toLowerCase().includes('jack')) {
-      await message.reply('Jack, esse gosta de sortear o caneco 🍺');
+      await message.reply('Jack, esse cara é o melhor em sortear o caneco!');
     }
     
     // Comando especial do usuário 405487427327885313

@@ -1,170 +1,164 @@
 {
   "384772320918765580": {
-    "total": 1,
-    "count": 1,
-    "panelMessageId": "1413348660888211587",
+    "total": 25,
+    "count": 5,
+    "panelMessageId": "1413523501872316529",
     "panelChannelId": "1394727160991842324"
   },
   "411224920085889024": {
-    "total": 20,
-    "count": 4,
-    "panelMessageId": "1413348661915815948",
+    "total": 36,
+    "count": 8,
+    "panelMessageId": "1413523503235334286",
     "panelChannelId": "1394727160991842324"
   },
   "405487427327885313": {
-    "total": 43,
-    "count": 9,
-    "panelMessageId": "1413348662758609001",
+    "total": 161,
+    "count": 33,
+    "panelMessageId": "1413523504309211296",
     "panelChannelId": "1394727160991842324"
   },
   "1004721127630852126": {
-    "total": 227,
-    "count": 47,
-    "panelMessageId": "1413348663861706813",
+    "total": 241,
+    "count": 49,
+    "panelMessageId": "1413523505332490380",
     "panelChannelId": "1394727160991842324"
   },
   "353389197534691328": {
-    "total": 146,
-    "count": 31,
-    "panelMessageId": "1413348665015144572",
+    "total": 281,
+    "count": 57,
+    "panelMessageId": "1413523506683187330",
     "panelChannelId": "1394727160991842324"
   },
   "1040379101569110058": {
-    "total": 45,
-    "count": 9,
-    "panelMessageId": "1413348683507826869",
+    "total": 75,
+    "count": 15,
+    "panelMessageId": "1413523507962314752",
     "panelChannelId": "1394727160991842324"
   },
   "248244724220166144": {
-    "total": 65,
-    "count": 13,
-    "panelMessageId": "1413348687198949407",
+    "total": 40,
+    "count": 8,
+    "panelMessageId": "1413523528418070582",
     "panelChannelId": "1394727160991842324"
   },
   "1353591233393590273": {
-    "total": 320,
-    "count": 65,
-    "panelMessageId": "1413348684665720927",
+    "total": 589,
+    "count": 118,
+    "panelMessageId": "1413523529953185823",
     "panelChannelId": "1394727160991842324"
   },
   "334847663377743874": {
-    "total": 305,
-    "count": 61,
-    "panelMessageId": "1413348686024675380",
+    "total": 548,
+    "count": 110,
+    "panelMessageId": "1413523530993242396",
     "panelChannelId": "1394727160991842324"
   },
   "1292163385370083527": {
-    "total": 189,
-    "count": 38,
-    "panelMessageId": "1413348688293531709",
+    "total": 265,
+    "count": 53,
+    "panelMessageId": "1413523532427690095",
     "panelChannelId": "1394727160991842324"
   },
   "688023538569052160": {
-    "total": 61,
-    "count": 13,
-    "panelMessageId": "1413348689325330512",
+    "total": 5,
+    "count": 1,
+    "panelMessageId": "1413523533706825748",
     "panelChannelId": "1394727160991842324"
   },
   "735293119142166528": {
-    "total": 255,
-    "count": 51,
-    "panelMessageId": "1413348710540116038",
+    "total": 530,
+    "count": 106,
+    "panelMessageId": "1413523534646612011",
     "panelChannelId": "1394727160991842324"
   },
   "1207174326730891364": {
-    "total": 10,
-    "count": 2,
-    "panelMessageId": "1413348711093895281",
+    "total": 52,
+    "count": 12,
+    "panelMessageId": "1413523555835973752",
     "panelChannelId": "1394727160991842324"
   },
   "245664836111826954": {
     "total": 0,
     "count": 0,
-    "panelMessageId": "1413348712692060160",
-    "panelChannelId": "1394727160991842324"
-  },
-  "377862544699949056": {
-    "total": 5,
-    "count": 1,
-    "panelMessageId": "1413348714432430223",
-    "panelChannelId": "1394727160991842324"
-  },
-  "585154352197402678": {
-    "total": 0,
-    "count": 0,
-    "panelMessageId": "1413348716089315454",
-    "panelChannelId": "1394727160991842324"
-  },
-  "497925926068289542": {
-    "total": 0,
-    "count": 0,
-    "panelMessageId": "1413348737538850888",
-    "panelChannelId": "1394727160991842324"
-  },
-  "706293464123310232": {
-    "total": 465,
-    "count": 93,
-    "panelMessageId": "1413348768903860294",
-    "panelChannelId": "1394727160991842324"
-  },
-  "949819918633807892": {
-    "total": 225,
-    "count": 45,
-    "panelMessageId": "1413348741964107806",
-    "panelChannelId": "1394727160991842324"
-  },
-  "1149401292381360139": {
-    "total": 400,
-    "count": 81,
-    "panelMessageId": "1413348743192903760",
-    "panelChannelId": "1394727160991842324"
-  },
-  "636805503019646976": {
-    "total": 352,
-    "count": 72,
-    "panelMessageId": "1413348740118614099",
-    "panelChannelId": "1394727160991842324"
-  },
-  "494236811292442654": {
-    "total": 165,
-    "count": 33,
-    "panelMessageId": "1413348744359055502",
-    "panelChannelId": "1394727160991842324"
-  },
-  "406277313647607820": {
-    "total": 0,
-    "count": 0,
-    "panelMessageId": "1397257042363940864",
-    "panelChannelId": "1394727160991842324"
-  },
-  "703349895842758828": {
-    "total": 30,
-    "count": 6,
-    "panelMessageId": "1413348765397553297",
-    "panelChannelId": "1394727160991842324"
-  },
-  "374686893960593409": {
-    "total": 30,
-    "count": 6,
-    "panelMessageId": "1413348767721324585",
-    "panelChannelId": "1394727160991842324"
-  },
-  "399363715238985729": {
-    "total": 20,
-    "count": 4,
-    "panelMessageId": "1413348739061649520",
-    "panelChannelId": "1394727160991842324"
-  },
-  "1036392381345435728": {
-    "total": 55,
-    "count": 11,
-    "panelMessageId": "1413348770250362920",
+    "panelMessageId": "1413523557404774481",
     "panelChannelId": "1394727160991842324"
   },
   "1073594175691427900": {
     "total": 0,
     "count": 0,
-    "panelMessageId": "1413348713732116601",
+    "panelMessageId": "1413523558553882655",
+    "panelChannelId": "1394727160991842324"
+  },
+  "377862544699949056": {
+    "total": 15,
+    "count": 3,
+    "panelMessageId": "1413523559661309982",
+    "panelChannelId": "1394727160991842324"
+  },
+  "585154352197402678": {
+    "total": 0,
+    "count": 0,
+    "panelMessageId": "1413523560718405725",
+    "panelChannelId": "1394727160991842324"
+  },
+  "497925926068289542": {
+    "total": 5,
+    "count": 1,
+    "panelMessageId": "1413523561745744035",
+    "panelChannelId": "1394727160991842324"
+  },
+  "949819918633807892": {
+    "total": 235,
+    "count": 47,
+    "panelMessageId": "1413523582306484274",
+    "panelChannelId": "1394727160991842324"
+  },
+  "1149401292381360139": {
+    "total": 398,
+    "count": 80,
+    "panelMessageId": "1413523583032098908",
+    "panelChannelId": "1394727160991842324"
+  },
+  "636805503019646976": {
+    "total": 425,
+    "count": 85,
+    "panelMessageId": "1413523584231673957",
+    "panelChannelId": "1394727160991842324"
+  },
+  "494236811292442654": {
+    "total": 225,
+    "count": 45,
+    "panelMessageId": "1413523585456406669",
+    "panelChannelId": "1394727160991842324"
+  },
+  "703349895842758828": {
+    "total": 280,
+    "count": 56,
+    "panelMessageId": "1413523586295140433",
+    "panelChannelId": "1394727160991842324"
+  },
+  "374686893960593409": {
+    "total": 80,
+    "count": 16,
+    "panelMessageId": "1413523604661866558",
+    "panelChannelId": "1394727160991842324"
+  },
+  "706293464123310232": {
+    "total": 415,
+    "count": 83,
+    "panelMessageId": "1413523606864138261",
+    "panelChannelId": "1394727160991842324"
+  },
+  "399363715238985729": {
+    "total": 150,
+    "count": 30,
+    "panelMessageId": "1413523608260837508",
+    "panelChannelId": "1394727160991842324"
+  },
+  "1036392381345435728": {
+    "total": 325,
+    "count": 65,
+    "panelMessageId": "1413523609326190642",
     "panelChannelId": "1394727160991842324"
   }
 }

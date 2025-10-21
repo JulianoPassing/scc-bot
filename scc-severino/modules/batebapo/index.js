@@ -26,8 +26,8 @@ const setupBateBapoModule = function(client) {
       await message.reply('Se está com problemas de renderização, teste <#1332833912698834996>');
     }
     
-    // Resposta para "RR" (inclui em qualquer parte)
-    if (message.content.toLowerCase().includes('rr')) {
+    // Resposta para "RR" (palavra isolada)
+    if (/\brr\b/i.test(message.content)) {
       await message.reply('Se sua dúvida for referente aos horários de RR, temos aqui <#1369722870820900995>');
     }
     

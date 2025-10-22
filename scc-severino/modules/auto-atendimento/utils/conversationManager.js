@@ -14,7 +14,7 @@ class ConversationManager {
     this.conversations.set(channelId, {
       userId,
       type,
-      step: 'initial', // initial, waiting_description, waiting_id, waiting_id_plate, waiting_verification
+      step: 'initial', // initial, waiting_description, waiting_print, waiting_id, waiting_id_plate, waiting_verification
       data: {},
       createdAt: new Date()
     });

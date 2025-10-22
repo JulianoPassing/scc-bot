@@ -25,9 +25,10 @@ Sistema automatizado de atendimento para problemas comuns de jogadores, com flux
 1. Jogador clica no botão "Limbo" no painel
 2. Bot cria canal privado de atendimento
 3. Bot pergunta: "Me conte o que aconteceu"
-4. Bot pergunta: "Me fale seu ID atual"
-5. Bot envia comando `!teleport <id>` para o servidor da staff
-6. Bot pergunta: "Você foi teleportado?"
+4. Bot pede: "Envie um print da tela do jogo"
+5. Bot pergunta: "Me fale seu ID atual"
+6. Bot envia comando `!teleport <id>` para o servidor da staff
+7. Bot pergunta: "Você foi teleportado?"
    - **Sim**: Encerra atendimento e mantém ticket aberto para análise
    - **Não**: Marca equipe de suporte (@role)
 
@@ -36,9 +37,10 @@ Sistema automatizado de atendimento para problemas comuns de jogadores, com flux
 1. Jogador clica no botão "Guincho" no painel
 2. Bot cria canal privado de atendimento
 3. Bot pergunta: "Me conte o que aconteceu"
-4. Bot pergunta: "Me fale seu ID atual e a PLACA do veículo"
-5. Bot envia comando `!guinchar <id> <placa>` para o servidor da staff
-6. Bot pergunta: "Seu veículo foi guinchado?"
+4. Bot pede: "Envie um print da tela do jogo"
+5. Bot pergunta: "Me fale seu ID atual e a PLACA do veículo"
+6. Bot envia comando `!guinchar <id> <placa>` para o servidor da staff
+7. Bot pergunta: "Seu veículo foi guinchado?"
    - **Sim**: Encerra atendimento e mantém ticket aberto para análise
    - **Não**: Marca equipe de suporte (@role)
 
@@ -134,6 +136,7 @@ O módulo mantém o estado de cada conversação:
 
 - `initial`: Ticket criado, aguardando primeira resposta
 - `waiting_description`: Aguardando descrição do problema
+- `waiting_print`: Aguardando print da tela do jogo
 - `waiting_id`: Aguardando ID (Limbo)
 - `waiting_id_plate`: Aguardando ID e Placa (Guincho)
 - `waiting_verification`: Aguardando verificação se foi resolvido

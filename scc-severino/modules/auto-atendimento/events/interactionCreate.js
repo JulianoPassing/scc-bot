@@ -146,12 +146,16 @@ async function handleVerification(interaction, client) {
         .setTitle('✅ Atendimento Concluído')
         .setDescription(
           'Fico feliz em ter ajudado! Seu problema foi resolvido.\n\n' +
-          '**Este ticket ficará aberto para análise da nossa equipe.**'
+          `**Este ticket ficará aberto para análise da nossa equipe.**\n\n` +
+          `<@&${config.supportRoleId}>, atendimento concluído. Por favor, analisem se não houve uso indevido.`
         )
         .setColor('#00FF00')
         .setTimestamp();
 
-      await interaction.channel.send({ embeds: [embed] });
+      await interaction.channel.send({
+        content: `<@&${config.supportRoleId}>`,
+        embeds: [embed]
+      });
 
       // Remove a conversação
       conversationManager.removeConversation(interaction.channel.id);

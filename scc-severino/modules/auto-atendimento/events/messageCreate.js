@@ -31,6 +31,9 @@ export default {
         case 'waiting_description':
           await handleDescription(message, conversation, client);
           break;
+        case 'waiting_print':
+          await handlePrint(message, conversation, client);
+          break;
         case 'waiting_id':
           await handleIdLimbo(message, conversation, client);
           break;
@@ -52,9 +55,41 @@ async function handleDescription(message, conversation, client) {
   const description = message.content;
 
   // Salva a descrição
-  conversationManager.updateStep(message.channel.id, 
+  conversationManager.updateStep(message.channel.id, 'waiting_print', { description });
+
+  // Pede o print da tela
+  const embed = new EmbedBuilder()
+    .setTitle('📸 Print da Tela')
+    .setDescription(
+      '**Por favor, envie um print (screenshot) da tela do seu jogo mostrando a situação.**\n\n' +
+      '⚠️ O print deve ser uma imagem anexada à mensagem.'
+    )
+    .setColor('#0099FF')
+    .setTimestamp();
+
+  await message.reply({ embeds: [embed] });
+}
+
+/**
+ * Lida com o print da tela
+ */
+async function handlePrint(message, conversation, client) {
+  // Verifica se a mensagem tem anexos de imagem
+  const hasImage = message.attachments.size > 0 && 
+    message.attachments.some(att => att.contentType && att.contentType.startsWith('image/'));
+
+  if (!hasImage) {
+    return message.reply('❌ Por favor, envie uma imagem (print da tela do jogo) como anexo.');
+  }
+
+  // Pega a URL da primeira imagem
+  const imageAttachment = message.attachments.find(att => att.contentType && att.contentType.startsWith('image/'));
+  
+  // Salva o print e avança para o próximo passo
+  conversationManager.updateStep(
+    message.channel.id, 
     conversation.type === 'limbo' ? 'waiting_id' : 'waiting_id_plate',
-    { description }
+    { printUrl: imageAttachment.url }
   );
 
   // Pergunta o próximo passo

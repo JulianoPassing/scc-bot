@@ -56,6 +56,7 @@ Sistema automatizado de atendimento para problemas comuns de jogadores, com flux
   "commandServerId": "1289039278915059772",    // Servidor para enviar comandos
   "commandChannelId": "1386024502802251938",   // Canal para enviar comandos
   "supportRoleId": "1046404063673192546",      // Role do suporte
+  "transcriptChannelId": "1430642776047091732", // Canal para enviar transcripts
   "categories": {
     "limbo": {
       "name": "Limbo",
@@ -79,6 +80,7 @@ Sistema automatizado de atendimento para problemas comuns de jogadores, com flux
 - **Servidor de Comandos**: `1289039278915059772`
 - **Canal de Comandos**: `1386024502802251938`
 - **Role de Suporte**: `1046404063673192546`
+- **Canal de Transcripts**: `1430642776047091732`
 
 ## 🚀 Comandos
 
@@ -99,6 +101,23 @@ O sistema envia os seguintes comandos para o servidor da staff:
 
 - `!teleport <id>` - Para casos de limbo
 - `!guinchar <id_do_player> <placa>` - Para casos de guincho
+
+## 🔒 Fechar Ticket
+
+Um botão "Fechar Ticket" aparece na mensagem inicial de cada atendimento. Este botão:
+
+- ✅ Apenas membros com o cargo staff (`1046404063673192546`) podem usar
+- 📄 Gera um transcript HTML completo da conversa
+- 📤 Envia o transcript para o canal `1430642776047091732`
+- 🗑️ Deleta o canal após 5 segundos
+
+O transcript inclui:
+- Todas as mensagens do canal
+- Anexos e imagens
+- Embeds e stickers
+- Informações do criador e staff responsável
+- Data e hora de fechamento
+- Design visual idêntico ao sistema de tickets padrão
 
 ## 🔧 Estrutura de Arquivos
 

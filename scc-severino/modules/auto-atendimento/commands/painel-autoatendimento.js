@@ -36,7 +36,12 @@ export default {
         'Selecione abaixo o tipo de problema que você está enfrentando:\n\n' +
         '🌫️ **Limbo** - Caso você tenha caído no limbo\n' +
         '🚗 **Guincho** - Caso seu veículo precise de guincho\n\n' +
-        '**Nosso sistema automatizado irá te ajudar rapidamente!**'
+        '**Nosso sistema automatizado irá te ajudar rapidamente!**\n\n' +
+        '⚠️ **ATENÇÃO:** ⚠️\n' +
+        '```diff\n' +
+        '- USAR O SISTEMA DE FORMA INDEVIDA PODE ACARRETAR EM BANIMENTO!\n' +
+        '```\n' +
+        '🔍 Todos os atendimentos são registrados e analisados pela nossa equipe.'
       )
       .setColor('#00FF00')
       .setFooter({ text: 'Clique no botão correspondente ao seu problema' })

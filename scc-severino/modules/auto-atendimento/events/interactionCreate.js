@@ -1,8 +1,14 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, ChannelType } = require('discord.js');
-const config = require('../config.json');
-const conversationManager = require('../utils/conversationManager');
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, ChannelType } from 'discord.js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import conversationManager from '../utils/conversationManager.js';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const config = JSON.parse(readFileSync(join(__dirname, '../config.json'), 'utf8'));
+
+export default {
   async execute(interaction, client) {
     // Ignora se não for um botão
     if (!interaction.isButton()) return;

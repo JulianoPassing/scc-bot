@@ -1,7 +1,13 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const config = require('../config.json');
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const config = JSON.parse(readFileSync(join(__dirname, '../config.json'), 'utf8'));
+
+export default {
   data: {
     name: 'painel-autoatendimento',
     description: 'Cria o painel de auto-atendimento',
@@ -62,5 +68,5 @@ module.exports = {
       await message.delete().catch(() => {});
     }
   }
-};
+}
 

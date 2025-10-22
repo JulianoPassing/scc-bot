@@ -83,5 +83,5 @@ setInterval(() => {
   conversationManager.cleanOldConversations();
 }, 60 * 60 * 1000);
 
-module.exports = conversationManager;
+export default conversationManager;
 

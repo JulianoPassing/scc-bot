@@ -1,8 +1,14 @@
-const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
-const config = require('../config.json');
-const conversationManager = require('../utils/conversationManager');
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { readFileSync } from 'fs';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import conversationManager from '../utils/conversationManager.js';
 
-module.exports = {
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const config = JSON.parse(readFileSync(join(__dirname, '../config.json'), 'utf8'));
+
+export default {
   async execute(message, client) {
     // Ignora mensagens de bots
     if (message.author.bot) return;
@@ -195,4 +201,3 @@ async function sendCommandToStaff(client, command) {
     console.error('[Auto-Atendimento] Erro ao enviar comando:', error);
   }
 }
-

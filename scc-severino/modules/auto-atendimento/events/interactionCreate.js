@@ -260,8 +260,8 @@ async function handleCloseTicket(interaction, client) {
 
     const sorted = allMessages.sort((a, b) => a.createdTimestamp - b.createdTimestamp);
 
-    // Identificar criador do ticket pela primeira mensagem que menciona o usuário
-    const notifyMsg = sorted.find(m => m.author.bot && m.content && m.content.includes('abriu um ticket') || m.content.includes('Olá'));
+    // Identificar criador do ticket pela primeira mensagem do bot que menciona um usuário
+    const notifyMsg = sorted.find(m => m.author.bot && m.content && (m.content.includes('Olá') || m.content.includes('Auto-Atendimento')));
     let autorId = null;
     let autorTag = null;
     let autorAvatar = null;
@@ -276,6 +276,29 @@ async function handleCloseTicket(interaction, client) {
           autorAvatar = userObj.displayAvatarURL();
         } catch (e) {
           console.error('[Auto-Atendimento] Erro ao buscar usuário:', e);
+        }
+      }
+    }
+
+    // Se não encontrou pela mensagem, tentar identificar pelas permissões do canal
+    if (!autorId) {
+      console.log('[Auto-Atendimento] Tentando identificar criador pelas permissões do canal...');
+      const permissions = channel.permissionOverwrites.cache;
+      for (const [id, perm] of permissions) {
+        if (id !== guild.id && id !== client.user.id && id !== config.supportRoleId) {
+          // Este deve ser o usuário criador
+          try {
+            const userObj = await client.users.fetch(id);
+            if (!userObj.bot) {
+              autorId = id;
+              autorTag = userObj.tag;
+              autorAvatar = userObj.displayAvatarURL();
+              console.log('[Auto-Atendimento] Criador identificado pelas permissões:', autorTag);
+              break;
+            }
+          } catch (e) {
+            console.error('[Auto-Atendimento] Erro ao buscar usuário por permissão:', e);
+          }
         }
       }
     }

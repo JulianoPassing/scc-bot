@@ -1,0 +1,21 @@
+{
+  "serverId": "1046404063287332936",
+  "categoryId": "1430638731446063265",
+  "panelChannelId": "1430638568145031180",
+  "commandServerId": "1289039278915059772",
+  "commandChannelId": "1386024502802251938",
+  "supportRoleId": "1046404063673192546",
+  "categories": {
+    "limbo": {
+      "name": "Limbo",
+      "emoji": "🌫️",
+      "channelPrefix": "🎫・limbo-"
+    },
+    "guincho": {
+      "name": "Guincho",
+      "emoji": "🚗",
+      "channelPrefix": "🎫・guincho-"
+    }
+  }
+}
+

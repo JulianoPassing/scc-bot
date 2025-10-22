@@ -31,6 +31,7 @@ client.commands = new Collection();
 // Carregar módulos de cada pasta
 const modules = [
   'altnomes',
+  'auto-atendimento',
   'avaliacoes',
   'batebapo',
   'blacklist',

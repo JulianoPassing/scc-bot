@@ -214,24 +214,33 @@ async function handleIdPlateGuincho(message, conversation, client) {
 }
 
 /**
- * Envia comando para o canal da staff
+ * Envia comando para o canal da staff via webhook
  */
 async function sendCommandToStaff(client, command) {
   try {
-    const guild = client.guilds.cache.get(config.commandServerId);
-    if (!guild) {
-      console.error('[Auto-Atendimento] Servidor de comando não encontrado');
+    if (!config.commandWebhookUrl) {
+      console.error('[Auto-Atendimento] URL do webhook não configurada');
       return;
     }
 
-    const channel = guild.channels.cache.get(config.commandChannelId);
-    if (!channel) {
-      console.error('[Auto-Atendimento] Canal de comando não encontrado');
-      return;
-    }
+    // Envia via webhook para simular um usuário
+    const response = await fetch(config.commandWebhookUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        content: command,
+        username: 'Auto-Atendimento Severino',
+        avatar_url: 'https://i.imgur.com/YULctuK.png'
+      })
+    });
 
-    await channel.send(command);
-    console.log(`[Auto-Atendimento] Comando enviado: ${command}`);
+    if (response.ok) {
+      console.log(`[Auto-Atendimento] Comando enviado via webhook: ${command}`);
+    } else {
+      console.error('[Auto-Atendimento] Erro ao enviar via webhook:', response.status);
+    }
   } catch (error) {
     console.error('[Auto-Atendimento] Erro ao enviar comando:', error);
   }

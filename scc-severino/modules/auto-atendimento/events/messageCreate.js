@@ -70,12 +70,18 @@ async function handleDescription(message, conversation, client) {
     embed.setDescription(
       '**Por favor, envie um print (screenshot) com a GARAGEM ABERTA, mostrando o veículo e a placa.**\n\n' +
       '⚠️ É importante que a garagem esteja aberta e a placa do veículo esteja visível!\n' +
-      '⚠️ O print deve ser uma imagem anexada à mensagem.'
+      '⚠️ O print deve ser uma imagem anexada à mensagem.\n\n' +
+      '```diff\n' +
+      '- ⛔ O PRINT DEVE SER DA TELA INTEIRA E NÃO RECORTE!\n' +
+      '```'
     );
   } else {
     embed.setDescription(
       '**Por favor, envie um print (screenshot) da tela do seu jogo mostrando a situação.**\n\n' +
-      '⚠️ O print deve ser uma imagem anexada à mensagem.'
+      '⚠️ O print deve ser uma imagem anexada à mensagem.\n\n' +
+      '```diff\n' +
+      '- ⛔ O PRINT DEVE SER DA TELA INTEIRA E NÃO RECORTE!\n' +
+      '```'
     );
   }
 

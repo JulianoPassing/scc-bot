@@ -40,6 +40,9 @@ export default {
         case 'waiting_id_plate':
           await handleIdPlateGuincho(message, conversation, client);
           break;
+        case 'waiting_alive_check':
+          await handleAliveCheck(message, conversation, client);
+          break;
       }
     } catch (error) {
       console.error('[Auto-Atendimento] Erro ao processar mensagem:', error);
@@ -60,12 +63,21 @@ async function handleDescription(message, conversation, client) {
   // Pede o print da tela
   const embed = new EmbedBuilder()
     .setTitle('📸 Print da Tela')
-    .setDescription(
-      '**Por favor, envie um print (screenshot) da tela do seu jogo mostrando a situação.**\n\n' +
-      '⚠️ O print deve ser uma imagem anexada à mensagem.'
-    )
     .setColor('#0099FF')
     .setTimestamp();
+
+  if (conversation.type === 'guincho') {
+    embed.setDescription(
+      '**Por favor, envie um print (screenshot) com a GARAGEM ABERTA, mostrando o veículo e a placa.**\n\n' +
+      '⚠️ É importante que a garagem esteja aberta e a placa do veículo esteja visível!\n' +
+      '⚠️ O print deve ser uma imagem anexada à mensagem.'
+    );
+  } else {
+    embed.setDescription(
+      '**Por favor, envie um print (screenshot) da tela do seu jogo mostrando a situação.**\n\n' +
+      '⚠️ O print deve ser uma imagem anexada à mensagem.'
+    );
+  }
 
   await message.reply({ embeds: [embed] });
 }
@@ -123,38 +135,98 @@ async function handleIdLimbo(message, conversation, client) {
   }
 
   // Salva o ID
-  conversationManager.updateStep(message.channel.id, 'waiting_verification', { playerId });
+  conversationManager.updateStep(message.channel.id, 'waiting_alive_check', { playerId });
 
   // Envia o comando para o servidor de comando
   await sendCommandToStaff(client, `!teleport ${playerId}`);
 
-  // Informa o usuário e pede verificação
+  // Informa o usuário e pergunta se está vivo
   const embed = new EmbedBuilder()
     .setTitle('✅ Comando Executado')
     .setDescription(
       `O comando de teleporte foi enviado para a staff!\n\n` +
-      '**Por favor, verifique se você foi teleportado para fora do limbo.**\n\n' +
-      'Você foi teleportado com sucesso?'
+      '**Você está vivo no momento?**\n\n' +
+      'Por favor, responda com **SIM** ou **NÃO**.'
     )
     .setColor('#00FF00')
     .setTimestamp();
 
-  const row = new ActionRowBuilder()
-    .addComponents(
-      new ButtonBuilder()
-        .setCustomId('autoatend_verify_yes')
-        .setLabel('Sim')
-        .setStyle(ButtonStyle.Success),
-      new ButtonBuilder()
-        .setCustomId('autoatend_verify_no')
-        .setLabel('Não')
-        .setStyle(ButtonStyle.Danger)
-    );
+  await message.reply({ embeds: [embed] });
+}
 
-  await message.reply({
-    embeds: [embed],
-    components: [row]
-  });
+/**
+ * Lida com a verificação se o player está vivo (Limbo)
+ */
+async function handleAliveCheck(message, conversation, client) {
+  const answer = message.content.trim().toLowerCase();
+  const playerId = conversation.data.playerId;
+
+  if (answer === 'sim' || answer === 's') {
+    // Está vivo, vai direto para verificação de teleporte
+    conversationManager.updateStep(message.channel.id, 'waiting_verification');
+
+    const embed = new EmbedBuilder()
+      .setTitle('✅ Perfeito!')
+      .setDescription(
+        '**Por favor, verifique se você foi teleportado para fora do limbo.**\n\n' +
+        'Você foi teleportado com sucesso?'
+      )
+      .setColor('#00FF00')
+      .setTimestamp();
+
+    const row = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('autoatend_verify_yes')
+          .setLabel('Sim')
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId('autoatend_verify_no')
+          .setLabel('Não')
+          .setStyle(ButtonStyle.Danger)
+      );
+
+    await message.reply({
+      embeds: [embed],
+      components: [row]
+    });
+
+  } else if (answer === 'não' || answer === 'nao' || answer === 'n') {
+    // Não está vivo, envia comando de reviver
+    await sendCommandToStaff(client, `!reviver ${playerId}`);
+
+    conversationManager.updateStep(message.channel.id, 'waiting_verification');
+
+    const embed = new EmbedBuilder()
+      .setTitle('✅ Comando de Reviver Enviado')
+      .setDescription(
+        `O comando para reviver foi enviado para a staff!\n\n` +
+        '**Aguarde alguns instantes e verifique se você foi revivido e teleportado.**\n\n' +
+        'O problema foi resolvido?'
+      )
+      .setColor('#00FF00')
+      .setTimestamp();
+
+    const row = new ActionRowBuilder()
+      .addComponents(
+        new ButtonBuilder()
+          .setCustomId('autoatend_verify_yes')
+          .setLabel('Sim')
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId('autoatend_verify_no')
+          .setLabel('Não')
+          .setStyle(ButtonStyle.Danger)
+      );
+
+    await message.reply({
+      embeds: [embed],
+      components: [row]
+    });
+
+  } else {
+    return message.reply('❌ Por favor, responda com **SIM** ou **NÃO**.');
+  }
 }
 
 /**

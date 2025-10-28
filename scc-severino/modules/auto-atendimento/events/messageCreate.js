@@ -367,6 +367,9 @@ async function handleBoostId(message, conversation, client) {
   // Envia o comando para o servidor de comando
   await sendCommandToStaff(client, `!darboost ${playerId} 1`);
 
+  // Envia log para o canal de logs de boost
+  await sendBoostLog(client, message.author, playerId, conversation.data.printUrl);
+
   // Informa o usuário para ir na concessionária
   const embed = new EmbedBuilder()
     .setTitle('✅ Boost Concedido!')
@@ -386,6 +389,50 @@ async function handleBoostId(message, conversation, client) {
 
   // Remove a conversação pois o atendimento foi concluído
   conversationManager.removeConversation(message.channel.id);
+}
+
+/**
+ * Envia log de boost concedido para o canal de logs
+ */
+async function sendBoostLog(client, user, playerId, printUrl) {
+  try {
+    const guild = client.guilds.cache.get(config.serverId);
+    if (!guild) {
+      console.error('[Auto-Atendimento] Servidor não encontrado para log de boost');
+      return;
+    }
+
+    const logChannel = guild.channels.cache.get('1432529603054014644');
+    if (!logChannel) {
+      console.error('[Auto-Atendimento] Canal de log de boost não encontrado');
+      return;
+    }
+
+    const logEmbed = new EmbedBuilder()
+      .setTitle('🚀 Boost Concedido')
+      .setDescription(`Um boost foi concedido através do sistema de auto-atendimento.`)
+      .addFields(
+        { name: '👤 Usuário', value: `<@${user.id}> (${user.tag})`, inline: true },
+        { name: '🆔 User ID', value: user.id, inline: true },
+        { name: '🎮 ID no Servidor', value: playerId, inline: true },
+        { name: '⚡ Comando Executado', value: `\`!darboost ${playerId} 1\``, inline: false },
+        { name: '📅 Data e Hora', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: false }
+      )
+      .setColor('#00FF00')
+      .setThumbnail(user.displayAvatarURL())
+      .setFooter({ text: 'Sistema de Auto-Atendimento' })
+      .setTimestamp();
+
+    // Se houver print, adiciona ao embed
+    if (printUrl) {
+      logEmbed.setImage(printUrl);
+    }
+
+    await logChannel.send({ embeds: [logEmbed] });
+    console.log(`[Auto-Atendimento] Log de boost enviado para ${user.tag} (ID: ${playerId})`);
+  } catch (error) {
+    console.error('[Auto-Atendimento] Erro ao enviar log de boost:', error);
+  }
 }
 
 /**

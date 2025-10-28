@@ -43,6 +43,12 @@ export default {
         case 'waiting_alive_check':
           await handleAliveCheck(message, conversation, client);
           break;
+        case 'waiting_boost_print':
+          await handleBoostPrint(message, conversation, client);
+          break;
+        case 'waiting_boost_id':
+          await handleBoostId(message, conversation, client);
+          break;
       }
     } catch (error) {
       console.error('[Auto-Atendimento] Erro ao processar mensagem:', error);
@@ -56,6 +62,27 @@ export default {
  */
 async function handleDescription(message, conversation, client) {
   const description = message.content;
+
+  // Para o tipo boost, pula direto para pedir o print dos boosts
+  if (conversation.type === 'boost') {
+    conversationManager.updateStep(message.channel.id, 'waiting_boost_print', { description });
+
+    const embed = new EmbedBuilder()
+      .setTitle('📸 Print dos Boosts')
+      .setDescription(
+        '**Por favor, envie um print (screenshot) mostrando os 2 boosts no servidor.**\n\n' +
+        '⚠️ O print deve mostrar claramente os boosts disponíveis!\n' +
+        '⚠️ O print deve ser uma imagem anexada à mensagem.\n\n' +
+        '```diff\n' +
+        '- ⛔ O PRINT DEVE SER DA TELA INTEIRA E NÃO RECORTE!\n' +
+        '```'
+      )
+      .setColor('#0099FF')
+      .setTimestamp();
+
+    await message.reply({ embeds: [embed] });
+    return;
+  }
 
   // Salva a descrição
   conversationManager.updateStep(message.channel.id, 'waiting_print', { description });
@@ -289,6 +316,76 @@ async function handleIdPlateGuincho(message, conversation, client) {
     embeds: [embed],
     components: [row]
   });
+}
+
+/**
+ * Lida com o print dos 2 boosts (Boost)
+ */
+async function handleBoostPrint(message, conversation, client) {
+  // Verifica se a mensagem tem anexos de imagem
+  const hasImage = message.attachments.size > 0 && 
+    message.attachments.some(att => att.contentType && att.contentType.startsWith('image/'));
+
+  if (!hasImage) {
+    return message.reply('❌ Por favor, envie uma imagem (print dos 2 boosts no servidor) como anexo.');
+  }
+
+  // Pega a URL da primeira imagem
+  const imageAttachment = message.attachments.find(att => att.contentType && att.contentType.startsWith('image/'));
+  
+  // Salva o print e avança para o próximo passo
+  conversationManager.updateStep(
+    message.channel.id, 
+    'waiting_boost_id',
+    { printUrl: imageAttachment.url }
+  );
+
+  // Pergunta o ID
+  const embed = new EmbedBuilder()
+    .setTitle('📝 ID do Jogador')
+    .setDescription('**Por favor, me informe seu ID atual no servidor.**')
+    .setColor('#0099FF')
+    .setTimestamp();
+
+  await message.reply({ embeds: [embed] });
+}
+
+/**
+ * Lida com o ID para o caso de Boost
+ */
+async function handleBoostId(message, conversation, client) {
+  const playerId = message.content.trim();
+
+  // Valida se é um número
+  if (isNaN(playerId)) {
+    return message.reply('❌ Por favor, informe apenas o número do seu ID.');
+  }
+
+  // Salva o ID
+  conversationManager.updateStep(message.channel.id, 'boost_completed', { playerId });
+
+  // Envia o comando para o servidor de comando
+  await sendCommandToStaff(client, `!darboost ${playerId} 1`);
+
+  // Informa o usuário para ir na concessionária
+  const embed = new EmbedBuilder()
+    .setTitle('✅ Boost Concedido!')
+    .setDescription(
+      `O comando de boost foi executado com sucesso!\n\n` +
+      '🏢 **Por favor, vá até a concessionária boost no servidor para adquirir seu veículo.**\n\n' +
+      '✨ Aproveite seu boost!\n\n' +
+      `<@&${config.supportRoleId}>, boost concedido para <@${message.author.id}>. Ticket pode ser analisado e fechado.`
+    )
+    .setColor('#00FF00')
+    .setTimestamp();
+
+  await message.reply({
+    content: `<@&${config.supportRoleId}>`,
+    embeds: [embed]
+  });
+
+  // Remove a conversação pois o atendimento foi concluído
+  conversationManager.removeConversation(message.channel.id);
 }
 
 /**

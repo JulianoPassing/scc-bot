@@ -17,7 +17,7 @@ export default {
     if (!interaction.customId.startsWith('autoatend_')) return;
 
     // Trata abertura de novo ticket
-    if (interaction.customId === 'autoatend_limbo' || interaction.customId === 'autoatend_guincho') {
+    if (interaction.customId === 'autoatend_limbo' || interaction.customId === 'autoatend_guincho' || interaction.customId === 'autoatend_boost') {
       await handleTicketCreation(interaction, client);
       return;
     }

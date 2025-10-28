@@ -16,6 +16,11 @@
       "name": "Guincho",
       "emoji": "🚗",
       "channelPrefix": "🎫・guincho-"
+    },
+    "boost": {
+      "name": "Boost",
+      "emoji": "🚀",
+      "channelPrefix": "🎫・boost-"
     }
   }
 }

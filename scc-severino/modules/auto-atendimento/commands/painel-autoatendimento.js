@@ -35,7 +35,8 @@ export default {
         '**Bem-vindo ao sistema de auto-atendimento!**\n\n' +
         'Selecione abaixo o tipo de problema que você está enfrentando:\n\n' +
         '🌫️ **Limbo** - Caso você tenha caído no limbo\n' +
-        '🚗 **Guincho** - Caso seu veículo precise de guincho\n\n' +
+        '🚗 **Guincho** - Caso seu veículo precise de guincho\n' +
+        '🚀 **Boost** - Solicitar resgate de boost do servidor\n\n' +
         '**Nosso sistema automatizado irá te ajudar rapidamente!**\n\n' +
         '⚠️ **ATENÇÃO:** ⚠️\n' +
         '```diff\n' +
@@ -59,7 +60,12 @@ export default {
           .setCustomId('autoatend_guincho')
           .setLabel('Guincho')
           .setEmoji('🚗')
-          .setStyle(ButtonStyle.Success)
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId('autoatend_boost')
+          .setLabel('Boost')
+          .setEmoji('🚀')
+          .setStyle(ButtonStyle.Secondary)
       );
 
     // Envia a mensagem do painel

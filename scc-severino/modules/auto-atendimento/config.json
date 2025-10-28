@@ -6,6 +6,7 @@
   "commandChannelId": "1386024502802251938",
   "supportRoleId": "1046404063673192546",
   "transcriptChannelId": "1430642776047091732",
+  "blacklistRoleId": "1432427630241644565",
   "categories": {
     "limbo": {
       "name": "Limbo",

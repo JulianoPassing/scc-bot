@@ -43,6 +43,16 @@ async function handleTicketCreation(interaction, client) {
   try {
     await interaction.deferReply({ ephemeral: true });
 
+    // Verifica se o usuário está na blacklist
+    const hasBlacklistRole = interaction.member.roles.cache.has(config.blacklistRoleId);
+    
+    if (hasBlacklistRole) {
+      return interaction.editReply({
+        content: '❌ **Você não tem permissão para usar o sistema de Auto-Atendimento.**\n\n' +
+          'Por favor, aguarde um membro da equipe de suporte entrar em contato com você.'
+      });
+    }
+
     const type = interaction.customId.replace('autoatend_', '');
     const categoryConfig = config.categories[type];
 

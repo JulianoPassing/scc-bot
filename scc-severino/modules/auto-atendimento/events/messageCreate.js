@@ -72,12 +72,14 @@ async function handleDescription(message, conversation, client) {
       .setDescription(
         '**Por favor, envie um print (screenshot) mostrando os 2 boosts no servidor.**\n\n' +
         '⚠️ O print deve mostrar claramente os boosts disponíveis!\n' +
-        '⚠️ O print deve ser uma imagem anexada à mensagem.\n\n' +
+        '⚠️ O print deve ser uma imagem anexada à mensagem.\n' +
+        '⚠️ **O print deve ser EXATAMENTE IGUAL ao exemplo abaixo!**\n\n' +
         '```diff\n' +
         '- ⛔ O PRINT DEVE SER DA TELA INTEIRA E NÃO RECORTE!\n' +
         '```'
       )
       .setColor('#0099FF')
+      .setImage('https://i.imgur.com/GMcNpJA.png')
       .setTimestamp();
 
     await message.reply({ embeds: [embed] });
@@ -94,22 +96,28 @@ async function handleDescription(message, conversation, client) {
     .setTimestamp();
 
   if (conversation.type === 'guincho') {
-    embed.setDescription(
-      '**Por favor, envie um print (screenshot) com a GARAGEM ABERTA, mostrando o veículo e a placa.**\n\n' +
-      '⚠️ É importante que a garagem esteja aberta e a placa do veículo esteja visível!\n' +
-      '⚠️ O print deve ser uma imagem anexada à mensagem.\n\n' +
-      '```diff\n' +
-      '- ⛔ O PRINT DEVE SER DA TELA INTEIRA E NÃO RECORTE!\n' +
-      '```'
-    );
+    embed
+      .setDescription(
+        '**Por favor, envie um print (screenshot) com a GARAGEM ABERTA, mostrando o veículo e a placa.**\n\n' +
+        '⚠️ É importante que a garagem esteja aberta e a placa do veículo esteja visível!\n' +
+        '⚠️ O print deve ser uma imagem anexada à mensagem.\n' +
+        '⚠️ **O print deve ser EXATAMENTE IGUAL ao exemplo abaixo!**\n\n' +
+        '```diff\n' +
+        '- ⛔ O PRINT DEVE SER DA TELA INTEIRA E NÃO RECORTE!\n' +
+        '```'
+      )
+      .setImage('https://i.imgur.com/hWD6ToQ.png');
   } else {
-    embed.setDescription(
-      '**Por favor, envie um print (screenshot) da tela do seu jogo mostrando a situação.**\n\n' +
-      '⚠️ O print deve ser uma imagem anexada à mensagem.\n\n' +
-      '```diff\n' +
-      '- ⛔ O PRINT DEVE SER DA TELA INTEIRA E NÃO RECORTE!\n' +
-      '```'
-    );
+    embed
+      .setDescription(
+        '**Por favor, envie um print (screenshot) da tela do seu jogo mostrando a situação.**\n\n' +
+        '⚠️ O print deve ser uma imagem anexada à mensagem.\n' +
+        '⚠️ **O print deve ser EXATAMENTE IGUAL ao exemplo abaixo!**\n\n' +
+        '```diff\n' +
+        '- ⛔ O PRINT DEVE SER DA TELA INTEIRA E NÃO RECORTE!\n' +
+        '```'
+      )
+      .setImage('https://i.imgur.com/wgQdo4t.png');
   }
 
   await message.reply({ embeds: [embed] });

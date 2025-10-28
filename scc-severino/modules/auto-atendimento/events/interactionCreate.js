@@ -49,7 +49,7 @@ async function handleTicketCreation(interaction, client) {
     if (hasBlacklistRole) {
       return interaction.editReply({
         content: '❌ **Você não tem permissão para usar o sistema de Auto-Atendimento.**\n\n' +
-          'Por favor, aguarde um membro da equipe de suporte entrar em contato com você.'
+          'Você deve abrir um ticket normal, sem ser o de Auto-Atendimento.'
       });
     }
 

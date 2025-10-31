@@ -121,12 +121,18 @@ async function handleTicketCreation(interaction, client) {
     conversationManager.createConversation(ticketChannel.id, interaction.user.id, type);
 
     // Envia mensagem inicial
+    let descriptionText = `Olá <@${interaction.user.id}>, boa tarde! Espero que possa lhe ajudar.\n\n`;
+    
+    // Adiciona aviso para guincho
+    if (type === 'guincho') {
+      descriptionText += '```diff\n- ⛔ SISTEMA EXCLUSIVO PARA CARROS NO LIMBO, QUALQUER OUTRO PROBLEMA, DEVE SER CHAMADO O MECANICO!\n```\n';
+    }
+    
+    descriptionText += '**Por favor, me conte o que aconteceu com o máximo de detalhes possível.**';
+
     const initialEmbed = new EmbedBuilder()
       .setTitle(`${categoryConfig.emoji} Auto-Atendimento: ${categoryConfig.name}`)
-      .setDescription(
-        `Olá <@${interaction.user.id}>, boa tarde! Espero que possa lhe ajudar.\n\n` +
-        '**Por favor, me conte o que aconteceu com o máximo de detalhes possível.**'
-      )
+      .setDescription(descriptionText)
       .setColor('#00FF00')
       .setTimestamp();
 

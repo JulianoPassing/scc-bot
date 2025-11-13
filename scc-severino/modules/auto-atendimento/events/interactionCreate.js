@@ -60,6 +60,18 @@ async function handleTicketCreation(interaction, client) {
       return interaction.editReply('❌ Tipo de atendimento inválido.');
     }
 
+    // Verifica se é categoria boost e se o usuário tem o cargo Server Booster
+    if (type === 'boost') {
+      const hasBoosterRole = interaction.member.roles.cache.has('1055575365784977458');
+      
+      if (!hasBoosterRole) {
+        return interaction.editReply({
+          content: '❌ **Você não tem permissão para usar o Auto-Atendimento de Boost.**\n\n' +
+            'Apenas membros com o cargo Server Booster podem abrir tickets nesta categoria.'
+        });
+      }
+    }
+
     const guild = client.guilds.cache.get(config.serverId);
     if (!guild) {
       return interaction.editReply('❌ Servidor não encontrado.');

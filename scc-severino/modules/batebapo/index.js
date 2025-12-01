@@ -60,7 +60,7 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para "fila" (inclui em qualquer parte)
     if (message.content.toLowerCase().includes('fila')) {
-      await message.reply('Se vc está travado na fila, clique no X e tenta entrar novamente');
+      await message.reply('Se vc está travado na fila, clique no X e tente entrar novamente. 🎅🏻');
     }
     
     // Resposta para "veloster" (mensagem exata)

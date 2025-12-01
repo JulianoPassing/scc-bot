@@ -58,6 +58,11 @@ const setupBateBapoModule = function(client) {
       await message.reply('Segue connect do servidor, cole no F8.\n```connect jogar.streetcarclub.com.br```');
     }
     
+    // Resposta para "fila" (inclui em qualquer parte)
+    if (message.content.toLowerCase().includes('fila')) {
+      await message.reply('Se vc está travado na fila, clique no X e tenta entrar novamente');
+    }
+    
     // Resposta para "veloster" (mensagem exata)
     if (message.content.toLowerCase().trim() === 'veloster') {
       await message.reply('**Ficha Técnica do Veloster**\n* **Velocidade Máxima**: 90 km/h\n* **Potência**: 49 CV\n* **Desempenho**: Mais fraco que uma CG 125cc\n* **Aceleração**: 0 a 100 km/h… nunca, provavelmente nunca vai acontecer.');

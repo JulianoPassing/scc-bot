@@ -1,4 +1,4 @@
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, ChannelType } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, ChannelType, MessageFlags } from 'discord.js';
 import { readFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -41,7 +41,7 @@ export default {
  */
 async function handleTicketCreation(interaction, client) {
   try {
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     // Verifica se o usuário está na blacklist
     const hasBlacklistRole = interaction.member.roles.cache.has(config.blacklistRoleId);
@@ -193,7 +193,7 @@ async function handleVerification(interaction, client) {
     if (conversation.userId !== interaction.user.id) {
       return interaction.followUp({
         content: '❌ Apenas o usuário que abriu o ticket pode responder.',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
@@ -273,11 +273,11 @@ async function handleCloseTicket(interaction, client) {
     if (!hasStaffRole) {
       return interaction.reply({
         content: '❌ Apenas membros da equipe staff podem fechar tickets!',
-        ephemeral: true
+        flags: MessageFlags.Ephemeral
       });
     }
 
-    await interaction.deferReply({ ephemeral: true });
+    await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
     const channel = interaction.channel;
     const guild = interaction.guild;

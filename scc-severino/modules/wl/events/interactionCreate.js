@@ -1,4 +1,4 @@
-import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import { dirname } from 'path';
@@ -34,7 +34,7 @@ export default async function(client) {
       const cargoAprovado = '1263487190575349892';
       const cargoAntigo = '1046404063308288098';
       if (user && user.aprovado && member.roles.cache.has(cargoAprovado)) {
-        return interaction.reply({ content: '✅ Você já foi aprovado na whitelist!', ephemeral: true });
+        return interaction.reply({ content: '✅ Você já foi aprovado na whitelist!', flags: MessageFlags.Ephemeral });
       }
       // Limite de tentativas/cooldown restaurado, mas sem limite para quem tem o cargo especial
       if (!member.roles.cache.has('1046404063689977984')) {
@@ -42,7 +42,7 @@ export default async function(client) {
           const last = new Date(user.last_attempt);
           const diff = (now - last) / (1000 * 60 * 60);
           if (diff < 24) {
-            return interaction.reply({ content: `⏳ Você atingiu o limite de tentativas. Tente novamente em <t:${Math.floor((last.getTime() + 24*60*60*1000)/1000)}:R>.`, ephemeral: true });
+            return interaction.reply({ content: `⏳ Você atingiu o limite de tentativas. Tente novamente em <t:${Math.floor((last.getTime() + 24*60*60*1000)/1000)}:R>.`, flags: MessageFlags.Ephemeral });
           }
         }
       }
@@ -200,13 +200,13 @@ export default async function(client) {
             `A) ${q.alternativas.a}\nB) ${q.alternativas.b}` + (q.alternativas.c && q.alternativas.c.trim() ? `\nC) ${q.alternativas.c}` : '')
           )
           .setColor(0x0099ff);
-        await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+        await interaction.reply({ embeds: [embed], components: [row], flags: MessageFlags.Ephemeral });
         return;
       } catch (err) {
         console.error('[WL][ERRO modal_wl_etapa1]', err);
         try {
           if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: '❌ Erro interno ao processar o formulário. Detalhe: ' + (err?.message || err), ephemeral: true });
+            await interaction.reply({ content: '❌ Erro interno ao processar o formulário. Detalhe: ' + (err?.message || err), flags: MessageFlags.Ephemeral });
           }
         } catch {}
         return;
@@ -388,7 +388,7 @@ export default async function(client) {
         console.error('[WL][ERRO wl_questao]', err);
         try {
           if (!interaction.replied && !interaction.deferred) {
-            await interaction.reply({ content: '❌ Erro interno ao processar a questão. Detalhe: ' + (err?.message || err), ephemeral: true });
+            await interaction.reply({ content: '❌ Erro interno ao processar a questão. Detalhe: ' + (err?.message || err), flags: MessageFlags.Ephemeral });
           }
         } catch {}
         return;

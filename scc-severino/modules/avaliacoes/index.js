@@ -7,7 +7,8 @@ import {
     ModalBuilder,
     TextInputBuilder,
     TextInputStyle,
-    AttachmentBuilder
+    AttachmentBuilder,
+    MessageFlags
 } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
@@ -1019,14 +1020,14 @@ const setupAvaliacaoModule = function(client) {
     });
     client.on('interactionCreate', async interaction => {
         if (interaction.isButton() && interaction.customId.startsWith('rate_')) {
-            if (interaction.member.roles.cache.has(FORBIDDEN_ROLE_ID)) { return interaction.reply({ content: '❌ Você não tem permissão para avaliar.', ephemeral: true }); }
+            if (interaction.member.roles.cache.has(FORBIDDEN_ROLE_ID)) { return interaction.reply({ content: '❌ Você não tem permissão para avaliar.', flags: MessageFlags.Ephemeral }); }
             const [, staffId, rateStr] = interaction.customId.split('_');
             const key = `${interaction.user.id}_${staffId}`;
             const now = Date.now();
             if (userCooldown.has(key) && (now - userCooldown.get(key) < COOLDOWN)) {
                 const remainingTime = COOLDOWN - (now - userCooldown.get(key));
                 const remainingHours = (remainingTime / (1000 * 60 * 60)).toFixed(1);
-                return interaction.reply({ content: `Você só pode avaliar este membro a cada 6 horas. Aguarde ${remainingHours} horas.`, ephemeral: true });
+                return interaction.reply({ content: `Você só pode avaliar este membro a cada 6 horas. Aguarde ${remainingHours} horas.`, flags: MessageFlags.Ephemeral });
             }
             const modal = new ModalBuilder().setCustomId(`modal_avaliacao_${staffId}_${rateStr}`).setTitle('Avaliação do Atendimento');
             const tipoInput = new TextInputBuilder()
@@ -1076,7 +1077,7 @@ const setupAvaliacaoModule = function(client) {
                     await panelToUpdate.edit({ embeds: [updatedEmbed] });
                 } catch (error) { }
             }
-            await interaction.reply({ content: '✅ Sua avaliação foi enviada com sucesso!', ephemeral: true });
+            await interaction.reply({ content: '✅ Sua avaliação foi enviada com sucesso!', flags: MessageFlags.Ephemeral });
         }
     });
 };

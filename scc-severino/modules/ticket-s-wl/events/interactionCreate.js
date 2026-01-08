@@ -1,4 +1,4 @@
-import { EmbedBuilder, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits, ButtonBuilder, ButtonStyle } from 'discord.js';
+import { EmbedBuilder, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import config from '../config.json' with { type: 'json' };
 
 const SEGURANCA_CATEGORY_ID = '1378778140528087191';
@@ -166,7 +166,7 @@ export const execute = async function(interaction) {
       const member = guild.members.cache.get(user.id);
       const hasStaffRole = member.roles.cache.has(config.staffRoleId);
       if (!hasStaffRole) {
-        return interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets de segurança!', ephemeral: true });
+        return interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets de segurança!', flags: MessageFlags.Ephemeral });
       }
       // Abrir modal para motivo do fechamento
       await interaction.showModal(
@@ -188,7 +188,7 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de motivo de fechamento
     if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento_seguranca') {
-      await interaction.deferReply({ ephemeral: true });
+      await interaction.deferReply({ flags: MessageFlags.Ephemeral });
       const motivo = interaction.fields.getTextInputValue('motivo');
       const user = interaction.user;
       const channel = interaction.channel;
@@ -588,19 +588,19 @@ export const execute = async function(interaction) {
     if (customId === 'assumir_ticket') {
       const member = guild.members.cache.get(user.id);
       if (!member.roles.cache.has(config.staffRoleId)) {
-        return interaction.reply({ content: '❌ Apenas membros da equipe podem assumir tickets!', ephemeral: true });
+        return interaction.reply({ content: '❌ Apenas membros da equipe podem assumir tickets!', flags: MessageFlags.Ephemeral });
       }
-      await interaction.reply({ content: `🫡 <@${user.id}> assumiu o ticket!`, ephemeral: false });
+      await interaction.reply({ content: `🫡 <@${user.id}> assumiu o ticket!` });
       return;
     }
     // Adicionar Membro
     if (customId === 'adicionar_membro') {
-      await interaction.reply({ content: 'Mencione o usuário a ser adicionado ao ticket.', ephemeral: true });
+      await interaction.reply({ content: 'Mencione o usuário a ser adicionado ao ticket.', flags: MessageFlags.Ephemeral });
       return;
     }
     // Avisar Membro
     if (customId === 'avisar_membro') {
-      await interaction.reply({ content: 'A equipe foi avisada sobre este ticket.', ephemeral: false });
+      await interaction.reply({ content: 'A equipe foi avisada sobre este ticket.' });
       return;
     }
     // Renomear Ticket mantendo emoji da categoria
@@ -636,7 +636,7 @@ export const execute = async function(interaction) {
     }
     // Timer 24h
     if (customId === 'timer_24h') {
-      await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket.', ephemeral: false });
+      await interaction.reply({ content: '⏰ Timer de 24h iniciado para este ticket.' });
       return;
     }
     // Handler do modal de renomear
@@ -652,7 +652,7 @@ export const execute = async function(interaction) {
       let finalName = novoNome;
       if (!finalName.startsWith(emoji)) finalName = emoji + finalName;
       await interaction.channel.setName(finalName);
-      await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, ephemeral: true });
+      await interaction.reply({ content: `✏️ Nome do ticket alterado para: ${finalName}`, flags: MessageFlags.Ephemeral });
       return;
     }
   } catch (error) {

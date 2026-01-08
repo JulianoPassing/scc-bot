@@ -5,7 +5,12 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "pm2": "pm2 start ecosystem.config.cjs",
+    "pm2:stop": "pm2 stop scc-severino",
+    "pm2:restart": "pm2 restart scc-severino",
+    "pm2:logs": "pm2 logs scc-severino",
+    "pm2:status": "pm2 status"
   },
   "author": "SCC",
   "license": "MIT",

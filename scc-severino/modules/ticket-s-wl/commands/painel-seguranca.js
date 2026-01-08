@@ -1,4 +1,4 @@
-import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, MessageFlags } from 'discord.js';
 import fs from 'fs';
 
 export const data = {
@@ -16,7 +16,7 @@ export async function execute(message, args, client) {
       .setDescription('Este comando só pode ser usado no canal correto para o painel de tickets!')
       .addFields({ name: 'Canal Permitido', value: `<#${allowedChannelId}>` })
       .setTimestamp();
-    return await message.reply({ embeds: [errorEmbed], ephemeral: true });
+    return await message.reply({ embeds: [errorEmbed], flags: MessageFlags.Ephemeral });
   }
 
   const panelEmbed = new EmbedBuilder()

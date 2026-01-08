@@ -1,6 +1,6 @@
 import { formatName } from '../utils/nameFormatter.js';
 import { EmbedBuilder } from 'discord.js';
-import config from '../config.json' assert { type: 'json' };
+import config from '../config.json' with { type: 'json' };
 
 export default {
     name: 'messageReactionAdd',

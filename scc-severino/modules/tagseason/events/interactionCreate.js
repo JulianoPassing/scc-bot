@@ -1,3 +1,5 @@
+import { MessageFlags } from 'discord.js';
+
 export const name = 'interactionCreate';
 
 export const execute = async function(interaction) {
@@ -14,7 +16,7 @@ export const execute = async function(interaction) {
         if (member.roles.cache.has(roleId)) {
           await interaction.reply({ 
             content: '❌ Você já possui esta tag da temporada!', 
-            ephemeral: true 
+            flags: MessageFlags.Ephemeral 
           });
           return;
         }
@@ -25,13 +27,13 @@ export const execute = async function(interaction) {
           
           await interaction.reply({ 
             content: '🎉 Parabéns! Você resgatou com sucesso sua Tag da Temporada 04! 🏆', 
-            ephemeral: true 
+            flags: MessageFlags.Ephemeral 
           });
         } catch (error) {
           console.error('Erro ao adicionar cargo:', error);
           await interaction.reply({ 
             content: '❌ Ocorreu um erro ao adicionar a tag. Entre em contato com a equipe.', 
-            ephemeral: true 
+            flags: MessageFlags.Ephemeral 
           });
         }
       }

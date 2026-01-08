@@ -6,6 +6,9 @@ const setupBateBapoModule = function(client) {
     if (message.author.bot) return;
     if (message.channel.id !== '1046404065690652745') return;
     
+    // Ignora membros staff (cargo 1046404063673192546)
+    if (message.member?.roles.cache.has('1046404063673192546')) return;
+    
     // Resposta para "." (mensagem exata)
     if (message.content.trim() === '.') {
       await message.reply('Se for pra contratação, me contrata também, **Noel 🎅🏻** me escravizou aqui.');

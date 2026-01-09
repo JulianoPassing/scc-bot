@@ -9,9 +9,33 @@ const DATABASE_PATH = path.join(__dirname, '../whitelist.json');
 
 function loadDB() {
   if (!fs.existsSync(DATABASE_PATH)) return {};
-  return JSON.parse(fs.readFileSync(DATABASE_PATH, 'utf8'));
+  try {
+    const content = fs.readFileSync(DATABASE_PATH, 'utf8');
+    return JSON.parse(content);
+  } catch (err) {
+    console.error('[WL][ERRO] Falha ao carregar whitelist.json:', err.message);
+    // Fazer backup do arquivo corrompido
+    const backupPath = DATABASE_PATH + '.corrupted.' + Date.now();
+    try {
+      fs.copyFileSync(DATABASE_PATH, backupPath);
+      console.log('[WL] Backup do arquivo corrompido salvo em:', backupPath);
+    } catch (backupErr) {
+      console.error('[WL] Falha ao criar backup:', backupErr.message);
+    }
+    // Retornar objeto vazio para não quebrar o bot
+    return {};
+  }
 }
+
 function saveDB(db) {
+  // Criar backup antes de salvar
+  if (fs.existsSync(DATABASE_PATH)) {
+    try {
+      fs.copyFileSync(DATABASE_PATH, DATABASE_PATH + '.backup');
+    } catch (err) {
+      console.error('[WL][ERRO] Falha ao criar backup antes de salvar:', err.message);
+    }
+  }
   fs.writeFileSync(DATABASE_PATH, JSON.stringify(db, null, 2));
 }
 

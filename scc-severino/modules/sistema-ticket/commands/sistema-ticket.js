@@ -19,7 +19,7 @@ export async function execute(message, args, client) {
 Abra um ticket no nosso sistema web para receber suporte personalizado da nossa equipe.
 
 **❗ Importante:**
-Evite marcar a equipe. Você será atendido o mais breve possível.
+Tickets tem prazo de resposta de até 72hrs uteis
 
 **📋 Categorias Disponíveis:**
 • 🏠 **Casas** - Questões relacionadas a casas e propriedades

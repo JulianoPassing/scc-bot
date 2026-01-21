@@ -3,6 +3,78 @@ import config from '../config.json' with { type: 'json' };
 
 const SEGURANCA_CATEGORY_ID = '1378778140528087191';
 
+function extractCreatorIdFromTopic(topic) {
+  if (!topic) return null;
+  const match = topic.match(/creatorId\s*=\s*(\d{17,19})/i);
+  return match ? match[1] : null;
+}
+
+async function findCreatorIdFromSecurityNotifyMessage(channel) {
+  // Busca paginando para trás até achar a mensagem de abertura
+  let lastId;
+  for (let i = 0; i < 25; i++) { // até 2500 mensagens (25x100)
+    const options = { limit: 100 };
+    if (lastId) options.before = lastId;
+
+    const messages = await channel.messages.fetch(options);
+    if (!messages.size) break;
+
+    const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket de segurança!'));
+    if (notifyMsg) {
+      const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
+      if (match) return match[1];
+    }
+
+    lastId = messages.last().id;
+    if (messages.size < 100) break;
+  }
+  return null;
+}
+
+async function findCreatorIdFromChannelPermissions(channel, client, guild) {
+  try {
+    const supportRoleIds = new Set();
+    for (const roleName of config.supportRoles || []) {
+      const role = guild.roles.cache.find(r => r.name === roleName);
+      if (role) supportRoleIds.add(role.id);
+    }
+
+    const excludedIds = new Set([
+      guild.roles.everyone.id,
+      client.user.id,
+      config.staffRoleId,
+      ...supportRoleIds
+    ]);
+
+    const candidateMemberIds = [];
+    for (const [id, overwrite] of channel.permissionOverwrites.cache) {
+      if (excludedIds.has(id)) continue;
+      // OverwriteType.Member é 1 no discord.js v14
+      if (overwrite?.type !== 1 && overwrite?.type !== 'member') continue;
+      candidateMemberIds.push(id);
+    }
+
+    for (const id of candidateMemberIds) {
+      const u = await client.users.fetch(id).catch(() => null);
+      if (u && !u.bot) return id;
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function getSecurityTicketCreatorId({ channel, client, guild }) {
+  // 1) Preferir topic (persistente e rápido)
+  const fromTopic = extractCreatorIdFromTopic(channel.topic);
+  if (fromTopic) return fromTopic;
+
+  // 2) Fallback: procurar na mensagem de abertura (com paginação)
+  const fromNotify = await findCreatorIdFromSecurityNotifyMessage(channel).catch(() => null);
+  if (fromNotify) return fromNotify;
+
+  // 3) Último recurso: heurística via permissões do canal
+  return await findCreatorIdFromChannelPermissions(channel, client, guild).catch(() => null);
+}
+
 export const name = 'interactionCreate';
 export const execute = async function(interaction) {
   try {
@@ -105,7 +177,7 @@ export const execute = async function(interaction) {
           name: `seg-${user.username.toLowerCase()}`,
           type: ChannelType.GuildText,
           parent: selectedCategoryId,
-          topic: `Ticket de Segurança | ${user.tag} | ${motivo}`,
+          topic: `Ticket de Segurança | creatorId=${user.id} | ${user.tag} | ${motivo}`,
           permissionOverwrites
         });
         console.log('[DEBUG] Canal criado com sucesso:', ticketChannel.id);
@@ -128,7 +200,9 @@ export const execute = async function(interaction) {
         return;
       }
       // Notificação
-      await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket de segurança! Equipe notificada:` });
+      const notifyMsg = await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket de segurança! Equipe notificada:` });
+      // Fix: manter referência fácil ao criador mesmo com muitas mensagens
+      await notifyMsg.pin().catch(() => {});
       // Embed do painel de ticket aberto
       const embed = new EmbedBuilder()
         .setColor('#EAF207')
@@ -209,16 +283,20 @@ export const execute = async function(interaction) {
       let autorId = null;
       let autorTag = null;
       let autorAvatar = null;
-      if (notifyMsg) {
+      autorId = extractCreatorIdFromTopic(channel.topic);
+      if (!autorId && notifyMsg) {
         const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
-        if (match) {
-          autorId = match[1];
-          try {
-            const userObj = await interaction.client.users.fetch(autorId);
-            autorTag = userObj.tag;
-            autorAvatar = userObj.displayAvatarURL();
-          } catch {}
-        }
+        if (match) autorId = match[1];
+      }
+      if (!autorId) {
+        autorId = await findCreatorIdFromChannelPermissions(channel, interaction.client, guild).catch(() => null);
+      }
+      if (autorId) {
+        try {
+          const userObj = await interaction.client.users.fetch(autorId);
+          autorTag = userObj.tag;
+          autorAvatar = userObj.displayAvatarURL();
+        } catch {}
       }
       // Staff responsável
       const staffTag = user.tag;
@@ -550,15 +628,8 @@ export const execute = async function(interaction) {
     }
     // Handler do botão Avisar Membro (segurança)
     if (interaction.isButton() && customId === 'avisar_membro_seguranca') {
-      // Buscar criador do ticket pela mensagem de notificação
       const channel = interaction.channel;
-      const messages = await channel.messages.fetch({ limit: 10 });
-      const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket de segurança!'));
-      let autorId = null;
-      if (notifyMsg) {
-        const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
-        if (match) autorId = match[1];
-      }
+      const autorId = await getSecurityTicketCreatorId({ channel, client: interaction.client, guild });
       if (autorId) {
         const embed = new EmbedBuilder()
           .setColor('#EAF207')

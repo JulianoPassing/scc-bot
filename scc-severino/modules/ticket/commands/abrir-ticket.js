@@ -39,7 +39,7 @@ export async function execute(message, args, client) {
       channelName,
       categoriaId,
       user.id,
-      `Ticket de Suporte | ${user.tag} | ${reason}`
+      `Ticket de Suporte | creatorId=${user.id} | ${user.tag} | ${reason}`
     );
   } catch (err) {
     console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);

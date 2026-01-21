@@ -58,7 +58,7 @@ export async function createTicketChannel(guild, channelName, user, reason, tick
         name: channelName,
         type: ChannelType.GuildText,
         parent: selectedCategoryId,
-        topic: `Ticket de Segurança #${ticketNumber} | ${user.tag} | ${reason}`,
+        topic: `Ticket de Segurança #${ticketNumber} | creatorId=${user.id} | ${user.tag} | ${reason}`,
         permissionOverwrites
       });
     } catch (channelError) {

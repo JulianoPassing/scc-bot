@@ -3,6 +3,83 @@ import { createTicketChannelWithCategoryCheck } from '../utils/ticketUtils.js';
 import { hasActiveTicketInCategory, registerActiveTicket, removeActiveTicket, loadTicketsData } from '../utils/ticketManager.js';
 import { CATEGORY_CONFIG } from '../config.js';
 
+function extractCreatorIdFromTopic(topic) {
+  if (!topic) return null;
+  const match = topic.match(/creatorId\s*=\s*(\d{17,19})/i);
+  return match ? match[1] : null;
+}
+
+async function findCreatorIdFromTicketsData(channelId) {
+  const data = await loadTicketsData();
+  for (const [userId, userTickets] of Object.entries(data.activeTickets || {})) {
+    for (const ticketData of Object.values(userTickets || {})) {
+      if (ticketData?.channelId === channelId) return userId;
+    }
+  }
+  return null;
+}
+
+async function findCreatorIdFromNotifyMessage(channel) {
+  let lastId;
+  for (let i = 0; i < 25; i++) { // até 2500 mensagens (25x100)
+    const options = { limit: 100 };
+    if (lastId) options.before = lastId;
+
+    const messages = await channel.messages.fetch(options);
+    if (!messages.size) break;
+
+    const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket!'));
+    if (notifyMsg) {
+      const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
+      if (match) return match[1];
+    }
+
+    lastId = messages.last().id;
+    if (messages.size < 100) break;
+  }
+  return null;
+}
+
+async function findCreatorIdFromChannelPermissions(channel, client, guild) {
+  try {
+    const excludedIds = new Set([
+      guild.roles.everyone.id,
+      client.user.id
+    ]);
+
+    const candidateMemberIds = [];
+    for (const [id, overwrite] of channel.permissionOverwrites.cache) {
+      if (excludedIds.has(id)) continue;
+      // OverwriteType.Member é 1 no discord.js v14
+      if (overwrite?.type !== 1 && overwrite?.type !== 'member') continue;
+      candidateMemberIds.push(id);
+    }
+
+    for (const id of candidateMemberIds) {
+      const u = await client.users.fetch(id).catch(() => null);
+      if (u && !u.bot) return id;
+    }
+  } catch (e) {}
+  return null;
+}
+
+async function getTicketCreatorId({ channel, client, guild }) {
+  // 1) topic (persistente e rápido)
+  const fromTopic = extractCreatorIdFromTopic(channel.topic);
+  if (fromTopic) return fromTopic;
+
+  // 2) tickets.json (registro do bot)
+  const fromData = await findCreatorIdFromTicketsData(channel.id).catch(() => null);
+  if (fromData) return fromData;
+
+  // 3) mensagem de abertura (com paginação)
+  const fromNotify = await findCreatorIdFromNotifyMessage(channel).catch(() => null);
+  if (fromNotify) return fromNotify;
+
+  // 4) último recurso: heurística pelas permissões do canal
+  return await findCreatorIdFromChannelPermissions(channel, client, guild).catch(() => null);
+}
+
 /**
  * Verifica se um usuário tem cargo de staff
  * @param {GuildMember} member - Membro do servidor
@@ -27,23 +104,14 @@ function hasStaffRole(member) {
  * Verifica se um usuário é o criador do ticket
  * @param {TextChannel} channel - Canal do ticket
  * @param {string} userId - ID do usuário a verificar
+ * @param {Client} client - Client do discord.js
+ * @param {Guild} guild - Guild do Discord
  * @returns {boolean} True se o usuário é o criador do ticket
  */
-async function isTicketCreator(channel, userId) {
+async function isTicketCreator(channel, userId, client, guild) {
   try {
-    // Buscar a mensagem de notificação de abertura do ticket
-    const messages = await channel.messages.fetch({ limit: 20 });
-    const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket!'));
-    
-    if (notifyMsg) {
-      const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
-      if (match) {
-        const creatorId = match[1];
-        return creatorId === userId;
-      }
-    }
-    
-    return false;
+    const creatorId = await getTicketCreatorId({ channel, client, guild });
+    return creatorId === userId;
   } catch (error) {
     console.error('Erro ao verificar criador do ticket:', error);
     return false;
@@ -111,7 +179,7 @@ export const execute = async function(interaction) {
       if (customId === 'fechar_ticket') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
@@ -141,7 +209,7 @@ export const execute = async function(interaction) {
       if (customId === 'assumir_ticket') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
@@ -163,7 +231,7 @@ export const execute = async function(interaction) {
       if (customId === 'adicionar_membro') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
@@ -193,7 +261,7 @@ export const execute = async function(interaction) {
       if (customId === 'avisar_membro') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
@@ -205,15 +273,8 @@ export const execute = async function(interaction) {
         
         console.log(`[DEBUG] Permitindo acesso ao avisar membro para ${interaction.user.tag}`);
         
-        // Busca a menção na mensagem de notificação de abertura do ticket
         const channel = interaction.channel;
-        const messages = await channel.messages.fetch({ limit: 10 });
-        const notifyMsg = messages.find(m => m.content && m.content.includes('abriu um ticket!'));
-        let autorId = null;
-        if (notifyMsg) {
-          const match = notifyMsg.content.match(/<@!?([0-9]+)>/);
-          if (match) autorId = match[1];
-        }
+        const autorId = await getTicketCreatorId({ channel, client: interaction.client, guild });
         if (autorId) {
           const embed = new EmbedBuilder()
             .setColor('#EAF207')
@@ -242,7 +303,7 @@ export const execute = async function(interaction) {
       if (customId === 'renomear_ticket') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
@@ -289,7 +350,7 @@ export const execute = async function(interaction) {
       if (customId === 'timer_24h') {
         // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
         // Verificar se é staff E não é o criador do ticket
         if (isStaff && !isCreator) {
@@ -434,7 +495,7 @@ export const execute = async function(interaction) {
       if (customId === 'cancelar_timer_24h') {
         // Verificar se é staff OU é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
         // Permitir se é staff OU é o criador do ticket
         if (isStaff || isCreator) {
@@ -501,7 +562,7 @@ export const execute = async function(interaction) {
           channelName,
           categoriaId,
           user.id,
-          `Ticket de ${categoria.nome} | ${user.tag}`
+          `Ticket de ${categoria.nome} | creatorId=${user.id} | ${user.tag}`
         );
       } catch (err) {
         console.error('Erro ao criar canal do ticket:', err, 'Categoria:', categoriaId, 'Guild:', guild.id);
@@ -524,7 +585,8 @@ export const execute = async function(interaction) {
       // Registrar o ticket ativo
       await registerActiveTicket(user.id, tipo, ticketChannel.id, ticketChannel.name);
       
-      await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket! Equipe notificada:` });
+      const notifyMsg = await ticketChannel.send({ content: `🔔 <@${user.id}> abriu um ticket! Equipe notificada:` });
+      await notifyMsg.pin().catch(() => {});
       
       // Verificar se é um ticket de doações e enviar mensagem privada para usuários específicos
       if (categoriaId === '1386490511606419578') {
@@ -594,7 +656,7 @@ export const execute = async function(interaction) {
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
       // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
       const isStaff = hasStaffRole(interaction.member);
-      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
       
       // Verificar se é staff E não é o criador do ticket
       if (isStaff && !isCreator) {
@@ -645,7 +707,7 @@ export const execute = async function(interaction) {
     if (interaction.isModalSubmit() && interaction.customId === 'modal_adicionar_membro') {
       // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
       const isStaff = hasStaffRole(interaction.member);
-      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
       
       // Verificar se é staff E não é o criador do ticket
       if (isStaff && !isCreator) {
@@ -694,7 +756,7 @@ export const execute = async function(interaction) {
     if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento') {
       // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
       const isStaff = hasStaffRole(interaction.member);
-      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id);
+      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
       
       // Verificar se é staff E não é o criador do ticket
       if (isStaff && !isCreator) {

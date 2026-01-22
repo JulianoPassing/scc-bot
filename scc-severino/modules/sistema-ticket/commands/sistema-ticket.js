@@ -1,4 +1,4 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -49,5 +49,13 @@ Ou acesse: ${baseUrl}
     })
     .setTimestamp();
 
-  await message.channel.send({ embeds: [embed] });
+  // Botão para abrir ticket no sistema web
+  const buttonRow = new ActionRowBuilder().addComponents(
+    new ButtonBuilder()
+      .setLabel('Abrir Ticket')
+      .setStyle(ButtonStyle.Link)
+      .setURL(baseUrl)
+  );
+
+  await message.channel.send({ embeds: [embed], components: [buttonRow] });
 }

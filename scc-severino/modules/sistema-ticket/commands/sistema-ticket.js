@@ -30,17 +30,7 @@ Tickets tem prazo de resposta de até 72hrs uteis
 • 🔎 **Revisão** - Solicitar revisão de advertências e banimentos
 • 📁 **Suporte** - Suporte técnico e ajuda geral
 
-**🔗 Acesse o Sistema:**
-[Clique aqui para abrir um ticket](${baseUrl})
-
-Ou acesse: ${baseUrl}
-
-**💡 Como funciona:**
-1. Acesse o link acima
-2. Faça login com sua conta Discord
-3. Selecione a categoria do seu ticket
-4. Descreva seu problema ou solicitação
-5. Nossa equipe responderá o mais rápido possível`)
+**💡 Para abrir um ticket, clique no botão abaixo!**`)
     .setColor(0xEAF207) // Amarelo
     .setThumbnail('https://i.imgur.com/kHvmXj6.png')
     .setFooter({ 
@@ -50,11 +40,14 @@ Ou acesse: ${baseUrl}
     .setTimestamp();
 
   // Botão para abrir ticket no sistema web
+  // Nota: Botões de link não podem ter cores customizadas no Discord
+  // Eles sempre aparecem com o estilo padrão (azul/cinza)
   const buttonRow = new ActionRowBuilder().addComponents(
     new ButtonBuilder()
       .setLabel('Abrir Ticket')
       .setStyle(ButtonStyle.Link)
       .setURL(baseUrl)
+      .setEmoji('🟡') // Emoji amarelo para referência visual à cor do embed (#EAF207)
   );
 
   await message.channel.send({ embeds: [embed], components: [buttonRow] });

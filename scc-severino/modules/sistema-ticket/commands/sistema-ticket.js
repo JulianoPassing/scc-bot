@@ -10,7 +10,7 @@ export const data = {
 
 export async function execute(message, args, client) {
   // URL base do sistema de tickets (pode ser configurada via .env)
-  const baseUrl = process.env.TICKET_BASE_URL || 'https://scc-tickets.vercel.app';
+  const baseUrl = process.env.TICKET_BASE_URL || 'http://191.252.221.157/';
   
   const embed = new EmbedBuilder()
     .setTitle('📄 Central de Atendimento - StreetCarClub')

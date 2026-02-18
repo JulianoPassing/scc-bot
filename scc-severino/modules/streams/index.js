@@ -721,15 +721,14 @@ const setupStreamsModule = function (client) {
       const successEmbed = new EmbedBuilder()
         .setColor(0xEAF207)
         .setTitle('📊 Relatório de Criadores de Conteúdo')
-        .setDescription('O relatório HTML foi gerado com sucesso.')
+        .setDescription(`📁 \`${filename}\`\n📅 <t:${Math.floor(Date.now() / 1000)}:F>`)
         .addFields(
-          { name: '📁 Arquivo', value: `\`${filename}\``, inline: true },
-          { name: '📅 Data', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
-          { name: '👥 Total', value: `${streamersData.length} criadores`, inline: true },
-          { name: '✅ Ativos', value: `${ativos}`, inline: true },
-          { name: '🔵 Pouco Ativos', value: `${poucoAtivos}`, inline: true },
-          { name: '⚠️ Inativos', value: `${inativos}`, inline: true },
-          { name: '❌ Inexistentes', value: `${inexistentes}`, inline: true }
+          { name: '✅ Ativos', value: `\`\`\`${ativos}\`\`\``, inline: true },
+          { name: '🔵 Pouco Ativos', value: `\`\`\`${poucoAtivos}\`\`\``, inline: true },
+          { name: '⚠️ Inativos', value: `\`\`\`${inativos}\`\`\``, inline: true },
+          { name: '❌ Inexistentes', value: `\`\`\`${inexistentes}\`\`\``, inline: true },
+          { name: '👥 Total', value: `\`\`\`${streamersData.length}\`\`\``, inline: true },
+          { name: '\u200b', value: '\u200b', inline: true }
         )
         .setFooter({ text: 'Street Car Club • Relatório de Streams' })
         .setTimestamp();

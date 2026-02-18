@@ -18,9 +18,13 @@ const {
   ADMIN_ROLE_ID
 } = config;
 
-const MSG_PER_WEEK_THRESHOLD = 2;
+const CRITERIOS = config.CRITERIOS || {};
+const MSG_PER_WEEK_THRESHOLD = CRITERIOS.MSG_MINIMA_POR_SEMANA ?? 2;
+const MSG_ULTIMOS_30_DIAS = CRITERIOS.MSG_MINIMA_ULTIMOS_30_DIAS ?? 2;
 const LAST_MESSAGES_TO_SHOW = 7;
-const INATIVIDADE_DAYS = 30; // Mensagens com mais de 30 dias = inativo
+const INATIVIDADE_DAYS = CRITERIOS.DIAS_INATIVIDADE ?? 30;
+const MSG_MINIMA_TOTAL = CRITERIOS.MSG_MINIMA_TOTAL ?? 2;
+const MODO_FILTRO = (CRITERIOS.MODO_FILTRO || 'janela'); // "janela" = msgs nos últimos 30 dias | "frequencia" = média histórica
 
 /**
  * Busca todas as mensagens do canal (máximo possível)
@@ -39,27 +43,45 @@ async function fetchAllChannelMessages(channel) {
   return allMessages.sort((a, b) => b.createdTimestamp - a.createdTimestamp);
 }
 
+/** Retorna início e fim do mês atual (America/Sao_Paulo) em timestamp */
+function getMesAtual(now = Date.now()) {
+  const d = new Date(now);
+  const ano = d.getFullYear();
+  const mes = d.getMonth();
+  const inicio = new Date(ano, mes, 1).getTime();
+  const fim = new Date(ano, mes + 1, 0, 23, 59, 59, 999).getTime();
+  return { inicio, fim };
+}
+
 /**
- * Calcula o status: INEXISTENTE, INATIVO ou ATIVO
- * ATIVO: última mensagem <= 30 dias E >= 2 mensagens E >= 2 por semana
- * INATIVO: última mensagem > 30 dias OU < 2 mensagens OU < 2 por semana
- * INEXISTENTE: sem mensagens
+ * Calcula status e métricas do criador de conteúdo
+ * Baseado no MÊS ATUAL:
+ *   ATIVO: 2+ mensagens no mês atual
+ *   POUCO ATIVO: 1 mensagem no mês atual
+ *   INATIVO: 0 mensagens no mês atual (mas tem histórico)
+ *   INEXISTENTE: nunca postou
  */
 function calculateStatus(messages, now = Date.now()) {
-  if (!messages || messages.length === 0) return 'INEXISTENTE';
+  const empty = { status: 'INEXISTENTE', diasDesdeUltima: null, msgPorSemana: '0', msgNoMes: 0, total: 0, motivo: 'Nunca postou no canal' };
+  if (!messages || messages.length === 0) return empty;
+
   const total = messages.length;
   const newest = Math.max(...messages.map(m => m.createdTimestamp));
-  const daysSinceLastMsg = (now - newest) / (1000 * 60 * 60 * 24);
-
-  // Se a última mensagem tem mais de 30 dias = INATIVO
-  if (daysSinceLastMsg > INATIVIDADE_DAYS) return 'INATIVO';
-  if (total < 2) return 'INATIVO';
-
   const oldest = Math.min(...messages.map(m => m.createdTimestamp));
+  const daysSinceLastMsg = Math.floor((now - newest) / (1000 * 60 * 60 * 24));
+  const { inicio, fim } = getMesAtual(now);
+  const msgNoMes = messages.filter(m => m.createdTimestamp >= inicio && m.createdTimestamp <= fim).length;
   const daysSpan = Math.max(1, (newest - oldest) / (1000 * 60 * 60 * 24));
   const weeks = daysSpan / 7;
-  const messagesPerWeek = total / weeks;
-  return messagesPerWeek >= MSG_PER_WEEK_THRESHOLD ? 'ATIVO' : 'INATIVO';
+  const messagesPerWeek = (total / weeks).toFixed(1);
+
+  if (msgNoMes === 0) {
+    return { status: 'INATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNoMes, total, motivo: `Nenhuma mensagem no mês atual` };
+  }
+  if (msgNoMes === 1) {
+    return { status: 'POUCO ATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNoMes, total, motivo: `1 mensagem no mês atual` };
+  }
+  return { status: 'ATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNoMes, total, motivo: `${msgNoMes} mensagens no mês atual` };
 }
 
 /** Retorna true se a mensagem tem mais de 30 dias */
@@ -83,23 +105,26 @@ function generateStreamersRelatorio(streamersData, guild) {
 
   const statusClass = (status) => {
     if (status === 'ATIVO') return 'status-ativo';
+    if (status === 'POUCO ATIVO') return 'status-pouco-ativo';
     if (status === 'INATIVO') return 'status-inativo';
     return 'status-inexistente';
   };
 
   const statusIcon = (status) => {
     if (status === 'ATIVO') return 'fa-check-circle';
+    if (status === 'POUCO ATIVO') return 'fa-minus-circle';
     if (status === 'INATIVO') return 'fa-exclamation-triangle';
     return 'fa-times-circle';
   };
 
   const now = Date.now();
-  const streamersHtml = streamersData.map(({ member, messages, status }) => {
+  const streamersHtml = streamersData.map(({ member, messages, status, statusData }) => {
     const displayName = member?.displayName || member?.user?.username || 'Desconhecido';
     const userTag = member?.user?.tag || member?.user?.username || 'Desconhecido';
     const userId = member?.id || '';
     const avatarUrl = member?.user?.displayAvatarURL?.() || '';
     const last7 = (messages || []).slice(0, LAST_MESSAGES_TO_SHOW);
+    const sd = statusData || {};
 
     const messagesHtml = last7.length === 0
       ? '<div class="no-messages">Nenhuma mensagem encontrada no canal de streams.</div>'
@@ -140,6 +165,14 @@ function generateStreamersRelatorio(streamersData, guild) {
               <div class="streamer-status ${statusClass(status)}">
                 <i class="fas ${statusIcon(status)}"></i> ${status}
               </div>
+              ${sd.motivo ? `<div class="streamer-motivo">${sd.motivo}</div>` : ''}
+              ${(sd.total > 0 && (sd.diasDesdeUltima !== null || sd.msgPorSemana || sd.msgNoMes)) ? `
+              <div class="streamer-metricas">
+                ${sd.diasDesdeUltima !== null ? `<span><i class="fas fa-clock"></i> Última: há ${sd.diasDesdeUltima} dias</span>` : ''}
+                ${sd.msgNoMes !== undefined ? `<span><i class="fas fa-calendar-alt"></i> ${sd.msgNoMes} no mês</span>` : ''}
+                ${sd.msgPorSemana ? `<span><i class="fas fa-chart-line"></i> ${sd.msgPorSemana}/semana</span>` : ''}
+                ${sd.total ? `<span><i class="fas fa-comment"></i> ${sd.total} total</span>` : ''}
+              </div>` : ''}
             </div>
           </div>
         </div>
@@ -244,6 +277,28 @@ function generateStreamersRelatorio(streamersData, guild) {
       opacity: 0.9;
     }
 
+    .stats-resumo {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin: 20px 30px;
+      justify-content: center;
+    }
+    .stat-box {
+      padding: 15px 25px;
+      border-radius: 12px;
+      text-align: center;
+      min-width: 100px;
+      border: 1px solid var(--border-color);
+    }
+    .stat-box .stat-num { font-size: 1.8em; font-weight: 700; display: block; }
+    .stat-box .stat-label { font-size: 0.85em; color: var(--text-secondary); }
+    .stat-box.stat-ativo { border-left: 4px solid #22c55e; }
+    .stat-box.stat-pouco-ativo { border-left: 4px solid #3b82f6; }
+    .stat-box.stat-inativo { border-left: 4px solid #f59e0b; }
+    .stat-box.stat-inexistente { border-left: 4px solid #ef4444; }
+    .stat-box.stat-total { border-left: 4px solid var(--primary-color); }
+
     .info {
       margin: 20px 30px;
       padding: 20px;
@@ -271,6 +326,7 @@ function generateStreamersRelatorio(streamersData, guild) {
     }
 
     .streamer-card.status-ativo { border-left-color: #22c55e; }
+    .streamer-card.status-pouco-ativo { border-left-color: #3b82f6; }
     .streamer-card.status-inativo { border-left-color: #f59e0b; }
     .streamer-card.status-inexistente { border-left-color: #ef4444; }
 
@@ -315,8 +371,26 @@ function generateStreamersRelatorio(streamersData, guild) {
     }
 
     .streamer-status.status-ativo { color: #22c55e; }
+    .streamer-status.status-pouco-ativo { color: #3b82f6; }
     .streamer-status.status-inativo { color: #f59e0b; }
     .streamer-status.status-inexistente { color: #ef4444; }
+
+    .streamer-motivo {
+      font-size: 0.85em;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      font-style: italic;
+    }
+    .streamer-metricas {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-top: 8px;
+      font-size: 0.8em;
+      color: var(--text-secondary);
+    }
+    .streamer-metricas span { display: flex; align-items: center; gap: 4px; }
+    .streamer-metricas i { color: var(--primary-color); }
 
     .streamer-messages h4 {
       font-size: 1em;
@@ -409,12 +483,36 @@ function generateStreamersRelatorio(streamersData, guild) {
       <p>Street Car Club • Canal de Streams • ${formattedDate}</p>
     </div>
 
+    <div class="stats-resumo">
+      <div class="stat-box stat-ativo">
+        <span class="stat-num">${streamersData.filter(s => s.status === 'ATIVO').length}</span>
+        <span class="stat-label">Ativos</span>
+      </div>
+      <div class="stat-box stat-pouco-ativo">
+        <span class="stat-num">${streamersData.filter(s => s.status === 'POUCO ATIVO').length}</span>
+        <span class="stat-label">Pouco Ativos</span>
+      </div>
+      <div class="stat-box stat-inativo">
+        <span class="stat-num">${streamersData.filter(s => s.status === 'INATIVO').length}</span>
+        <span class="stat-label">Inativos</span>
+      </div>
+      <div class="stat-box stat-inexistente">
+        <span class="stat-num">${streamersData.filter(s => s.status === 'INEXISTENTE').length}</span>
+        <span class="stat-label">Inexistentes</span>
+      </div>
+      <div class="stat-box stat-total">
+        <span class="stat-num">${streamersData.length}</span>
+        <span class="stat-label">Total</span>
+      </div>
+    </div>
+
     <div class="info">
-      <strong><i class="fas fa-info-circle"></i> Critérios de Status:</strong><br>
-      <strong>ATIVO:</strong> Última mensagem nos últimos 30 dias + 2 ou mais mensagens por semana<br>
-      <strong>INATIVO:</strong> Última mensagem com mais de 30 dias OU menos de 2 mensagens por semana<br>
-      <strong>INEXISTENTE:</strong> Nenhuma mensagem encontrada<br>
-      <small style="opacity:0.8;margin-top:8px;display:block">Relatório gerado em: ${formattedDate}</small>
+      <strong><i class="fas fa-info-circle"></i> Critérios (mês atual)</strong><br><br>
+      <strong style="color:#22c55e">ATIVO:</strong> 2+ mensagens no mês atual<br>
+      <strong style="color:#3b82f6">POUCO ATIVO:</strong> 1 mensagem no mês atual<br>
+      <strong style="color:#f59e0b">INATIVO:</strong> 0 mensagens no mês atual<br>
+      <strong style="color:#ef4444">INEXISTENTE:</strong> Nunca postou no canal<br><br>
+      <small style="opacity:0.8">Relatório: ${formattedDate}</small>
     </div>
 
     ${streamersHtml}
@@ -585,17 +683,20 @@ const setupStreamsModule = function (client) {
 
       const streamersData = criadores.map(member => {
         const userMessages = allMessages.filter(m => m.author.id === member.id);
-        const status = calculateStatus(userMessages);
+        const statusData = calculateStatus(userMessages);
         return {
           member,
           messages: userMessages,
-          status
+          status: statusData.status,
+          statusData
         };
       });
 
       streamersData.sort((a, b) => {
-        const order = { ATIVO: 0, INATIVO: 1, INEXISTENTE: 2 };
-        return (order[a.status] ?? 3) - (order[b.status] ?? 3);
+        const order = { ATIVO: 0, 'POUCO ATIVO': 1, INATIVO: 2, INEXISTENTE: 3 };
+        const diff = (order[a.status] ?? 4) - (order[b.status] ?? 4);
+        if (diff !== 0) return diff;
+        return (a.statusData.diasDesdeUltima ?? 9999) - (b.statusData.diasDesdeUltima ?? 9999);
       });
 
       const html = generateStreamersRelatorio(streamersData, guild);
@@ -613,6 +714,7 @@ const setupStreamsModule = function (client) {
       const attachment = new AttachmentBuilder(filePath, { name: filename });
 
       const ativos = streamersData.filter(s => s.status === 'ATIVO').length;
+      const poucoAtivos = streamersData.filter(s => s.status === 'POUCO ATIVO').length;
       const inativos = streamersData.filter(s => s.status === 'INATIVO').length;
       const inexistentes = streamersData.filter(s => s.status === 'INEXISTENTE').length;
 
@@ -625,6 +727,7 @@ const setupStreamsModule = function (client) {
           { name: '📅 Data', value: `<t:${Math.floor(Date.now() / 1000)}:F>`, inline: true },
           { name: '👥 Total', value: `${streamersData.length} criadores`, inline: true },
           { name: '✅ Ativos', value: `${ativos}`, inline: true },
+          { name: '🔵 Pouco Ativos', value: `${poucoAtivos}`, inline: true },
           { name: '⚠️ Inativos', value: `${inativos}`, inline: true },
           { name: '❌ Inexistentes', value: `${inexistentes}`, inline: true }
         )

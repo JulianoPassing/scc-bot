@@ -13,6 +13,7 @@ const config = JSON.parse(
 const {
   STREAMS_CHANNEL_ID,
   REPORT_COMMAND_CHANNEL_ID,
+  REMOVER_STREAMER_CHANNEL_ID,
   CRIADOR_CONTEUDO_ROLE_ID,
   ADMIN_ROLE_ID
 } = config;
@@ -455,8 +456,12 @@ const setupStreamsModule = function (client) {
 
     if (!isRelatorio && !isRemover) return;
 
-    if (message.channel.id !== REPORT_COMMAND_CHANNEL_ID) {
-      return message.reply('❌ Este comando só pode ser usado no canal autorizado.').catch(() => {});
+    if (isRelatorio && message.channel.id !== REPORT_COMMAND_CHANNEL_ID) {
+      return message.reply('❌ O relatório só pode ser gerado no canal autorizado.').catch(() => {});
+    }
+    const removerChannel = REMOVER_STREAMER_CHANNEL_ID || REPORT_COMMAND_CHANNEL_ID;
+    if (isRemover && removerChannel && message.channel.id !== removerChannel) {
+      return message.reply(`❌ Use o comando no canal <#${removerChannel}>`).catch(() => {});
     }
 
     if (!message.member?.roles?.cache?.has(ADMIN_ROLE_ID)) {
@@ -475,9 +480,14 @@ const setupStreamsModule = function (client) {
       }
 
       try {
+        const processingMsg = ids.length > 10
+          ? await message.reply(`🔄 Removendo cargo de ${ids.length} membros...`).catch(() => null)
+          : null;
+
         const guild = message.guild;
         const role = await guild.roles.fetch(CRIADOR_CONTEUDO_ROLE_ID).catch(() => null);
         if (!role) {
+          if (processingMsg) await processingMsg.delete().catch(() => {});
           return message.reply('❌ Cargo Criador de Conteúdo não encontrado.').catch(() => {});
         }
 
@@ -502,6 +512,7 @@ const setupStreamsModule = function (client) {
 
         const sucesso = resultados.filter(r => r.ok);
         const falha = resultados.filter(r => !r.ok);
+        const MAX_LEN = 1900;
         let reply = `**Remoção do cargo Criador de Conteúdo**\n`;
         if (sucesso.length > 0) {
           reply += `\n✅ **Removidos (${sucesso.length}):**\n${sucesso.map(s => `• \`${s.id}\` — ${s.tag}`).join('\n')}`;
@@ -509,7 +520,39 @@ const setupStreamsModule = function (client) {
         if (falha.length > 0) {
           reply += `\n\n❌ **Falhas (${falha.length}):**\n${falha.map(f => `• \`${f.id}\` — ${f.msg}`).join('\n')}`;
         }
-        await message.reply(reply).catch(() => {});
+        if (processingMsg) await processingMsg.delete().catch(() => {});
+
+        if (reply.length > MAX_LEN) {
+          const chunks = [];
+          let curr = `**Remoção do cargo Criador de Conteúdo**\n`;
+          if (sucesso.length > 0) {
+            curr += `\n✅ **Removidos (${sucesso.length}):**\n`;
+            for (const s of sucesso) {
+              const line = `• \`${s.id}\` — ${s.tag}\n`;
+              if (curr.length + line.length > MAX_LEN) {
+                chunks.push(curr);
+                curr = line;
+              } else curr += line;
+            }
+          }
+          if (falha.length > 0) {
+            curr += `\n❌ **Falhas (${falha.length}):**\n`;
+            for (const f of falha) {
+              const line = `• \`${f.id}\` — ${f.msg}\n`;
+              if (curr.length + line.length > MAX_LEN) {
+                chunks.push(curr);
+                curr = line;
+              } else curr += line;
+            }
+          }
+          chunks.push(curr);
+          await message.reply(chunks[0]).catch(e => console.error('Erro ao enviar reply:', e));
+          for (let i = 1; i < chunks.length; i++) {
+            await message.channel.send(chunks[i]).catch(e => console.error('Erro ao enviar chunk:', e));
+          }
+        } else {
+          await message.reply(reply).catch(e => console.error('Erro ao enviar reply:', e));
+        }
       } catch (error) {
         console.error('Erro no remover-streamer:', error);
         await message.reply('❌ Erro ao processar o comando.').catch(() => {});

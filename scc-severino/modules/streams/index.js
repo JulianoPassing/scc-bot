@@ -19,6 +19,7 @@ const {
 
 const MSG_PER_WEEK_THRESHOLD = 2;
 const LAST_MESSAGES_TO_SHOW = 7;
+const INATIVIDADE_DAYS = 30; // Mensagens com mais de 30 dias = inativo
 
 /**
  * Busca todas as mensagens do canal (máximo possível)
@@ -39,20 +40,30 @@ async function fetchAllChannelMessages(channel) {
 
 /**
  * Calcula o status: INEXISTENTE, INATIVO ou ATIVO
- * ATIVO: >= 2 mensagens E >= 2 mensagens por semana (em média)
- * INATIVO: tem mensagens mas < 2 por semana ou menos de 2 mensagens no total
+ * ATIVO: última mensagem <= 30 dias E >= 2 mensagens E >= 2 por semana
+ * INATIVO: última mensagem > 30 dias OU < 2 mensagens OU < 2 por semana
  * INEXISTENTE: sem mensagens
  */
-function calculateStatus(messages) {
+function calculateStatus(messages, now = Date.now()) {
   if (!messages || messages.length === 0) return 'INEXISTENTE';
   const total = messages.length;
-  if (total < 2) return 'INATIVO';
-  const oldest = Math.min(...messages.map(m => m.createdTimestamp));
   const newest = Math.max(...messages.map(m => m.createdTimestamp));
+  const daysSinceLastMsg = (now - newest) / (1000 * 60 * 60 * 24);
+
+  // Se a última mensagem tem mais de 30 dias = INATIVO
+  if (daysSinceLastMsg > INATIVIDADE_DAYS) return 'INATIVO';
+  if (total < 2) return 'INATIVO';
+
+  const oldest = Math.min(...messages.map(m => m.createdTimestamp));
   const daysSpan = Math.max(1, (newest - oldest) / (1000 * 60 * 60 * 24));
   const weeks = daysSpan / 7;
   const messagesPerWeek = total / weeks;
   return messagesPerWeek >= MSG_PER_WEEK_THRESHOLD ? 'ATIVO' : 'INATIVO';
+}
+
+/** Retorna true se a mensagem tem mais de 30 dias */
+function isMessageOld(timestamp, now = Date.now()) {
+  return (now - timestamp) / (1000 * 60 * 60 * 24) > INATIVIDADE_DAYS;
 }
 
 /**
@@ -65,7 +76,8 @@ function generateStreamersRelatorio(streamersData, guild) {
     month: '2-digit',
     year: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    timeZone: 'America/Sao_Paulo'
   });
 
   const statusClass = (status) => {
@@ -80,8 +92,11 @@ function generateStreamersRelatorio(streamersData, guild) {
     return 'fa-times-circle';
   };
 
+  const now = Date.now();
   const streamersHtml = streamersData.map(({ member, messages, status }) => {
     const displayName = member?.displayName || member?.user?.username || 'Desconhecido';
+    const userTag = member?.user?.tag || member?.user?.username || 'Desconhecido';
+    const userId = member?.id || '';
     const avatarUrl = member?.user?.displayAvatarURL?.() || '';
     const last7 = (messages || []).slice(0, LAST_MESSAGES_TO_SHOW);
 
@@ -93,14 +108,19 @@ function generateStreamersRelatorio(streamersData, guild) {
             month: '2-digit',
             year: 'numeric',
             hour: '2-digit',
-            minute: '2-digit'
+            minute: '2-digit',
+            timeZone: 'America/Sao_Paulo'
           });
+          const antiga = isMessageOld(msg.createdTimestamp, now);
           const content = msg.content
             ? msg.content.replace(/</g, '&lt;').replace(/>/g, '&gt;')
             : '(sem texto)';
           return `
-            <div class="msg-item">
-              <div class="msg-meta">${dateStr}</div>
+            <div class="msg-item ${antiga ? 'msg-antiga' : 'msg-recente'}">
+              <div class="msg-meta">
+                ${dateStr}
+                ${antiga ? '<span class="msg-badge">Antiga</span>' : '<span class="msg-badge msg-badge-recente">Recente</span>'}
+              </div>
               <div class="msg-content">${content}</div>
             </div>`;
         }).join('');
@@ -110,8 +130,12 @@ function generateStreamersRelatorio(streamersData, guild) {
         <div class="streamer-header">
           <div class="streamer-info">
             ${avatarUrl ? `<img src="${avatarUrl}" alt="avatar" class="streamer-avatar">` : ''}
-            <div>
+            <div class="streamer-details">
               <div class="streamer-name">${displayName}</div>
+              <div class="streamer-ids">
+                <span class="streamer-tag"><i class="fas fa-at"></i> ${userTag}</span>
+                <span class="streamer-id"><i class="fas fa-fingerprint"></i> ${userId}</span>
+              </div>
               <div class="streamer-status ${statusClass(status)}">
                 <i class="fas ${statusIcon(status)}"></i> ${status}
               </div>
@@ -272,6 +296,17 @@ function generateStreamersRelatorio(streamersData, guild) {
       color: var(--text-color);
     }
 
+    .streamer-details { flex: 1; }
+    .streamer-ids {
+      display: flex;
+      gap: 15px;
+      margin-top: 6px;
+      font-size: 0.85em;
+      color: var(--text-secondary);
+    }
+    .streamer-ids i { margin-right: 4px; color: var(--primary-color); }
+    .streamer-tag, .streamer-id { font-family: monospace; }
+
     .streamer-status {
       font-size: 0.95em;
       margin-top: 4px;
@@ -304,6 +339,32 @@ function generateStreamersRelatorio(streamersData, guild) {
       font-size: 12px;
       color: var(--text-secondary);
       margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .msg-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .msg-badge:not(.msg-badge-recente) {
+      background: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+    .msg-badge-recente {
+      background: rgba(34, 197, 94, 0.3);
+      color: #86efac;
+    }
+    .msg-item.msg-antiga {
+      border-left-color: #ef4444;
+      opacity: 0.9;
+    }
+    .msg-item.msg-recente {
+      border-left-color: #22c55e;
     }
 
     .msg-content {
@@ -349,9 +410,10 @@ function generateStreamersRelatorio(streamersData, guild) {
 
     <div class="info">
       <strong><i class="fas fa-info-circle"></i> Critérios de Status:</strong><br>
-      <strong>ATIVO:</strong> 2 ou mais mensagens por semana no canal de streams<br>
-      <strong>INATIVO:</strong> Menos de 2 mensagens por semana<br>
-      <strong>INEXISTENTE:</strong> Nenhuma mensagem encontrada
+      <strong>ATIVO:</strong> Última mensagem nos últimos 30 dias + 2 ou mais mensagens por semana<br>
+      <strong>INATIVO:</strong> Última mensagem com mais de 30 dias OU menos de 2 mensagens por semana<br>
+      <strong>INEXISTENTE:</strong> Nenhuma mensagem encontrada<br>
+      <small style="opacity:0.8;margin-top:8px;display:block">Relatório gerado em: ${formattedDate}</small>
     </div>
 
     ${streamersHtml}

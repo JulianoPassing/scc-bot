@@ -426,10 +426,34 @@ function generateStreamersRelatorio(streamersData, guild) {
 </html>`;
 }
 
+/** Extrai Discord ID - aceita só o número (ex: 953329786858663996), menção ou com prefixo */
+function extractDiscordIds(text) {
+  const parts = text.split(/\s+/).filter(Boolean);
+  const ids = [];
+  for (const p of parts) {
+    if (p === '!remover-streamer') continue;
+    // Menção <@123> ou <@!123>
+    const mentionMatch = p.match(/<?@!?(\d{17,19})>?/);
+    if (mentionMatch) {
+      ids.push(mentionMatch[1]);
+    } else {
+      // Só o número ou número com prefixo (discordid:, etc)
+      const numMatch = p.match(/(\d{17,19})/);
+      if (numMatch) ids.push(numMatch[1]);
+    }
+  }
+  return [...new Set(ids)];
+}
+
 const setupStreamsModule = function (client) {
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
-    if (message.content !== '!relatorio-streamers') return;
+
+    const content = message.content.trim();
+    const isRelatorio = content === '!relatorio-streamers';
+    const isRemover = content.startsWith('!remover-streamer');
+
+    if (!isRelatorio && !isRemover) return;
 
     if (message.channel.id !== REPORT_COMMAND_CHANNEL_ID) {
       return message.reply('❌ Este comando só pode ser usado no canal autorizado.').catch(() => {});
@@ -439,6 +463,61 @@ const setupStreamsModule = function (client) {
       return message.reply('❌ Você não tem permissão para usar este comando.').catch(() => {});
     }
 
+    // ========== COMANDO !remover-streamer ==========
+    if (isRemover) {
+      const ids = extractDiscordIds(content);
+      if (ids.length === 0) {
+        return message.reply(
+          '❌ Informe pelo menos um Discord ID (só o número).\n' +
+          '**Uso:** `!remover-streamer` seguido dos IDs\n' +
+          '**Exemplo:**\n```\n!remover-streamer\n953329786858663996\n123456789012345678\n```'
+        ).catch(() => {});
+      }
+
+      try {
+        const guild = message.guild;
+        const role = await guild.roles.fetch(CRIADOR_CONTEUDO_ROLE_ID).catch(() => null);
+        if (!role) {
+          return message.reply('❌ Cargo Criador de Conteúdo não encontrado.').catch(() => {});
+        }
+
+        const resultados = [];
+        for (const userId of ids) {
+          try {
+            const member = await guild.members.fetch(userId).catch(() => null);
+            if (!member) {
+              resultados.push({ id: userId, ok: false, msg: 'Membro não encontrado no servidor' });
+              continue;
+            }
+            if (!member.roles.cache.has(CRIADOR_CONTEUDO_ROLE_ID)) {
+              resultados.push({ id: userId, ok: false, msg: 'Não possui o cargo' });
+              continue;
+            }
+            await member.roles.remove(role);
+            resultados.push({ id: userId, ok: true, tag: member.user.tag });
+          } catch (err) {
+            resultados.push({ id: userId, ok: false, msg: err.message || 'Erro ao remover' });
+          }
+        }
+
+        const sucesso = resultados.filter(r => r.ok);
+        const falha = resultados.filter(r => !r.ok);
+        let reply = `**Remoção do cargo Criador de Conteúdo**\n`;
+        if (sucesso.length > 0) {
+          reply += `\n✅ **Removidos (${sucesso.length}):**\n${sucesso.map(s => `• \`${s.id}\` — ${s.tag}`).join('\n')}`;
+        }
+        if (falha.length > 0) {
+          reply += `\n\n❌ **Falhas (${falha.length}):**\n${falha.map(f => `• \`${f.id}\` — ${f.msg}`).join('\n')}`;
+        }
+        await message.reply(reply).catch(() => {});
+      } catch (error) {
+        console.error('Erro no remover-streamer:', error);
+        await message.reply('❌ Erro ao processar o comando.').catch(() => {});
+      }
+      return;
+    }
+
+    // ========== COMANDO !relatorio-streamers ==========
     try {
       const processingMsg = await message.reply('🔄 Gerando relatório de criadores de conteúdo...');
 

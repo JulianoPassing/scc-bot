@@ -39,29 +39,13 @@ const setupRegrasAcoesModule = function (client) {
         .setTitle('🎯 Regras de Ações – PvP/PvE')
         .setURL(REGRAS_SITE_URL)
         .setDescription(
-          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-            '**Regras oficiais de PvP/PvE** da Street Car Club Roleplay.\n\n' +
-            'Consulte o canal e o site para todas as informações atualizadas sobre ações, contingentes, locais blipados e demais regras.\n\n' +
-            '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
-            `📌 **[Ver regras completas no site →](${REGRAS_SITE_URL})**`
+          '**Regras oficiais de PvP/PvE da Street Car Club Roleplay. Consulte o canal para mais detalhes.**\n\n' +
+            `📌 [Ver regras completas no site](${REGRAS_SITE_URL})`
         )
         .setColor(0xEAF207)
         .setImage('https://i.imgur.com/Wf7bGAO.png')
         .setThumbnail('https://i.imgur.com/YULctuK.png')
-        .addFields({
-          name: '🔗 Acesso rápido',
-          value: `[Abrir Regras de Ações](${REGRAS_SITE_URL})`,
-          inline: true
-        })
-        .addFields({
-          name: '📋 Conteúdo',
-          value: 'PvP • PvE • Ações Blipadas • Locais',
-          inline: true
-        })
-        .setFooter({
-          text: 'Street Car Club Roleplay • Clique no título para abrir o site',
-          iconURL: 'https://i.imgur.com/YULctuK.png'
-        })
+        .setFooter({ text: 'Street Car Club Roleplay • Regras oficiais • Clique no título para abrir o site' })
         .setTimestamp();
 
       await channel.send({ embeds: [embed] });

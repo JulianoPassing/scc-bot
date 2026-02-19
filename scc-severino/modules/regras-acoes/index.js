@@ -3,6 +3,7 @@ import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { EmbedBuilder } from 'discord.js';
+import { fetchRegrasFromSite } from './fetchRegras.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -113,13 +114,22 @@ const setupRegrasAcoesModule = function (client) {
     }
 
     try {
-      if (!fs.existsSync(REGRAS_JSON_PATH)) {
-        return message.reply(`❌ Arquivo não encontrado: \`regras-acoes.json\``).catch(() => {});
+      const processingMsg = await message.reply('🔄 Buscando regras atualizadas no site...');
+
+      let data;
+      try {
+        data = await fetchRegrasFromSite();
+      } catch (fetchError) {
+        console.warn('Erro ao buscar do site, usando arquivo local:', fetchError.message);
+        if (fs.existsSync(REGRAS_JSON_PATH)) {
+          data = JSON.parse(fs.readFileSync(REGRAS_JSON_PATH, 'utf-8'));
+        } else {
+          return processingMsg.edit(
+            '❌ Não foi possível buscar do site e o arquivo `regras-acoes.json` não foi encontrado.'
+          ).catch(() => {});
+        }
       }
 
-      const processingMsg = await message.reply('🔄 Carregando regras de ações...');
-
-      const data = JSON.parse(fs.readFileSync(REGRAS_JSON_PATH, 'utf-8'));
       const embeds = buildEmbeds(data);
 
       const channel = await message.guild.channels.fetch(ACOES_CHANNEL_ID).catch(() => null);

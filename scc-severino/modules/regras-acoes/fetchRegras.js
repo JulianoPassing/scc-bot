@@ -231,11 +231,40 @@ function parseFromMarkdownLike(text) {
 }
 
 /**
+ * Converte HTML para texto markdown-like para o parser.
+ * Útil quando o site retorna HTML mas com estrutura diferente.
+ */
+function htmlToMarkdownLike(html) {
+  return html
+    .replace(/<h2[^>]*>/gi, '\n## ')
+    .replace(/<h3[^>]*>/gi, '\n### ')
+    .replace(/<h4[^>]*>/gi, '\n#### ')
+    .replace(/<h5[^>]*>/gi, '\n##### ')
+    .replace(/<\/h[2-5]>/gi, '\n')
+    .replace(/<p[^>]*>/gi, '\n')
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<\/p>/gi, '\n')
+    .replace(/<li[^>]*>/gi, '\n- ')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/**
  * Busca as regras do site e retorna no formato esperado pelo buildEmbeds.
+ * Tenta múltiplas estratégias de parsing para funcionar com diferentes estruturas do site.
  */
 export async function fetchRegrasFromSite() {
   const res = await fetch(REGRAS_URL, {
-    headers: { 'User-Agent': 'SCC-Bot/1.0' }
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0',
+      'Accept': 'text/html,application/xhtml+xml'
+    }
   });
 
   if (!res.ok) {
@@ -244,17 +273,53 @@ export async function fetchRegrasFromSite() {
 
   const html = await res.text();
 
-  if (html.includes('Regras de Ações') || html.includes('PvP/PvE')) {
+  if (!html.includes('Regras de Ações') && !html.includes('PvP')) {
+    throw new Error('Conteúdo de Regras de Ações não encontrado no site');
+  }
+
+  // Estratégia 0: Next.js __NEXT_DATA__ (dados em JSON)
+  const nextDataMatch = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+  if (nextDataMatch) {
     try {
-      return parseHtmlToRegras(html);
-    } catch (e) {
-      const idx = html.indexOf('Regras de Ações');
-      if (idx >= 0) {
-        return parseFromMarkdownLike(html.substring(idx));
+      const nextData = JSON.parse(nextDataMatch[1]);
+      const pageProps = nextData?.props?.pageProps;
+      const content = pageProps?.content || pageProps?.html || JSON.stringify(pageProps);
+      if (typeof content === 'string' && content.includes('Regras de Ações')) {
+        let parsed = parseHtmlToRegras(content);
+        if (parsed.secoes?.length < 5) parsed = parseFromMarkdownLike(htmlToMarkdownLike(content));
+        if (parsed.secoes?.length >= 5) return parsed;
       }
-      throw e;
+    } catch (_) {}
+  }
+
+  // Estratégia 1: Parser HTML (quando o site tem HTML completo com id="acoes")
+  try {
+    const parsed = parseHtmlToRegras(html);
+    if (parsed.secoes?.length >= 5) return parsed;
+  } catch (_) {}
+
+  // Estratégia 2: Extrair trecho e converter HTML → markdown-like
+  const idx = html.indexOf('Regras de Ações');
+  if (idx >= 0) {
+    const slice = html.substring(idx);
+    const endIdx = slice.indexOf('©') >= 0 ? slice.indexOf('©') : slice.length;
+    const excerpt = slice.substring(0, endIdx);
+    const markdownLike = htmlToMarkdownLike(excerpt);
+
+    if (markdownLike.includes('### ')) {
+      const parsed = parseFromMarkdownLike(markdownLike);
+      if (parsed.secoes?.length >= 3) return parsed;
     }
   }
 
-  throw new Error('Conteúdo de Regras de Ações não encontrado no site');
+  // Estratégia 3: Parser markdown direto no HTML (para SPAs que injetam texto)
+  const markdownFull = htmlToMarkdownLike(html);
+  const acoesIdx = markdownFull.indexOf('Regras de Ações');
+  if (acoesIdx >= 0) {
+    const until = markdownFull.indexOf('©') >= 0 ? markdownFull.indexOf('©') : markdownFull.length;
+    const parsed = parseFromMarkdownLike(markdownFull.substring(acoesIdx, until));
+    if (parsed.secoes?.length >= 3) return parsed;
+  }
+
+  throw new Error('Não foi possível extrair as regras do site. Estrutura da página pode ter mudado.');
 }

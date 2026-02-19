@@ -12,7 +12,6 @@ const config = JSON.parse(
 );
 
 const { ACOES_CHANNEL_ID, ADMIN_ROLE_ID } = config;
-const REGRAS_JSON_PATH = path.join(__dirname, 'regras-acoes.json');
 
 const MAX_FIELD_VALUE = 1024;
 const MAX_DESCRIPTION = 4096;
@@ -129,18 +128,10 @@ const setupRegrasAcoesModule = function (client) {
     try {
       const processingMsg = await message.reply('🔄 Buscando regras atualizadas no site...');
 
-      let data;
-      try {
-        data = await fetchRegrasFromSite();
-      } catch (fetchError) {
-        console.warn('Erro ao buscar do site, usando arquivo local:', fetchError.message);
-        if (fs.existsSync(REGRAS_JSON_PATH)) {
-          data = JSON.parse(fs.readFileSync(REGRAS_JSON_PATH, 'utf-8'));
-        } else {
-          return processingMsg.edit(
-            '❌ Não foi possível buscar do site e o arquivo `regras-acoes.json` não foi encontrado.'
-          ).catch(() => {});
-        }
+      const data = await fetchRegrasFromSite();
+
+      if (!data?.secoes?.length) {
+        return processingMsg.edit('❌ Não foi possível extrair as regras do site.').catch(() => {});
       }
 
       const embeds = buildEmbeds(data);

@@ -256,25 +256,56 @@ function htmlToMarkdownLike(html) {
 }
 
 /**
+ * Busca via Jina Reader (retorna conteúdo renderizado, funciona com SPAs)
+ */
+async function fetchViaJina() {
+  const url = `https://r.jina.ai/${REGRAS_URL}?respondWith=markdown`;
+  const res = await fetch(url, {
+    headers: { 'User-Agent': 'SCC-Bot/1.0' }
+  });
+  if (!res.ok) throw new Error(`Jina retornou ${res.status}`);
+  return res.text();
+}
+
+/**
  * Busca as regras do site e retorna no formato esperado pelo buildEmbeds.
  * Tenta múltiplas estratégias de parsing para funcionar com diferentes estruturas do site.
  */
 export async function fetchRegrasFromSite() {
-  const res = await fetch(REGRAS_URL, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0',
-      'Accept': 'text/html,application/xhtml+xml'
-    }
-  });
+  let html = '';
+  let usedJina = false;
 
-  if (!res.ok) {
-    throw new Error(`Site retornou status ${res.status}`);
+  // Tentativa 1: fetch direto
+  try {
+    const res = await fetch(REGRAS_URL, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0',
+        'Accept': 'text/html,application/xhtml+xml'
+      }
+    });
+    if (res.ok) html = await res.text();
+  } catch (_) {}
+
+  // Tentativa 2: Jina Reader (conteúdo renderizado)
+  if (!html.includes('Regras de Ações') || html.length < 5000) {
+    try {
+      html = await fetchViaJina();
+      usedJina = true;
+    } catch (_) {}
   }
 
-  const html = await res.text();
-
-  if (!html.includes('Regras de Ações') && !html.includes('PvP')) {
+  if (!html || (!html.includes('Regras de Ações') && !html.includes('PvP'))) {
     throw new Error('Conteúdo de Regras de Ações não encontrado no site');
+  }
+
+  // Se veio do Jina (markdown), parse direto
+  if (usedJina && html.includes('### ')) {
+    const acoesIdx = html.indexOf('Regras de Ações');
+    if (acoesIdx >= 0) {
+      const until = html.indexOf('©') >= 0 ? html.indexOf('©') : html.length;
+      const parsed = parseFromMarkdownLike(html.substring(acoesIdx, until));
+      if (parsed.secoes?.length >= 3) return parsed;
+    }
   }
 
   // Estratégia 0: Next.js __NEXT_DATA__ (dados em JSON)

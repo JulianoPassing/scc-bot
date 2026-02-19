@@ -147,27 +147,16 @@ const setupRegrasAcoesModule = function (client) {
 
       await processingMsg.edit('🔄 Publicando regras no canal #acoes...').catch(() => {});
 
-      // Envia em lotes de 5 com delay para evitar rate limit e garantir que todos sejam publicados
-      const BATCH_SIZE = 5;
+      // Envia cada embed individualmente para garantir que todos sejam publicados
       const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-      for (let i = 0; i < embeds.length; i += BATCH_SIZE) {
-        const batch = embeds.slice(i, i + BATCH_SIZE);
+      for (let i = 0; i < embeds.length; i++) {
         try {
-          await channel.send({ embeds: batch });
+          await channel.send({ embeds: [embeds[i]] });
         } catch (e) {
-          console.error('Erro ao enviar lote de embeds:', e);
-          // Tenta enviar um por um se o lote falhar
-          for (const embed of batch) {
-            try {
-              await channel.send({ embeds: [embed] });
-              await delay(500);
-            } catch (err) {
-              console.error('Erro ao enviar embed individual:', err);
-            }
-          }
+          console.error(`Erro ao enviar embed ${i + 1}/${embeds.length}:`, e.message);
         }
-        if (i + BATCH_SIZE < embeds.length) await delay(1500);
+        if (i < embeds.length - 1) await delay(800);
       }
 
       await processingMsg.edit('✅ Regras de ações publicadas no canal <#' + ACOES_CHANNEL_ID + '>!').catch(() => {});

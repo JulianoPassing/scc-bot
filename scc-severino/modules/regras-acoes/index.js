@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { EmbedBuilder } from 'discord.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -10,168 +11,96 @@ const config = JSON.parse(
 );
 
 const { ACOES_CHANNEL_ID, ADMIN_ROLE_ID } = config;
-const REGRAS_HTML_PATH = path.join(__dirname, 'regras-acoes.html');
+const REGRAS_JSON_PATH = path.join(__dirname, 'regras-acoes.json');
 
-const MAX_MSG_LEN = 1900;
+const MAX_FIELD_VALUE = 1024;
+const MAX_DESCRIPTION = 4096;
+const MAX_FIELD_NAME = 256;
+const MAX_EMBED_TOTAL = 6000;
+const MAX_FIELDS_PER_EMBED = 25;
 
 /**
- * Extrai o conteúdo da seção #acoes do HTML
+ * Trunca texto para caber no limite do Discord
  */
-function extractAcoesSection(html) {
-  const start = html.indexOf('<section id="acoes"');
-  if (start === -1) return '';
-  const end = html.indexOf('<section id="advertencias"', start);
-  if (end === -1) return html.slice(start);
-  return html.slice(start, end);
+function truncate(str, max) {
+  if (!str || str.length <= max) return str;
+  return str.slice(0, max - 3) + '...';
 }
 
 /**
- * Converte HTML para formato Discord preservando emojis e estrutura
+ * Cria embeds a partir do JSON de regras
  */
-function htmlToDiscord(html) {
-  let text = html
-    .replace(/<section[^>]*>|<\/section>/gi, '')
-    .replace(/<h2[^>]*>.*?<\/h2>/gi, '')
-    .replace(/<h3[^>]*>/gi, '\n\n**')
-    .replace(/<\/h3>/gi, '**\n')
-    .replace(/<h4[^>]*>/gi, '\n**')
-    .replace(/<\/h4>/gi, '**\n')
-    .replace(/<h5[^>]*>/gi, '\n**')
-    .replace(/<\/h5>/gi, '**\n')
-    .replace(/<b>/gi, '**')
-    .replace(/<\/b>/gi, '**')
-    .replace(/<i>/gi, '*')
-    .replace(/<\/i>/gi, '*')
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<p[^>]*>/gi, '\n')
-    .replace(/<li[^>]*>/gi, '\n• ')
-    .replace(/<\/li>/gi, '')
-    .replace(/<ul[^>]*>|<\/ul>|<ol[^>]*>|<\/ol>/gi, '')
-    .replace(/<tr>/gi, '\n')
-    .replace(/<td[^>]*>/gi, ' | ')
-    .replace(/<\/td>/gi, '')
-    .replace(/<th[^>]*>/gi, ' **')
-    .replace(/<\/th>/gi, '** ')
-    .replace(/<\/tr>/gi, '')
-    .replace(/<thead>|<\/thead>|<tbody>|<\/tbody>|<table[^>]*>|<\/table>/gi, '')
-    .replace(/<a[^>]*href="[^"]*"[^>]*>[\s\S]*?<\/a>/gi, '')
-    .replace(/<div[^>]*>|<\/div>/gi, '\n')
-    .replace(/<span[^>]*>|<\/span>/gi, '')
-    .replace(/<i class="[^"]*"[^>]*><\/i>/gi, '')
-    .replace(/<i class="[^"]*"[^>]*>/gi, '')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/<[^>]+>/g, '')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/^\s+|\s+$/gm, '')
-    .trim();
+function buildEmbeds(data) {
+  const embeds = [];
 
-  return text;
-}
+  // Embed de abertura
+  const introEmbed = new EmbedBuilder()
+    .setTitle(`🎯 ${data.titulo}`)
+    .setDescription(data.descricao)
+    .setColor(0xEAF207)
+    .setThumbnail('https://i.imgur.com/YULctuK.png')
+    .setFooter({ text: 'Street Car Club Roleplay • Regras oficiais' })
+    .setTimestamp();
+  embeds.push(introEmbed);
 
-/** Mapeamento de títulos para emojis */
-const TITULO_EMOJIS = {
-  'Roupa de Gangue': '👕',
-  'Regras Gerais – Polícia x Bandido': '⚙️',
-  'Corpo da Polícia': '🏥',
-  'Taser': '⚡',
-  'Código 5': '🔫',
-  'Disparos': '⏱️',
-  'Ação de Rua': '🛣️',
-  'QRR dos Bandidos': '👥',
-  'Rendição': '🙌',
-  'Giroflex': '🚨',
-  'Veículo Danificado': '🚗',
-  'Troca de Veículo': '🔄',
-  'Disparos em Veículos': '🚙',
-  'Roupa de Mergulho': '🏊',
-  'Pneus Danificados': '🛞',
-  'Drop em Telhados': '🏢',
-  'Uso de Força': '🛡️',
-  'Mandato de Prisão': '⚖️',
-  'QSV – Limite': '🛡️',
-  'Águia e Helicóptero': '🚁',
-  'Ação de Rua': '🛣️',
-  'Uso de Capacete': '⛑️',
-  'Regras por Localidade': '📍',
-  'Caixa Eletrônico': '💰',
-  'Armazém': '📦',
-  'Dominação': '🚩',
-  'Petrolífera': '⛽',
-  'Desmanche': '🔧',
-  'Ações Blipadas': '📡',
-  'Médico': '🩺',
-  'Resgates': '🚑',
-  'Multas': '📋',
-  'Locais Blipados': '🏪',
-  'Barbearia': '💈',
-  'Ammunation': '🛡️',
-  'Loja de Conveniência': '🏪',
-  'Joalheria': '💎',
-  'Galinheiro': '🐔',
-  'Açougue': '🥩',
-  'Banco Flecca': '🏦',
-  'Tequi-La-La': '🍹',
-  'Banco Paleto': '🏦',
-  'Banco Central': '🏛️',
-  'Nióbio': '🧪',
-  'Roubo de Casas': '🏠',
-  'Corrida Ilegal': '🏎️'
-};
+  for (const secao of data.secoes) {
+    const tituloCompleto = `${secao.emoji} ${secao.titulo}`;
+    const cor = secao.cor || 0xEAF207;
 
-/**
- * Enriquece o texto com emojis e formatação visual para Discord
- */
-function enrichWithEmojis(text) {
-  let result = text;
+    // Seção com muitos fields (ex: Regras Gerais) - pode precisar dividir
+    if (secao.fields && secao.fields.length > 0) {
+      let embed = new EmbedBuilder()
+        .setTitle(tituloCompleto)
+        .setColor(cor);
 
-  for (const [titulo, emoji] of Object.entries(TITULO_EMOJIS)) {
-    const escaped = titulo.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const re = new RegExp(`\\*\\*([0-9.]*\\s*)?${escaped}[^*]*\\*\\*`, 'gi');
-    result = result.replace(re, (m) => {
-      const inner = m.replace(/\*\*/g, '').trim();
-      return `**${emoji} ${inner}**`;
-    });
-  }
-
-  result = result
-    .replace(/^\s*•\s*/gm, '  ▸ ')
-    .replace(/\n\*\*([^*]+)\*\*\n/g, '\n\n**$1**\n')
-    .replace(/\n{3,}/g, '\n\n')
-    .replace(/\n\n(\*\*[^*]{4,80}\*\*)\n/g, '\n\n▬▬▬▬▬▬▬▬▬▬▬▬\n$1\n')
-    .replace(/^\s+/, '')
-    .trim();
-
-  return result;
-}
-
-/**
- * Divide texto em chunks que cabem no limite do Discord (2000 chars)
- */
-function splitIntoChunks(text, maxLen = MAX_MSG_LEN) {
-  const chunks = [];
-  const lines = text.split('\n');
-  let current = '';
-
-  for (const line of lines) {
-    if (current.length + line.length + 1 <= maxLen) {
-      current += (current ? '\n' : '') + line;
-    } else {
-      if (current) chunks.push(current);
-      if (line.length > maxLen) {
-        for (let i = 0; i < line.length; i += maxLen) {
-          chunks.push(line.slice(i, i + maxLen));
-        }
-        current = '';
-      } else {
-        current = line;
+      if (secao.conteudo) {
+        embed = embed.setDescription(truncate(secao.conteudo, MAX_DESCRIPTION));
       }
+
+      let totalChars = (embed.data.description?.length || 0) + tituloCompleto.length + 100;
+      const fieldsToAdd = [];
+
+      for (const f of secao.fields) {
+        const nome = truncate(f.nome, MAX_FIELD_NAME);
+        let valor = f.valor;
+        if (valor.length > MAX_FIELD_VALUE) {
+          valor = truncate(valor, MAX_FIELD_VALUE);
+        }
+        const fieldSize = nome.length + valor.length + 10;
+        if (totalChars + fieldSize > MAX_EMBED_TOTAL || fieldsToAdd.length >= MAX_FIELDS_PER_EMBED) {
+          // Envia embed atual e começa outro
+          if (fieldsToAdd.length > 0) {
+            embed.addFields(fieldsToAdd);
+            embeds.push(embed);
+            embed = new EmbedBuilder()
+              .setTitle(`${tituloCompleto} (continuação)`)
+              .setColor(cor);
+            totalChars = tituloCompleto.length + 100;
+            fieldsToAdd.length = 0;
+          }
+        }
+        fieldsToAdd.push({
+          name: nome,
+          value: valor,
+          inline: f.inline ?? false
+        });
+        totalChars += fieldSize;
+      }
+      if (fieldsToAdd.length > 0) {
+        embed.addFields(fieldsToAdd);
+        embeds.push(embed);
+      }
+    } else {
+      // Seção com apenas conteúdo
+      const embed = new EmbedBuilder()
+        .setTitle(tituloCompleto)
+        .setDescription(truncate(secao.conteudo || '', MAX_DESCRIPTION))
+        .setColor(cor);
+      embeds.push(embed);
     }
   }
-  if (current) chunks.push(current);
-  return chunks;
+
+  return embeds;
 }
 
 const setupRegrasAcoesModule = function (client) {
@@ -184,51 +113,35 @@ const setupRegrasAcoesModule = function (client) {
     }
 
     try {
-      const htmlPath = REGRAS_HTML_PATH;
-      if (!fs.existsSync(htmlPath)) {
-        return message.reply(`❌ Arquivo não encontrado: \`${htmlPath}\``).catch(() => {});
+      if (!fs.existsSync(REGRAS_JSON_PATH)) {
+        return message.reply(`❌ Arquivo não encontrado: \`regras-acoes.json\``).catch(() => {});
       }
 
       const processingMsg = await message.reply('🔄 Carregando regras de ações...');
 
-      const html = fs.readFileSync(htmlPath, 'utf-8');
-      const acoesHtml = extractAcoesSection(html);
-      const discordText = htmlToDiscord(acoesHtml);
-      const enriched = enrichWithEmojis(discordText);
-      const chunks = splitIntoChunks(enriched);
+      const data = JSON.parse(fs.readFileSync(REGRAS_JSON_PATH, 'utf-8'));
+      const embeds = buildEmbeds(data);
 
       const channel = await message.guild.channels.fetch(ACOES_CHANNEL_ID).catch(() => null);
       if (!channel) {
         return processingMsg.edit('❌ Canal #acoes não encontrado.').catch(() => {});
       }
 
-      const header = '**🎯 REGRAS DE AÇÕES – PvP/PvE**\n' +
-        '═══════════════════════════\n' +
-        '_Regras de PvP/PvE da cidade_\n\n';
-      const footer = '\n═══════════════════════════\n' +
-        '🏁 _Street Car Club Roleplay_';
-
       await processingMsg.edit('🔄 Publicando regras no canal #acoes...').catch(() => {});
 
-      let first = true;
-      for (let i = 0; i < chunks.length; i++) {
-        let content = chunks[i];
-        if (first) {
-          content = header + content;
-          first = false;
-        }
-        if (i === chunks.length - 1) {
-          content += footer;
-        }
-        await channel.send(content).catch((e) => {
-          console.error('Erro ao enviar chunk regras-acoes:', e);
+      // Discord permite até 10 embeds por mensagem
+      const BATCH_SIZE = 10;
+      for (let i = 0; i < embeds.length; i += BATCH_SIZE) {
+        const batch = embeds.slice(i, i + BATCH_SIZE);
+        await channel.send({ embeds: batch }).catch((e) => {
+          console.error('Erro ao enviar embeds regras-acoes:', e);
         });
       }
 
       await processingMsg.edit('✅ Regras de ações publicadas no canal <#' + ACOES_CHANNEL_ID + '>!').catch(() => {});
     } catch (error) {
       console.error('Erro no regras-acoes:', error);
-      await message.reply('❌ Erro ao carregar as regras. Verifique o caminho do arquivo e os logs.').catch(() => {});
+      await message.reply('❌ Erro ao carregar as regras. Verifique o arquivo e os logs.').catch(() => {});
     }
   });
 };

@@ -9,7 +9,8 @@ const config = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'config.json'), 'utf-8')
 );
 
-const { REGRAS_HTML_PATH, ACOES_CHANNEL_ID, ADMIN_ROLE_ID } = config;
+const { ACOES_CHANNEL_ID, ADMIN_ROLE_ID } = config;
+const REGRAS_HTML_PATH = path.join(__dirname, 'regras-acoes.html');
 
 const MAX_MSG_LEN = 1900;
 
@@ -183,7 +184,7 @@ const setupRegrasAcoesModule = function (client) {
     }
 
     try {
-      const htmlPath = path.resolve(REGRAS_HTML_PATH);
+      const htmlPath = REGRAS_HTML_PATH;
       if (!fs.existsSync(htmlPath)) {
         return message.reply(`❌ Arquivo não encontrado: \`${htmlPath}\``).catch(() => {});
       }

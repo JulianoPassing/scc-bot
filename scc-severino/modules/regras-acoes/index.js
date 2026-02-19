@@ -11,110 +11,7 @@ const config = JSON.parse(
 );
 
 const { ACOES_CHANNEL_ID, ADMIN_ROLE_ID } = config;
-const REGRAS_JSON_PATH = path.join(__dirname, 'regras-acoes.json');
-
-const MAX_FIELD_VALUE = 1024;
-const MAX_DESCRIPTION = 4096;
-const MAX_FIELD_NAME = 256;
-const MAX_EMBED_TOTAL = 6000;
-const MAX_FIELDS_PER_EMBED = 6; // Menos fields = mais espaço e melhor leitura
 const REGRAS_SITE_URL = 'https://regras-scc.vercel.app/#acoes';
-
-/**
- * Trunca texto para caber no limite do Discord
- */
-function truncate(str, max) {
-  if (!str || str.length <= max) return str;
-  return str.slice(0, max - 3) + '...';
-}
-
-/**
- * Cria embeds a partir do JSON de regras
- */
-function buildEmbeds(data) {
-  const embeds = [];
-
-  // Embed de abertura – imagem em destaque para melhor visualização
-  const introEmbed = new EmbedBuilder()
-    .setAuthor({
-      name: 'Street Car Club Roleplay',
-      iconURL: 'https://i.imgur.com/YULctuK.png',
-      url: REGRAS_SITE_URL
-    })
-    .setTitle(`🎯 ${data.titulo}`)
-    .setURL(REGRAS_SITE_URL)
-    .setDescription(`**${data.descricao}**\n\n📌 [Ver regras completas no site](${REGRAS_SITE_URL})`)
-    .setColor(0xEAF207)
-    .setImage('https://i.imgur.com/Wf7bGAO.png') // Banner maior (full width)
-    .setThumbnail('https://i.imgur.com/YULctuK.png')
-    .setFooter({ text: 'Street Car Club Roleplay • Regras oficiais • Clique no título para abrir o site' })
-    .setTimestamp();
-  embeds.push(introEmbed);
-
-  for (const secao of data.secoes) {
-    const tituloCompleto = `${secao.emoji} ${secao.titulo}`;
-    const cor = secao.cor || 0xEAF207;
-
-    // Seção com muitos fields (ex: Regras Gerais) - divide em mais embeds para melhor leitura
-    if (secao.fields && secao.fields.length > 0) {
-      let embed = new EmbedBuilder()
-        .setTitle(tituloCompleto)
-        .setURL(REGRAS_SITE_URL)
-        .setColor(cor);
-
-      if (secao.conteudo) {
-        embed = embed.setDescription(`**${truncate(secao.conteudo, MAX_DESCRIPTION - 10)}**`);
-      }
-
-      let totalChars = (embed.data.description?.length || 0) + tituloCompleto.length + 100;
-      const fieldsToAdd = [];
-
-      for (const f of secao.fields) {
-        const nome = truncate(f.nome, MAX_FIELD_NAME);
-        let valor = f.valor;
-        if (valor.length > MAX_FIELD_VALUE) {
-          valor = truncate(valor, MAX_FIELD_VALUE);
-        }
-        const fieldSize = nome.length + valor.length + 10;
-        if (totalChars + fieldSize > MAX_EMBED_TOTAL || fieldsToAdd.length >= MAX_FIELDS_PER_EMBED) {
-          // Envia embed atual e começa outro
-          if (fieldsToAdd.length > 0) {
-            embed.addFields(fieldsToAdd);
-            embeds.push(embed);
-            embed = new EmbedBuilder()
-              .setTitle(`${tituloCompleto} (continuação)`)
-              .setURL(REGRAS_SITE_URL)
-              .setColor(cor);
-            totalChars = tituloCompleto.length + 100;
-            fieldsToAdd.length = 0;
-          }
-        }
-        fieldsToAdd.push({
-          name: nome,
-          value: valor,
-          inline: f.inline ?? false
-        });
-        totalChars += fieldSize;
-      }
-      if (fieldsToAdd.length > 0) {
-        embed.addFields(fieldsToAdd);
-        embeds.push(embed);
-      }
-    } else {
-      // Seção com apenas conteúdo
-      const conteudo = (secao.conteudo || '').trim();
-      const desc = conteudo ? `**${truncate(conteudo, MAX_DESCRIPTION - 10)}**` : '';
-      const embed = new EmbedBuilder()
-        .setTitle(tituloCompleto)
-        .setURL(REGRAS_SITE_URL)
-        .setDescription(desc || '\u200b') // zero-width space se vazio
-        .setColor(cor);
-      embeds.push(embed);
-    }
-  }
-
-  return embeds;
-}
 
 const setupRegrasAcoesModule = function (client) {
   client.on('messageCreate', async (message) => {
@@ -126,43 +23,53 @@ const setupRegrasAcoesModule = function (client) {
     }
 
     try {
-      const processingMsg = await message.reply('🔄 Carregando regras...');
-
-      if (!fs.existsSync(REGRAS_JSON_PATH)) {
-        return processingMsg.edit('❌ Arquivo `regras-acoes.json` não encontrado.').catch(() => {});
-      }
-
-      const data = JSON.parse(fs.readFileSync(REGRAS_JSON_PATH, 'utf-8'));
-
-      if (!data?.secoes?.length) {
-        return processingMsg.edit('❌ O arquivo de regras está vazio ou inválido.').catch(() => {});
-      }
-
-      const embeds = buildEmbeds(data);
+      const processingMsg = await message.reply('🔄 Publicando regras...');
 
       const channel = await message.guild.channels.fetch(ACOES_CHANNEL_ID).catch(() => null);
       if (!channel) {
         return processingMsg.edit('❌ Canal #acoes não encontrado.').catch(() => {});
       }
 
-      await processingMsg.edit('🔄 Publicando regras no canal #acoes...').catch(() => {});
+      const embed = new EmbedBuilder()
+        .setAuthor({
+          name: 'Street Car Club Roleplay',
+          iconURL: 'https://i.imgur.com/YULctuK.png',
+          url: REGRAS_SITE_URL
+        })
+        .setTitle('🎯 Regras de Ações – PvP/PvE')
+        .setURL(REGRAS_SITE_URL)
+        .setDescription(
+          '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+            '**Regras oficiais de PvP/PvE** da Street Car Club Roleplay.\n\n' +
+            'Consulte o canal e o site para todas as informações atualizadas sobre ações, contingentes, locais blipados e demais regras.\n\n' +
+            '━━━━━━━━━━━━━━━━━━━━━━━━\n\n' +
+            `📌 **[Ver regras completas no site →](${REGRAS_SITE_URL})**`
+        )
+        .setColor(0xEAF207)
+        .setImage('https://i.imgur.com/Wf7bGAO.png')
+        .setThumbnail('https://i.imgur.com/YULctuK.png')
+        .addFields({
+          name: '🔗 Acesso rápido',
+          value: `[Abrir Regras de Ações](${REGRAS_SITE_URL})`,
+          inline: true
+        })
+        .addFields({
+          name: '📋 Conteúdo',
+          value: 'PvP • PvE • Ações Blipadas • Locais',
+          inline: true
+        })
+        .setFooter({
+          text: 'Street Car Club Roleplay • Clique no título para abrir o site',
+          iconURL: 'https://i.imgur.com/YULctuK.png'
+        })
+        .setTimestamp();
 
-      // Envia cada embed individualmente para garantir que todos sejam publicados
-      const delay = (ms) => new Promise((r) => setTimeout(r, ms));
-
-      for (let i = 0; i < embeds.length; i++) {
-        try {
-          await channel.send({ embeds: [embeds[i]] });
-        } catch (e) {
-          console.error(`Erro ao enviar embed ${i + 1}/${embeds.length}:`, e.message);
-        }
-        if (i < embeds.length - 1) await delay(800);
-      }
+      await channel.send({ embeds: [embed] });
 
       await processingMsg.edit('✅ Regras de ações publicadas no canal <#' + ACOES_CHANNEL_ID + '>!').catch(() => {});
     } catch (error) {
       console.error('Erro no regras-acoes:', error);
-      await message.reply('❌ Erro ao carregar as regras. Verifique o arquivo e os logs.').catch(() => {});
+      await message.reply('❌ Erro ao publicar as regras.').catch(() => {});
     }
   });
 };

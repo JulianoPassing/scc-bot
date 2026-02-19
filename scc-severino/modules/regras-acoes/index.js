@@ -147,13 +147,27 @@ const setupRegrasAcoesModule = function (client) {
 
       await processingMsg.edit('🔄 Publicando regras no canal #acoes...').catch(() => {});
 
-      // Discord permite até 10 embeds por mensagem
-      const BATCH_SIZE = 10;
+      // Envia em lotes de 5 com delay para evitar rate limit e garantir que todos sejam publicados
+      const BATCH_SIZE = 5;
+      const delay = (ms) => new Promise((r) => setTimeout(r, ms));
+
       for (let i = 0; i < embeds.length; i += BATCH_SIZE) {
         const batch = embeds.slice(i, i + BATCH_SIZE);
-        await channel.send({ embeds: batch }).catch((e) => {
-          console.error('Erro ao enviar embeds regras-acoes:', e);
-        });
+        try {
+          await channel.send({ embeds: batch });
+        } catch (e) {
+          console.error('Erro ao enviar lote de embeds:', e);
+          // Tenta enviar um por um se o lote falhar
+          for (const embed of batch) {
+            try {
+              await channel.send({ embeds: [embed] });
+              await delay(500);
+            } catch (err) {
+              console.error('Erro ao enviar embed individual:', err);
+            }
+          }
+        }
+        if (i + BATCH_SIZE < embeds.length) await delay(1500);
       }
 
       await processingMsg.edit('✅ Regras de ações publicadas no canal <#' + ACOES_CHANNEL_ID + '>!').catch(() => {});

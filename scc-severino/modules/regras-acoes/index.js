@@ -18,7 +18,8 @@ const MAX_FIELD_VALUE = 1024;
 const MAX_DESCRIPTION = 4096;
 const MAX_FIELD_NAME = 256;
 const MAX_EMBED_TOTAL = 6000;
-const MAX_FIELDS_PER_EMBED = 25;
+const MAX_FIELDS_PER_EMBED = 6; // Menos fields = mais espaço e melhor leitura
+const REGRAS_SITE_URL = 'https://regras-scc.vercel.app/#acoes';
 
 /**
  * Trunca texto para caber no limite do Discord
@@ -34,13 +35,20 @@ function truncate(str, max) {
 function buildEmbeds(data) {
   const embeds = [];
 
-  // Embed de abertura
+  // Embed de abertura – imagem em destaque para melhor visualização
   const introEmbed = new EmbedBuilder()
+    .setAuthor({
+      name: 'Street Car Club Roleplay',
+      iconURL: 'https://i.imgur.com/YULctuK.png',
+      url: REGRAS_SITE_URL
+    })
     .setTitle(`🎯 ${data.titulo}`)
-    .setDescription(data.descricao)
+    .setURL(REGRAS_SITE_URL)
+    .setDescription(`**${data.descricao}**\n\n📌 [Ver regras completas no site](${REGRAS_SITE_URL})`)
     .setColor(0xEAF207)
+    .setImage('https://i.imgur.com/Wf7bGAO.png') // Banner maior (full width)
     .setThumbnail('https://i.imgur.com/YULctuK.png')
-    .setFooter({ text: 'Street Car Club Roleplay • Regras oficiais' })
+    .setFooter({ text: 'Street Car Club Roleplay • Regras oficiais • Clique no título para abrir o site' })
     .setTimestamp();
   embeds.push(introEmbed);
 
@@ -48,14 +56,15 @@ function buildEmbeds(data) {
     const tituloCompleto = `${secao.emoji} ${secao.titulo}`;
     const cor = secao.cor || 0xEAF207;
 
-    // Seção com muitos fields (ex: Regras Gerais) - pode precisar dividir
+    // Seção com muitos fields (ex: Regras Gerais) - divide em mais embeds para melhor leitura
     if (secao.fields && secao.fields.length > 0) {
       let embed = new EmbedBuilder()
         .setTitle(tituloCompleto)
+        .setURL(REGRAS_SITE_URL)
         .setColor(cor);
 
       if (secao.conteudo) {
-        embed = embed.setDescription(truncate(secao.conteudo, MAX_DESCRIPTION));
+        embed = embed.setDescription(`**${truncate(secao.conteudo, MAX_DESCRIPTION - 10)}**`);
       }
 
       let totalChars = (embed.data.description?.length || 0) + tituloCompleto.length + 100;
@@ -75,6 +84,7 @@ function buildEmbeds(data) {
             embeds.push(embed);
             embed = new EmbedBuilder()
               .setTitle(`${tituloCompleto} (continuação)`)
+              .setURL(REGRAS_SITE_URL)
               .setColor(cor);
             totalChars = tituloCompleto.length + 100;
             fieldsToAdd.length = 0;
@@ -93,9 +103,12 @@ function buildEmbeds(data) {
       }
     } else {
       // Seção com apenas conteúdo
+      const conteudo = (secao.conteudo || '').trim();
+      const desc = conteudo ? `**${truncate(conteudo, MAX_DESCRIPTION - 10)}**` : '';
       const embed = new EmbedBuilder()
         .setTitle(tituloCompleto)
-        .setDescription(truncate(secao.conteudo || '', MAX_DESCRIPTION))
+        .setURL(REGRAS_SITE_URL)
+        .setDescription(desc || '\u200b') // zero-width space se vazio
         .setColor(cor);
       embeds.push(embed);
     }

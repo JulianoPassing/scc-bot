@@ -3,7 +3,6 @@ import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { EmbedBuilder } from 'discord.js';
-import { fetchRegrasFromSite } from './fetchRegras.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -127,30 +126,16 @@ const setupRegrasAcoesModule = function (client) {
     }
 
     try {
-      const processingMsg = await message.reply('🔄 Buscando regras atualizadas no site...');
+      const processingMsg = await message.reply('🔄 Carregando regras...');
 
-      let data;
-      const MIN_SECOES = 5;
-
-      try {
-        data = await fetchRegrasFromSite();
-        if (data?.secoes?.length >= MIN_SECOES) {
-          fs.writeFileSync(REGRAS_JSON_PATH, JSON.stringify(data, null, 2), 'utf-8');
-        }
-      } catch (fetchError) {
-        console.warn('Fetch do site falhou, usando JSON local:', fetchError.message);
+      if (!fs.existsSync(REGRAS_JSON_PATH)) {
+        return processingMsg.edit('❌ Arquivo `regras-acoes.json` não encontrado.').catch(() => {});
       }
 
-      if (!data?.secoes?.length || data.secoes.length < MIN_SECOES) {
-        if (fs.existsSync(REGRAS_JSON_PATH)) {
-          data = JSON.parse(fs.readFileSync(REGRAS_JSON_PATH, 'utf-8'));
-        }
-      }
+      const data = JSON.parse(fs.readFileSync(REGRAS_JSON_PATH, 'utf-8'));
 
       if (!data?.secoes?.length) {
-        return processingMsg.edit(
-          '❌ Não foi possível buscar do site. Execute o comando quando o site estiver acessível para criar o arquivo de cache.'
-        ).catch(() => {});
+        return processingMsg.edit('❌ O arquivo de regras está vazio ou inválido.').catch(() => {});
       }
 
       const embeds = buildEmbeds(data);

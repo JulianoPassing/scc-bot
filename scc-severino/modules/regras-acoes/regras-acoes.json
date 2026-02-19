@@ -18,7 +18,7 @@
         { "nome": "3. Código 5 – Disparos", "valor": "⏱️ Liberado após **10 minutos** de fuga limpa.\n✔️ Em caso de quebra de regra, pode atirar antes dos 10 minutos.\n🔫 BANDIDOS só podem atirar após **2 minutos** de fuga (priorize escapar)." },
         { "nome": "4. Ação de Rua", "valor": "⏱️ Encerrada após **7 minutos** sem disparos.\n👮 Após esse tempo, a POLÍCIA pode revistar." },
         { "nome": "5. QRR dos Bandidos", "valor": "⏱️ Pode chegar até **7 minutos** após o início dos tiros." },
-        { "nome": "6. Rendição", "valor": "Após rendição (mãos levantadas):\n🚫 Proibido passar rádio\n🚫 Proibido sacar arma\n🚫 Proibido fugir\n\n**6.1.** Se o QRR já foi solicitado, pode chegar até o meliante ser colocado na viatura." },
+        { "nome": "6. Rendição", "valor": "Após rendição (mãos levantadas):\n🚫 Proibido passar rádio\n🚫 Proibido sacar arma\n🚫 Proibido fugir\n\n**6.1. QRR após rendição:** Se o QRR já foi solicitado, pode chegar até o meliante ser colocado na viatura." },
         { "nome": "7. Giroflex", "valor": "🚨 Obrigatório para policiais em QRU ou durante abordagem." },
         { "nome": "8. Veículo Danificado em Fuga", "valor": "Se o veículo bater a lateral no chão ou capotar:\n➜ Deve descer e continuar a fuga a pé ou se render.\n❌ Se continuar dirigindo, será liberado CÓDIGO 3 nos pneus." },
         { "nome": "9. Troca de Veículo em Fuga", "valor": "🚫 Trocar de veículo libera CÓDIGO 3 nos pneus.\n🔫 Persistindo a fuga, será liberado CÓDIGO 5." },
@@ -70,9 +70,9 @@
       "emoji": "📍",
       "cor": 13027395,
       "fields": [
-        { "nome": "💰 Caixa Eletrônico", "valor": "✔️ Priorizar a fuga • ✔️ Pode ir armado • ⏱️ Disparos liberados após 2 minutos de fuga", "inline": true },
-        { "nome": "🚗 Carro Forte", "valor": "✔️ Mesma regras de ação de Rua • ✔️ Polícia só atira se tiver visual do indivíduo armado • ✔️ Helicóptero apenas no QRR em ambos os lados", "inline": true },
-        { "nome": "⛽ Petrolífera", "valor": "🔴 Zona vermelha • 🔫 Tiroteio liberado em toda a área", "inline": true },
+        { "nome": "💰 Caixa Eletrônico", "valor": "✔️ Priorizar a fuga • ✔️ Pode ir armado • ✔️ Disparos liberados após 2 minutos de fuga", "inline": true },
+        { "nome": "🚗 Carro Forte", "valor": "✔️ Mesma regras de ação de Rua • ✔️ Polícia só atira se tiver visual do indivíduo armado • ✔️ Se sem arma na mão ou bandido evadindo: abordagem padrão • ✔️ Helicóptero apenas no QRR em ambos os lados", "inline": true },
+        { "nome": "⛽ Petrolífera", "valor": "✔️ Zona vermelha • ✔️ Tiroteio liberado em toda a área", "inline": true },
         { "nome": "🔧 Desmanche", "valor": "🚫 Proibido remover peças antes de iniciar: Capô, Porta-malas, Portas", "inline": true }
       ]
     },

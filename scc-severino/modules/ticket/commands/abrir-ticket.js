@@ -1,17 +1,24 @@
 import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'discord.js';
 import { createTicketChannelWithCategoryCheck } from '../utils/ticketUtils.js';
 import { hasActiveTicketInCategory, registerActiveTicket, getUserActiveTicket } from '../utils/ticketManager.js';
+import { hasCategoryPermission } from '../utils/ticketPermissions.js';
 import { CATEGORY_CONFIG } from '../config.js';
 
 export const data = {
   name: 'abrir-ticket',
-  description: 'Abre um ticket de suporte.'
+  description: 'Abre um ticket de suporte (apenas staff).'
 };
 
 export async function execute(message, args, client) {
   const user = message.author;
   const guild = message.guild;
+  const member = message.member;
   const reason = args.join(' ') || 'Sem motivo especificado';
+
+  // Apenas staff pode usar este comando
+  if (!member || !hasCategoryPermission(member, 'suporte')) {
+    return message.reply('❌ Apenas a equipe de staff pode usar este comando.');
+  }
 
   // Verifica se o usuário já tem tickets ativos
   const activeTickets = await getUserActiveTicket(user.id);

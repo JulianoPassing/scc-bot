@@ -177,12 +177,9 @@ export const execute = async function(interaction) {
       }
       // Botões do painel de ticket aberto
       if (customId === 'fechar_ticket') {
-        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
-        // Verificar se é staff E não é o criador do ticket
-        if (isStaff && !isCreator) {
+        if (!isStaff) {
           // Permitir acesso
         } else {
           await interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets!', flags: 64 });
@@ -207,12 +204,9 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'assumir_ticket') {
-        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
-        // Verificar se é staff E não é o criador do ticket
-        if (isStaff && !isCreator) {
+        if (!isStaff) {
           // Permitir acesso
         } else {
           await interaction.reply({ content: '❌ Apenas membros da equipe podem assumir tickets!', flags: 64 });
@@ -229,12 +223,9 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'adicionar_membro') {
-        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
-        // Verificar se é staff E não é o criador do ticket
-        if (isStaff && !isCreator) {
+        if (!isStaff) {
           // Permitir acesso
         } else {
           await interaction.reply({ content: '❌ Apenas membros da equipe podem adicionar membros!', flags: 64 });
@@ -259,12 +250,9 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'avisar_membro') {
-        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
-        // Verificar se é staff E não é o criador do ticket
-        if (isStaff && !isCreator) {
+        if (!isStaff) {
           // Permitir acesso
         } else {
           await interaction.reply({ content: '❌ Apenas membros da equipe podem avisar membros!', flags: 64 });
@@ -301,12 +289,9 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'renomear_ticket') {
-        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
-        // Verificar se é staff E não é o criador do ticket
-        if (isStaff && !isCreator) {
+        if (!isStaff) {
           // Permitir acesso
         } else {
           await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
@@ -348,12 +333,9 @@ export const execute = async function(interaction) {
         return;
       }
       if (customId === 'timer_24h') {
-        // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
         const isStaff = hasStaffRole(interaction.member);
-        const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
         
-        // Verificar se é staff E não é o criador do ticket
-        if (isStaff && !isCreator) {
+        if (!isStaff) {
           // Permitir acesso
         } else {
           await interaction.reply({ content: '❌ Apenas membros da equipe podem usar timer!', flags: 64 });
@@ -654,12 +636,9 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de renomear
     if (interaction.isModalSubmit() && interaction.customId === 'modal_renomear_ticket') {
-      // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
       const isStaff = hasStaffRole(interaction.member);
-      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
       
-      // Verificar se é staff E não é o criador do ticket
-      if (isStaff && !isCreator) {
+      if (!isStaff) {
         // Permitir acesso
       } else {
         await interaction.reply({ content: '❌ Apenas membros da equipe podem renomear tickets!', flags: 64 });
@@ -705,12 +684,9 @@ export const execute = async function(interaction) {
     }
     // Handler do modal de adicionar membro
     if (interaction.isModalSubmit() && interaction.customId === 'modal_adicionar_membro') {
-      // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
       const isStaff = hasStaffRole(interaction.member);
-      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
       
-      // Verificar se é staff E não é o criador do ticket
-      if (isStaff && !isCreator) {
+      if (!isStaff) {
         // Permitir acesso
       } else {
         await interaction.reply({ content: '❌ Apenas membros da equipe podem adicionar membros!', flags: 64 });
@@ -754,12 +730,9 @@ export const execute = async function(interaction) {
 
     // Handler do modal de motivo de fechamento
     if (interaction.isModalSubmit() && interaction.customId === 'modal_motivo_fechamento') {
-      // Verificar se é staff (tem cargo de staff) e não é o criador do ticket
       const isStaff = hasStaffRole(interaction.member);
-      const isCreator = await isTicketCreator(interaction.channel, interaction.user.id, interaction.client, interaction.guild);
       
-      // Verificar se é staff E não é o criador do ticket
-      if (isStaff && !isCreator) {
+      if (!isStaff) {
         // Permitir acesso
       } else {
         await interaction.reply({ content: '❌ Apenas membros da equipe podem fechar tickets!', flags: 64 });

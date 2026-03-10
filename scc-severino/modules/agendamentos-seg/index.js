@@ -63,6 +63,9 @@ const pendente = new Map();
 // Lock de confirmação
 const confirmandoSlot = new Set();
 
+// IDs dos canais que já receberam o lembrete de 10 minutos nesta sessão
+const lembreteEnviado = new Set();
+
 // ============================================================
 // HELPERS
 // ============================================================
@@ -76,6 +79,8 @@ function parseAgendado(name) {
 }
 
 function diasDisponiveis() {
+  // JS: getDay() retorna 0=Dom, 1=Seg … 6=Sab
+  // Convertemos para 0=Seg … 6=Dom para comparar com os valores de DIAS
   const jsDay = new Date().getDay();
   const hojeNum = jsDay === 0 ? 6 : jsDay - 1;
   return Object.entries(DIAS)
@@ -85,10 +90,9 @@ function diasDisponiveis() {
 
 function slotsOcupados(guild) {
   const ocupados = {};
-  const cat = guild.channels.cache.get(CATEGORIA_AGENDADOS_ID);
-  if (!cat) return ocupados;
-
-  for (const [, ch] of cat.children.cache) {
+  // Varre TODOS os canais do servidor — canais agendados podem estar
+  // em mais de uma categoria, então não limitamos a CATEGORIA_AGENDADOS_ID.
+  for (const [, ch] of guild.channels.cache) {
     const m = ch.name.match(RE_AGENDADO);
     if (m) {
       const key = `${m[2]}_${m[3]}`;
@@ -122,6 +126,82 @@ const prefixoDoCanal = (name) => name.split('-')[0];
 async function sendTemp(channel, content, ms = 15_000) {
   const msg = await channel.send({ content });
   setTimeout(() => msg.delete().catch(() => {}), ms);
+}
+
+// ============================================================
+// LEMBRETE DE 10 MINUTOS
+// ============================================================
+
+// Mapeamento de abreviação → número do dia JS (0=Dom, 1=Seg … 6=Sab)
+const DIA_PARA_JS = { seg: 1, ter: 2, qua: 3, sex: 5 };
+
+/**
+ * Dado o dia abreviado ('ter') e o horário formatado ('10h00'),
+ * retorna o objeto Date correspondente na semana atual.
+ * Se o dia já passou esta semana, retorna null.
+ */
+function getAppointmentDate(dia, horaFmt) {
+  const targetJSDay = DIA_PARA_JS[dia];
+  if (targetJSDay === undefined) return null;
+
+  const [hh, mm] = horaFmt.split('h').map(Number);
+
+  const now = new Date();
+  const diff = targetJSDay - now.getDay();
+
+  const target = new Date(now);
+  target.setDate(now.getDate() + diff);
+  target.setHours(hh, mm, 0, 0);
+
+  return target > now ? target : null;
+}
+
+/**
+ * Varre todos os canais do servidor e envia
+ * um lembrete nos canais seg-* cuja entrevista ocorrerá em ~10 minutos.
+ *
+ * Janela de disparo: entre 9 min 30s e 10 min 30s antes (570–630 s),
+ * checando a cada 30s.
+ */
+async function checkReminders(client) {
+  for (const [, guild] of client.guilds.cache) {
+    for (const [, channel] of guild.channels.cache) {
+      if (!channel.isTextBased()) continue;
+      if (!channel.name?.startsWith('seg-')) continue;
+      if (lembreteEnviado.has(channel.id)) continue;
+
+      const parsed = parseAgendado(channel.name);
+      if (!parsed) continue;
+
+      const appointmentDate = getAppointmentDate(parsed.dia, parsed.hora);
+      if (!appointmentDate) continue;
+
+      const secUntil = (appointmentDate - Date.now()) / 1000;
+
+      if (secUntil < 570 || secUntil > 630) continue;
+
+      lembreteEnviado.add(channel.id);
+
+      const horaExibida = parsed.hora.replace('h', ':');
+
+      const embed = new EmbedBuilder()
+        .setTitle('⏰ Lembrete')
+        .setDescription(
+          'No horário agendado é só entrar na call https://discord.com/channels/1046404063287332936/1378780085091565678.\n\n' +
+          'Assim que a gente tiver disponível a gente te puxa. Como o atendimento é a cada hora, então vc pode ser atendido nesse intervalo. ' +
+          'Exemplo: Se seu horário é as 19 horas, vc será atendido entre 19:00 até 19:59.\n\n' +
+          'Pode ser q n seja atendido exatamente no horário agendado pois podemos estar em outro atendimento.\n\n' +
+          'É só aguardar na call que iremos atender assim que puder.',
+        )
+        .setColor(0xfee75c)
+        .addFields(
+          { name: 'Dia', value: DIAS_PT[parsed.dia], inline: true },
+          { name: 'Horário', value: horaExibida, inline: true },
+        );
+
+      await channel.send({ embeds: [embed] }).catch(() => {});
+    }
+  }
 }
 
 // ============================================================
@@ -217,6 +297,12 @@ function buildConfirmarRows() {
 const setupAgendamentosSegModule = function (client) {
   // Apenas canais seg-* (tickets de segurança)
   const isCanalSeg = (name) => name && name.startsWith('seg-');
+
+  // Verifica lembretes a cada 30 segundos
+  client.once('ready', () => {
+    setInterval(() => { checkReminders(client).catch(console.error); }, 30_000);
+    console.log('   ⏰ [agendamentos-seg] Verificação de lembretes iniciada (intervalo: 30s)');
+  });
 
   // --- messageCreate ---
   client.on('messageCreate', async (message) => {

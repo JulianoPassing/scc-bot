@@ -90,6 +90,7 @@ client.on('shardReconnecting', (shardId) => {
 
 // Carregar módulos de cada pasta
 const modules = [
+  'agendamentos-seg',
   'altnomes',
   'auto-atendimento',
   'avaliacoes',

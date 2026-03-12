@@ -1,0 +1,97 @@
+{
+  "ADMIN_ROLE_ID": "1046404063522197521",
+  "serverName": "🏁 ARMAGEDDON – STREET CAR CLUB (SCC)",
+  "categories": [
+    {
+      "name": "📢 | INFORMAÇÕES",
+      "channels": [
+        { "name": "📜 | regras", "type": "text", "key": "regras" },
+        { "name": "📣 | anúncios", "type": "text", "key": "anúncios" },
+        { "name": "📅 | calendário", "type": "text", "key": "calendário" }
+      ]
+    },
+    {
+      "name": "📝 | INSCRIÇÕES",
+      "channels": [
+        { "name": "🏎 | inscrição-pilotos", "type": "text", "key": "inscrição-pilotos" },
+        { "name": "🚗 | inscrição-carros", "type": "text", "key": "inscrição-carros" }
+      ]
+    },
+    {
+      "name": "🔧 | HOMOLOGAÇÃO",
+      "channels": [
+        { "name": "🔍 | agendar-vistoria", "type": "text", "key": "agendar-vistoria" },
+        { "name": "✅ | carros-homologados", "type": "text", "key": "carros-homologados" }
+      ]
+    },
+    {
+      "name": "🏁 | CORRIDAS",
+      "channels": [
+        { "name": "💬 | chat-corrida", "type": "text", "key": "chat-corrida" },
+        { "name": "📊 | resultados", "type": "text", "key": "resultados" },
+        { "name": "⏱ | recordes-da-pista", "type": "text", "key": "recordes-da-pista" }
+      ]
+    },
+    {
+      "name": "🌐 | COMUNIDADE",
+      "channels": [
+        { "name": "💬 | chat-geral", "type": "text", "key": "chat-geral" },
+        { "name": "📸 | fotos-e-vídeos", "type": "text", "key": "fotos-e-vídeos" }
+      ]
+    },
+    {
+      "name": "🎧 | VOZ",
+      "channels": [
+        { "name": "🔊 | lobby", "type": "voice", "key": "lobby" },
+        { "name": "🏁 | corrida", "type": "voice", "key": "corrida" },
+        { "name": "🛠 | staff", "type": "voice", "key": "staff" }
+      ]
+    }
+  ],
+  "roles": [
+    {
+      "name": "Street Armageddon",
+      "color": "#FF4500",
+      "permissions": "decorativo"
+    },
+    {
+      "name": "Visitante",
+      "color": "#808080",
+      "permissions": "visitante"
+    },
+    {
+      "name": "Piloto",
+      "color": "#00BFFF",
+      "permissions": "piloto"
+    },
+    {
+      "name": "Organizador",
+      "color": "#00FF00",
+      "permissions": "all"
+    },
+    {
+      "name": "Prefeitura",
+      "color": "#FFD700",
+      "permissions": "all"
+    }
+  ],
+  "channelPermissions": {
+    "piloto": [
+      "regras", "anúncios", "calendário",
+      "inscrição-pilotos", "inscrição-carros",
+      "agendar-vistoria", "carros-homologados",
+      "chat-corrida", "resultados", "recordes-da-pista",
+      "chat-geral", "fotos-e-vídeos",
+      "lobby", "corrida"
+    ],
+    "visitante": [
+      "regras", "anúncios", "calendário",
+      "inscrição-pilotos", "inscrição-carros",
+      "chat-geral", "fotos-e-vídeos",
+      "lobby"
+    ],
+    "staff": [
+      "staff"
+    ]
+  }
+}

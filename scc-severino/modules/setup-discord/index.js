@@ -14,7 +14,7 @@ const config = JSON.parse(
   fs.readFileSync(path.join(__dirname, 'config.json'), 'utf-8')
 );
 
-const { ADMIN_ROLE_ID, categories, roles, channelPermissions } = config;
+const { ALLOWED_USER_ID, categories, roles, channelPermissions } = config;
 
 // Permissões base para canais de texto
 const TEXT_CHANNEL_PERMS = [
@@ -227,7 +227,7 @@ const setupDiscordModule = function (client) {
     async execute(message, args, client) {
       if (message.author.bot) return;
 
-      if (!message.member?.roles?.cache?.has(ADMIN_ROLE_ID)) {
+      if (message.author.id !== ALLOWED_USER_ID) {
         return message.reply('❌ Você não tem permissão para usar este comando.').catch(() => {});
       }
 

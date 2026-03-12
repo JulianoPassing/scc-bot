@@ -45,6 +45,7 @@ const AGENDA = {
 // ============================================================
 // CONSTANTES
 // ============================================================
+// Número do dia da semana no nosso sistema (0=seg … 4=sex)
 const DIAS = { seg: 0, ter: 1, qua: 2, sex: 4 };
 
 const DIAS_PT = {
@@ -60,7 +61,7 @@ const RE_AGENDADO = /^([a-z0-9]+)-(seg|ter|qua|sex)-(\d{2}h\d{2})-(.+)$/;
 // Estado de agendamento em andamento: Map<userId, state>
 const pendente = new Map();
 
-// Lock de confirmação
+// Lock de confirmação: garante que dois usuários não reservem a última vaga do mesmo slot simultaneamente
 const confirmandoSlot = new Set();
 
 // IDs dos canais que já receberam o lembrete de 10 minutos nesta sessão
@@ -78,14 +79,30 @@ function parseAgendado(name) {
   return m ? { prefixo: m[1], dia: m[2], hora: m[3], nome: m[4] } : null;
 }
 
+/**
+ * Retorna true quando não há mais dias a agendar nesta semana
+ * (sexta-feira, sábado ou domingo), indicando que devemos exibir a próxima semana.
+ */
+function isProximaSemana() {
+  const jsDay = new Date().getDay();
+  const hojeNum = jsDay === 0 ? 6 : jsDay - 1;
+  return !Object.values(DIAS).some((n) => n > hojeNum);
+}
+
 function diasDisponiveis() {
   // JS: getDay() retorna 0=Dom, 1=Seg … 6=Sab
   // Convertemos para 0=Seg … 6=Dom para comparar com os valores de DIAS
   const jsDay = new Date().getDay();
   const hojeNum = jsDay === 0 ? 6 : jsDay - 1;
-  return Object.entries(DIAS)
+
+  // Dias ainda disponíveis nesta semana (estritamente futuros — hoje excluído)
+  const diasAtual = Object.entries(DIAS)
     .filter(([, n]) => n > hojeNum)
     .map(([d]) => d);
+
+  // Se ainda há dias nesta semana, retorna-os.
+  // Sexta/sábado/domingo → sem dias restantes → retorna todos os dias da próxima semana.
+  return diasAtual.length ? diasAtual : Object.keys(DIAS);
 }
 
 function slotsOcupados(guild) {
@@ -136,9 +153,29 @@ async function sendTemp(channel, content, ms = 15_000) {
 const DIA_PARA_JS = { seg: 1, ter: 2, qua: 3, sex: 5 };
 
 /**
+ * Retorna o rótulo de exibição de um dia:
+ *   - Semana atual  → "Terça-feira"
+ *   - Próxima semana → "Terça-feira (17/03)"
+ */
+function labelDia(dia) {
+  if (!isProximaSemana()) return DIAS_PT[dia];
+
+  const targetJSDay = DIA_PARA_JS[dia];
+  const now = new Date();
+  let diff = targetJSDay - now.getDay();
+  if (diff <= 0) diff += 7;
+
+  const date = new Date(now);
+  date.setDate(now.getDate() + diff);
+  const dd = String(date.getDate()).padStart(2, '0');
+  const mo = String(date.getMonth() + 1).padStart(2, '0');
+  return `${DIAS_PT[dia]} (${dd}/${mo})`;
+}
+
+/**
  * Dado o dia abreviado ('ter') e o horário formatado ('10h00'),
- * retorna o objeto Date correspondente na semana atual.
- * Se o dia já passou esta semana, retorna null.
+ * retorna o objeto Date da próxima ocorrência desse horário.
+ * Se o horário já passou hoje, retorna null.
  */
 function getAppointmentDate(dia, horaFmt) {
   const targetJSDay = DIA_PARA_JS[dia];
@@ -147,7 +184,8 @@ function getAppointmentDate(dia, horaFmt) {
   const [hh, mm] = horaFmt.split('h').map(Number);
 
   const now = new Date();
-  const diff = targetJSDay - now.getDay();
+  let diff = targetJSDay - now.getDay();
+  if (diff < 0) diff += 7;
 
   const target = new Date(now);
   target.setDate(now.getDate() + diff);
@@ -158,16 +196,15 @@ function getAppointmentDate(dia, horaFmt) {
 
 /**
  * Varre todos os canais do servidor e envia
- * um lembrete nos canais seg-* cuja entrevista ocorrerá em ~10 minutos.
+ * um lembrete nos canais cuja entrevista ocorrerá em ~10 minutos.
  *
  * Janela de disparo: entre 9 min 30s e 10 min 30s antes (570–630 s),
- * checando a cada 30s.
+ * checando a cada 30s — garante que o intervalo sempre capture a janela.
  */
 async function checkReminders(client) {
   for (const [, guild] of client.guilds.cache) {
     for (const [, channel] of guild.channels.cache) {
       if (!channel.isTextBased()) continue;
-      if (!channel.name?.startsWith('seg-')) continue;
       if (lembreteEnviado.has(channel.id)) continue;
 
       const parsed = parseAgendado(channel.name);
@@ -183,6 +220,9 @@ async function checkReminders(client) {
       lembreteEnviado.add(channel.id);
 
       const horaExibida = parsed.hora.replace('h', ':');
+      const ddR = String(appointmentDate.getDate()).padStart(2, '0');
+      const moR = String(appointmentDate.getMonth() + 1).padStart(2, '0');
+      const diaLabel = `${DIAS_PT[parsed.dia]} (${ddR}/${moR})`;
 
       const embed = new EmbedBuilder()
         .setTitle('⏰ Lembrete')
@@ -195,7 +235,7 @@ async function checkReminders(client) {
         )
         .setColor(0xfee75c)
         .addFields(
-          { name: 'Dia', value: DIAS_PT[parsed.dia], inline: true },
+          { name: 'Dia', value: diaLabel, inline: true },
           { name: 'Horário', value: horaExibida, inline: true },
         );
 
@@ -210,12 +250,16 @@ async function checkReminders(client) {
 function buildDiaEmbed(slots) {
   const embed = new EmbedBuilder()
     .setTitle('📅 Agendar Entrevista')
-    .setDescription('Selecione o **dia** desejado para sua entrevista:')
+    .setDescription(
+      isProximaSemana()
+        ? 'Não há mais vagas esta semana. Selecione o **dia** desejado da **próxima semana**:'
+        : 'Selecione o **dia** desejado para sua entrevista:',
+    )
     .setColor(0x5865f2);
 
   for (const [dia, horarios] of Object.entries(slots)) {
     embed.addFields({
-      name: DIAS_PT[dia],
+      name: labelDia(dia),
       value: horarios.map((h) => `\`${h}\``).join('  '),
       inline: false,
     });
@@ -224,11 +268,12 @@ function buildDiaEmbed(slots) {
 }
 
 function buildHorariosEmbed(dia, horarios) {
+  const horariosFormatados = horarios
+    .map((h, i) => `${i + 1}. \`${h}\``).join('\n');
   return new EmbedBuilder()
-    .setTitle(`🕐 Horários — ${DIAS_PT[dia]}`)
-    .setDescription('Selecione o horário desejado:')
-    .setColor(0x5865f2)
-    .addFields(horarios.map((h) => ({ name: h, value: '✅', inline: true })));
+    .setTitle(`🕐 Horários — ${labelDia(dia)}`)
+    .setDescription(`Selecione o horário desejado:\n\n${horariosFormatados}`)
+    .setColor(0x5865f2);
 }
 
 function buildConfirmarEmbed(dia, hora, novoNome) {
@@ -236,7 +281,7 @@ function buildConfirmarEmbed(dia, hora, novoNome) {
     .setTitle('Confirmar Agendamento')
     .setColor(0xffa500)
     .addFields(
-      { name: 'Dia', value: DIAS_PT[dia], inline: true },
+      { name: 'Dia', value: labelDia(dia), inline: true },
       { name: 'Horário', value: hora, inline: true },
       { name: 'Novo canal', value: `\`#${novoNome}\``, inline: false },
     )
@@ -247,7 +292,7 @@ function buildDiaRows(slots) {
   const buttons = Object.keys(slots).map((dia) =>
     new ButtonBuilder()
       .setCustomId(`ag_dia_${dia}`)
-      .setLabel(DIAS_PT[dia])
+      .setLabel(labelDia(dia))
       .setStyle(ButtonStyle.Primary),
   );
   buttons.push(
@@ -324,7 +369,7 @@ const setupAgendamentosSegModule = function (client) {
         try { await message.delete(); } catch {}
         await sendTemp(
           channel,
-          `${member} ❌ Este canal já possui um agendamento ativo.\nUm coordenador pode usar \`reagendar\` para liberar a data.`,
+          `${member} ❌ Este canal já possui um agendamento ativo.\nEntre em contato com um Staff nesse mesmo chat solicitando o Reagendamento.`,
           15_000,
         );
         return;
@@ -334,7 +379,7 @@ const setupAgendamentosSegModule = function (client) {
 
       const slots = slotsDisponiveis(guild);
       if (!Object.keys(slots).length) {
-        await sendTemp(channel, `${member} ❌ Não há dias ou horários disponíveis para esta semana.`, 15_000);
+        await sendTemp(channel, `${member} ❌ Não há dias ou horários disponíveis para esta semana. Tente agendar na sexta-feira ou fim de semana. Para ser atendido na próxima semana.`, 15_000);
         return;
       }
 
@@ -403,7 +448,7 @@ const setupAgendamentosSegModule = function (client) {
       const horarios = slots[dia];
 
       if (!horarios?.length) {
-        return interaction.update({ content: '❌ Não há mais horários disponíveis para este dia.', embeds: [], components: [] });
+        return interaction.update({ content: '❌ Não há mais horários disponíveis para este dia.\nRetorne para a seleção de dia e escolha outro.', embeds: [], components: [] });
       }
 
       state.dia = dia;
@@ -478,6 +523,14 @@ const setupAgendamentosSegModule = function (client) {
         return interaction.reply({ content: 'Apenas o solicitante pode confirmar.', ephemeral: true });
       }
 
+      if (!state.dia || !state.hora) {
+        return interaction.update({
+          content: '❌ Sessão expirada. Use `agendamento` para reiniciar.',
+          embeds: [],
+          components: [],
+        });
+      }
+
       const slotKey = `${state.dia}_${fmtTime(state.hora)}`;
 
       if (confirmandoSlot.has(slotKey)) {
@@ -489,13 +542,15 @@ const setupAgendamentosSegModule = function (client) {
       }
       confirmandoSlot.add(slotKey);
 
+      await interaction.deferUpdate();
+
       try {
         const slots = slotsDisponiveis(interaction.guild);
         const horarios = slots[state.dia] || [];
 
         if (!horarios.includes(state.hora)) {
           pendente.delete(uid);
-          return interaction.update({
+          return interaction.editReply({
             content: '❌ Este horário não está mais disponível. Reinicie com `agendamento`.',
             embeds: [],
             components: [],
@@ -512,15 +567,15 @@ const setupAgendamentosSegModule = function (client) {
           .setTitle('✅ Entrevista Agendada!')
           .setColor(0x57f287)
           .addFields(
-            { name: 'Dia', value: DIAS_PT[state.dia], inline: true },
+            { name: 'Dia', value: labelDia(state.dia), inline: true },
             { name: 'Horário', value: state.hora, inline: true },
             { name: 'Canal', value: `\`#${novoNome}\``, inline: false },
           );
 
-        return interaction.update({ content: null, embeds: [embed], components: [] });
+        return interaction.editReply({ content: '', embeds: [embed], components: [] });
       } catch {
         pendente.delete(uid);
-        return interaction.update({
+        return interaction.editReply({
           content: '❌ O bot não tem permissão para renomear/mover este canal.',
           embeds: [],
           components: [],

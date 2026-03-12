@@ -1,7 +1,7 @@
 /**
- * Módulo de Agendamento de Entrevistas - StreetCarClub (Segurança)
- * ----------------------------------------------------------------
- * Comandos (apenas via texto no canal seg-*):
+ * Bot de Agendamento de Entrevistas - StreetCarClub
+ * --------------------------------------------------
+ * Comandos (apenas via texto no canal):
  *   agendamento  → (role ROLE_AGENDAMENTO_ID) abre o fluxo de agendamento
  *   reagendar    → (role ROLE_REAGENDAR_ID)   reverte o canal para prefixo-nome
  *
@@ -64,7 +64,8 @@ const pendente = new Map();
 // Lock de confirmação: garante que dois usuários não reservem a última vaga do mesmo slot simultaneamente
 const confirmandoSlot = new Set();
 
-// IDs dos canais que já receberam o lembrete de 10 minutos nesta sessão
+// IDs dos canais que já receberam o lembrete nesta sessão.
+// Evita enviar a mensagem mais de uma vez caso o intervalo dispare no mesmo janela.
 const lembreteEnviado = new Set();
 
 // ============================================================
@@ -196,9 +197,9 @@ function getAppointmentDate(dia, horaFmt) {
 
 /**
  * Varre todos os canais do servidor e envia
- * um lembrete nos canais cuja entrevista ocorrerá em ~10 minutos.
+ * um lembrete nos canais cuja entrevista ocorrerá em ~20 minutos.
  *
- * Janela de disparo: entre 9 min 30s e 10 min 30s antes (570–630 s),
+ * Janela de disparo: entre 19 min 30s e 20 min 30s antes (1170–1230 s),
  * checando a cada 30s — garante que o intervalo sempre capture a janela.
  */
 async function checkReminders(client) {
@@ -215,7 +216,7 @@ async function checkReminders(client) {
 
       const secUntil = (appointmentDate - Date.now()) / 1000;
 
-      if (secUntil < 570 || secUntil > 630) continue;
+      if (secUntil < 1170 || secUntil > 1230) continue;
 
       lembreteEnviado.add(channel.id);
 
@@ -302,6 +303,7 @@ function buildDiaRows(slots) {
       .setStyle(ButtonStyle.Danger),
   );
 
+  // Máximo de 5 botões por row
   const rows = [];
   for (let i = 0; i < buttons.length; i += 5) {
     rows.push(new ActionRowBuilder().addComponents(buttons.slice(i, i + 5)));
@@ -340,9 +342,6 @@ function buildConfirmarRows() {
 // SETUP
 // ============================================================
 const setupAgendamentosSegModule = function (client) {
-  // Apenas canais seg-* (tickets de segurança)
-  const isCanalSeg = (name) => name && name.startsWith('seg-');
-
   // Verifica lembretes a cada 30 segundos
   client.once('ready', () => {
     setInterval(() => { checkReminders(client).catch(console.error); }, 30_000);
@@ -352,16 +351,17 @@ const setupAgendamentosSegModule = function (client) {
   // --- messageCreate ---
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
-    if (!isCanalSeg(message.channel?.name)) return;
 
     const cmd = message.content.trim().toLowerCase();
     const channel = message.channel;
     const member = message.member;
     const guild = message.guild;
 
+    if (!guild || !member) return;
+
     if (cmd === 'agendamento') {
       if (!member.roles.cache.has(ROLE_AGENDAMENTO_ID)) {
-        try { await message.delete(); } catch {}
+        try { await message.delete(); } catch { /* sem permissão para deletar */ }
         return;
       }
 
@@ -542,9 +542,15 @@ const setupAgendamentosSegModule = function (client) {
       }
       confirmandoSlot.add(slotKey);
 
+      // Sinaliza ao Discord que a resposta pode demorar mais que 3 s.
+      // Necessário porque o Discord aplica rate-limit em renomeações de canal
+      // (2 por 10 min), e o discord.js aguarda esse limite em fila antes de prosseguir.
+      // deferUpdate() estende o prazo de resposta de 3 s para 15 min,
+      // permitindo que editReply() atualize a mensagem após a renomeação.
       await interaction.deferUpdate();
 
       try {
+        // Verificação final (feita DENTRO do lock): slot ainda tem vaga?
         const slots = slotsDisponiveis(interaction.guild);
         const horarios = slots[state.dia] || [];
 
@@ -560,6 +566,7 @@ const setupAgendamentosSegModule = function (client) {
         const novoNome = `${state.prefixo}-${state.dia}-${fmtTime(state.hora)}-${state.nome}`;
         const cat = interaction.guild.channels.cache.get(CATEGORIA_AGENDADOS_ID);
 
+        // Pode aguardar aqui se o rate-limit estiver ativo — deferUpdate() garante que há tempo.
         await interaction.channel.edit({ name: novoNome, parent: cat ?? CATEGORIA_AGENDADOS_ID });
         pendente.delete(uid);
 
@@ -581,6 +588,7 @@ const setupAgendamentosSegModule = function (client) {
           components: [],
         });
       } finally {
+        // Sempre libera o lock, mesmo em caso de erro
         confirmandoSlot.delete(slotKey);
       }
     }

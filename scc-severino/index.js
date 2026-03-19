@@ -90,7 +90,6 @@ client.on('shardReconnecting', (shardId) => {
 
 // Carregar módulos de cada pasta
 const modules = [
-  'agendamentos-seg',
   'altnomes',
   'apagar-msg-bot',
   'setup-discord',

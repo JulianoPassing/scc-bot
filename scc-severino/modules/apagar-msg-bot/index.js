@@ -2,7 +2,7 @@
  * Módulo para apagar a mensagem de boas-vindas do agendamento em TODOS os canais/servidores
  * Comando: !apagar-msg-bot
  * Remove "Olá! Para agendar sua entrevista escreva `agendamento` aqui."
- * Processa bloco a bloco, limpando cache entre leituras.
+ * Só lê as 100 mensagens mais recentes por canal (a msg está sempre no topo).
  */
 
 const BOT_ID = '1413346434102595646';
@@ -11,17 +11,11 @@ const MSG_MATCH = 'Para agendar sua entrevista escreva';
 
 const ALLOWED_ROLES = ['1046404063689977985', '1046404063689977984'];
 
-// Bloco de leitura (mensagens por fetch)
-const BLOCK_SIZE = 100;
+// Canais em paralelo
+const CONCURRENCY = 20;
 
-// Máximo de mensagens apagadas por vez
-const DELETE_BATCH = 50;
-
-// Pausa entre blocos (reduzida para acelerar)
-const DELAY_BETWEEN_BLOCKS = 400;
-
-// Canais processados em paralelo (acelera muito com 919 canais)
-const CONCURRENCY = 12;
+// Só as 100 msgs mais recentes (a msg de boas-vindas está sempre no topo)
+const MSGS_PER_CHANNEL = 100;
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 5000;
@@ -49,70 +43,51 @@ async function withRetry(fn) {
   }
 }
 
-async function processChannel(channel, botId, onBlock, totalSoFar) {
+async function processChannel(channel, botId) {
   let deleted = 0;
   const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
   try {
-    let lastId = null;
-    let blockNum = 0;
+    channel.messages.cache.clear();
 
-    while (true) {
-      blockNum++;
-      channel.messages.cache.clear();
+    const messages = await withRetry(async () =>
+      channel.messages.fetch({ limit: MSGS_PER_CHANNEL, cache: false })
+    );
 
-      const messages = await withRetry(async () => {
-        const options = { limit: BLOCK_SIZE, cache: false };
-        if (lastId) options.before = lastId;
-        return channel.messages.fetch(options);
-      });
+    if (!messages || messages.size === 0) return 0;
 
-      if (!messages || messages.size === 0) break;
+    const toDelete = messages.filter((m) => isTargetMessage(m, botId));
+    if (toDelete.size === 0) return 0;
 
-      const toDelete = messages.filter((m) => isTargetMessage(m, botId));
+    const recent = [];
+    const old = [];
 
-      if (toDelete.size > 0) {
-        const recent = [];
-        const old = [];
+    for (const [, msg] of toDelete) {
+      const age = Date.now() - msg.createdTimestamp;
+      if (age < FOURTEEN_DAYS_MS) {
+        recent.push(msg);
+      } else {
+        old.push(msg);
+      }
+    }
 
-        for (const [, msg] of toDelete) {
-          const age = Date.now() - msg.createdTimestamp;
-          if (age < FOURTEEN_DAYS_MS) {
-            recent.push(msg);
-          } else {
-            old.push(msg);
-          }
-        }
-
-        for (let i = 0; i < recent.length; i += DELETE_BATCH) {
-          const batch = recent.slice(i, i + DELETE_BATCH);
-          const ok = await withRetry(() => channel.bulkDelete(batch));
-          if (ok !== null) {
-            deleted += batch.length;
-            if (onBlock) onBlock(deleted, blockNum, channel.name, totalSoFar);
-            await new Promise((r) => setTimeout(r, 400));
-          } else {
-            for (const msg of batch) {
-              const ok2 = await withRetry(() => msg.delete().then(() => true));
-              if (ok2) deleted++;
-              await new Promise((r) => setTimeout(r, 200));
-            }
-            if (onBlock) onBlock(deleted, blockNum, channel.name, totalSoFar);
-          }
-        }
-
-        for (const msg of old) {
+    if (recent.length > 0) {
+      try {
+        await withRetry(() => channel.bulkDelete(recent));
+        deleted += recent.length;
+      } catch {
+        for (const msg of recent) {
           const ok = await withRetry(() => msg.delete().then(() => true));
           if (ok) deleted++;
-          await new Promise((r) => setTimeout(r, 200));
+          await new Promise((r) => setTimeout(r, 150));
         }
-        if (old.length > 0 && onBlock) onBlock(deleted, blockNum, channel.name, totalSoFar);
       }
+    }
 
-      lastId = messages.last()?.id;
-      if (messages.size < BLOCK_SIZE) break;
-
-      await new Promise((r) => setTimeout(r, DELAY_BETWEEN_BLOCKS));
+    for (const msg of old) {
+      const ok = await withRetry(() => msg.delete().then(() => true));
+      if (ok) deleted++;
+      await new Promise((r) => setTimeout(r, 150));
     }
   } catch {
     // Sem permissão — ignora
@@ -183,36 +158,27 @@ const setupApagarMsgBotModule = function (client) {
           }
 
           await statusMsg.edit(
-            `**🧹 ${channels.length} canais. Processando ${CONCURRENCY} em paralelo...**`
+            `**🧹 ${channels.length} canais. Só as ${MSGS_PER_CHANNEL} msgs mais recentes por canal.**`
           ).catch(() => {});
 
           let totalDeleted = 0;
-          const totalRef = { value: 0 };
 
           for (let i = 0; i < channels.length; i += CONCURRENCY) {
             const batch = channels.slice(i, i + CONCURRENCY);
             const results = await Promise.all(
-              batch.map((ch) =>
-                processChannel(ch, botId, (del, block, name, getTotal) => {
-                  statusMsg.edit(
-                    `**🧹 Bloco ${block} em #${name}**\n` +
-                    `Total: ${getTotal() + del}`
-                  ).catch(() => {});
-                }, () => totalRef.value)
-              )
+              batch.map((ch) => processChannel(ch, botId))
             );
             const batchDeleted = results.reduce((a, b) => a + b, 0);
             totalDeleted += batchDeleted;
-            totalRef.value = totalDeleted;
 
-            if (batchDeleted > 0) {
-              await statusMsg.edit(
-                `**🧹 Lote ${Math.floor(i / CONCURRENCY) + 1}/${Math.ceil(channels.length / CONCURRENCY)}**\n` +
-                `Total: ${totalDeleted} removida(s)`
-              ).catch(() => {});
-            }
+            const lote = Math.floor(i / CONCURRENCY) + 1;
+            const totalLotes = Math.ceil(channels.length / CONCURRENCY);
+            await statusMsg.edit(
+              `**🧹 Lote ${lote}/${totalLotes}**\n` +
+              `Total: ${totalDeleted} removida(s)`
+            ).catch(() => {});
 
-            await new Promise((r) => setTimeout(r, 200));
+            await new Promise((r) => setTimeout(r, 100));
           }
 
           await statusMsg.delete().catch(() => {});

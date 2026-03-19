@@ -503,7 +503,7 @@ const client = new Client({
   ],
 });
 
-client.once('ready', () => {
+client.once('ready', async () => {
   console.log(`✅ Bot online: ${client.user.tag} (ID: ${client.user.id})`);
   console.log(`   Servidores: ${client.guilds.cache.map((g) => g.name).join(', ')}`);
 

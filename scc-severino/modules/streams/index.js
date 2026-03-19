@@ -53,35 +53,64 @@ function getMesAtual(now = Date.now()) {
   return { inicio, fim };
 }
 
+/** Retorna timestamp do início da janela de N dias atrás */
+function getJanelaInicio(dias = INATIVIDADE_DAYS, now = Date.now()) {
+  return now - dias * 24 * 60 * 60 * 1000;
+}
+
 /**
- * Calcula status e métricas do criador de conteúdo
- * Baseado no MÊS ATUAL:
- *   ATIVO: 2+ mensagens no mês atual
- *   POUCO ATIVO: 1 mensagem no mês atual
- *   INATIVO: 0 mensagens no mês atual (mas tem histórico)
- *   INEXISTENTE: nunca postou
+ * Calcula status e métricas do criador de conteúdo.
+ * Usa os critérios do config.json (CRITERIOS).
+ *
+ * Modo "janela" (padrão): baseado nos últimos N dias (DIAS_INATIVIDADE)
+ *   - INEXISTENTE: nunca postou
+ *   - INATIVO: última mensagem há mais de N dias OU 0 msgs na janela
+ *   - POUCO ATIVO: 1 mensagem na janela
+ *   - ATIVO: >= MSG_MINIMA_ULTIMOS_30_DIAS na janela
+ *
+ * Modo "frequencia": baseado na média histórica (msgs/semana)
+ *   - Usa MSG_MINIMA_POR_SEMANA como threshold
  */
 function calculateStatus(messages, now = Date.now()) {
-  const empty = { status: 'INEXISTENTE', diasDesdeUltima: null, msgPorSemana: '0', msgNoMes: 0, total: 0, motivo: 'Nunca postou no canal' };
+  const empty = { status: 'INEXISTENTE', diasDesdeUltima: null, msgPorSemana: '0', msgNaJanela: 0, total: 0, motivo: 'Nunca postou no canal' };
   if (!messages || messages.length === 0) return empty;
 
   const total = messages.length;
   const newest = Math.max(...messages.map(m => m.createdTimestamp));
   const oldest = Math.min(...messages.map(m => m.createdTimestamp));
   const daysSinceLastMsg = Math.floor((now - newest) / (1000 * 60 * 60 * 24));
-  const { inicio, fim } = getMesAtual(now);
-  const msgNoMes = messages.filter(m => m.createdTimestamp >= inicio && m.createdTimestamp <= fim).length;
   const daysSpan = Math.max(1, (newest - oldest) / (1000 * 60 * 60 * 24));
   const weeks = daysSpan / 7;
   const messagesPerWeek = (total / weeks).toFixed(1);
 
-  if (msgNoMes === 0) {
-    return { status: 'INATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNoMes, total, motivo: `Nenhuma mensagem no mês atual` };
+  const janelaInicio = getJanelaInicio(INATIVIDADE_DAYS, now);
+  const msgNaJanela = messages.filter(m => m.createdTimestamp >= janelaInicio).length;
+
+  if (MODO_FILTRO === 'frequencia') {
+    const mediaSemana = parseFloat(messagesPerWeek);
+    if (mediaSemana >= MSG_PER_WEEK_THRESHOLD) {
+      return { status: 'ATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNaJanela, total, motivo: `Média ${messagesPerWeek}/semana (≥${MSG_PER_WEEK_THRESHOLD})` };
+    }
+    if (mediaSemana >= 0.5) {
+      return { status: 'POUCO ATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNaJanela, total, motivo: `Média ${messagesPerWeek}/semana` };
+    }
+    return { status: 'INATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNaJanela, total, motivo: `Média ${messagesPerWeek}/semana (baixa)` };
   }
-  if (msgNoMes === 1) {
-    return { status: 'POUCO ATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNoMes, total, motivo: `1 mensagem no mês atual` };
+
+  // Modo "janela" (padrão)
+  if (daysSinceLastMsg > INATIVIDADE_DAYS) {
+    return { status: 'INATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNaJanela, total, motivo: `Sem postar há ${daysSinceLastMsg} dias (>${INATIVIDADE_DAYS})` };
   }
-  return { status: 'ATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNoMes, total, motivo: `${msgNoMes} mensagens no mês atual` };
+  if (msgNaJanela === 0) {
+    return { status: 'INATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNaJanela, total, motivo: `Nenhuma mensagem nos últimos ${INATIVIDADE_DAYS} dias` };
+  }
+  if (msgNaJanela === 1) {
+    return { status: 'POUCO ATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNaJanela, total, motivo: `1 mensagem nos últimos ${INATIVIDADE_DAYS} dias` };
+  }
+  if (msgNaJanela >= MSG_ULTIMOS_30_DIAS) {
+    return { status: 'ATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNaJanela, total, motivo: `${msgNaJanela} mensagens nos últimos ${INATIVIDADE_DAYS} dias` };
+  }
+  return { status: 'POUCO ATIVO', diasDesdeUltima: daysSinceLastMsg, msgPorSemana: messagesPerWeek, msgNaJanela, total, motivo: `${msgNaJanela} mensagens nos últimos ${INATIVIDADE_DAYS} dias` };
 }
 
 /** Retorna true se a mensagem tem mais de 30 dias */
@@ -166,10 +195,10 @@ function generateStreamersRelatorio(streamersData, guild) {
                 <i class="fas ${statusIcon(status)}"></i> ${status}
               </div>
               ${sd.motivo ? `<div class="streamer-motivo">${sd.motivo}</div>` : ''}
-              ${(sd.total > 0 && (sd.diasDesdeUltima !== null || sd.msgPorSemana || sd.msgNoMes)) ? `
+              ${(sd.total > 0 && (sd.diasDesdeUltima !== null || sd.msgPorSemana || sd.msgNaJanela !== undefined)) ? `
               <div class="streamer-metricas">
                 ${sd.diasDesdeUltima !== null ? `<span><i class="fas fa-clock"></i> Última: há ${sd.diasDesdeUltima} dias</span>` : ''}
-                ${sd.msgNoMes !== undefined ? `<span><i class="fas fa-calendar-alt"></i> ${sd.msgNoMes} no mês</span>` : ''}
+                ${sd.msgNaJanela !== undefined ? `<span><i class="fas fa-calendar-alt"></i> ${sd.msgNaJanela} nos últimos ${INATIVIDADE_DAYS}d</span>` : ''}
                 ${sd.msgPorSemana ? `<span><i class="fas fa-chart-line"></i> ${sd.msgPorSemana}/semana</span>` : ''}
                 ${sd.total ? `<span><i class="fas fa-comment"></i> ${sd.total} total</span>` : ''}
               </div>` : ''}
@@ -507,10 +536,16 @@ function generateStreamersRelatorio(streamersData, guild) {
     </div>
 
     <div class="info">
-      <strong><i class="fas fa-info-circle"></i> Critérios (mês atual)</strong><br><br>
-      <strong style="color:#22c55e">ATIVO:</strong> 2+ mensagens no mês atual<br>
-      <strong style="color:#3b82f6">POUCO ATIVO:</strong> 1 mensagem no mês atual<br>
-      <strong style="color:#f59e0b">INATIVO:</strong> 0 mensagens no mês atual<br>
+      <strong><i class="fas fa-info-circle"></i> Critérios (modo: ${MODO_FILTRO})</strong><br><br>
+      ${MODO_FILTRO === 'janela' ? `
+      <strong style="color:#22c55e">ATIVO:</strong> ≥${MSG_ULTIMOS_30_DIAS} mensagens nos últimos ${INATIVIDADE_DAYS} dias<br>
+      <strong style="color:#3b82f6">POUCO ATIVO:</strong> 1 mensagem nos últimos ${INATIVIDADE_DAYS} dias<br>
+      <strong style="color:#f59e0b">INATIVO:</strong> 0 mensagens ou sem postar há &gt;${INATIVIDADE_DAYS} dias<br>
+      ` : `
+      <strong style="color:#22c55e">ATIVO:</strong> Média ≥${MSG_PER_WEEK_THRESHOLD} msg/semana<br>
+      <strong style="color:#3b82f6">POUCO ATIVO:</strong> Média entre 0.5 e ${MSG_PER_WEEK_THRESHOLD} msg/semana<br>
+      <strong style="color:#f59e0b">INATIVO:</strong> Média &lt;0.5 msg/semana<br>
+      `}
       <strong style="color:#ef4444">INEXISTENTE:</strong> Nunca postou no canal<br><br>
       <small style="opacity:0.8">Relatório: ${formattedDate}</small>
     </div>

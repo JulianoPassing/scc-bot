@@ -92,6 +92,7 @@ client.on('shardReconnecting', (shardId) => {
 const modules = [
   'agendamentos-seg',
   'altnomes',
+  'apagar-msg-bot',
   'setup-discord',
   'auto-atendimento',
   'avaliacoes',

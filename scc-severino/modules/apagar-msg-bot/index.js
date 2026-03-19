@@ -1,21 +1,25 @@
 /**
  * Módulo para apagar a mensagem de boas-vindas do agendamento em TODOS os canais/servidores
  * Comando: !apagar-msg-bot
- * Remove "Olá! Para agendar sua entrevista escreva `agendamento` aqui." em todo o Discord
+ * Remove "Olá! Para agendar sua entrevista escreva `agendamento` aqui."
+ * Processa bloco a bloco, limpando cache entre leituras.
  */
 
 const BOT_ID = '1413346434102595646';
 
-// Match flexível: mensagem do bot que contém esse texto
 const MSG_MATCH = 'Para agendar sua entrevista escreva';
 
-// IDs dos cargos permitidos (mesmos do limparchat)
 const ALLOWED_ROLES = ['1046404063689977985', '1046404063689977984'];
 
-// Canais processados em paralelo
-const CONCURRENCY = 12;
+// Bloco de leitura (mensagens por fetch)
+const BLOCK_SIZE = 100;
 
-// Retry em caso de rate limit (429)
+// Máximo de mensagens apagadas por vez (bulk delete aceita até 100, mas menor = mais estável)
+const DELETE_BATCH = 50;
+
+// Pausa entre blocos (evita rate limit e deixa cache "respirar")
+const DELAY_BETWEEN_BLOCKS = 1500;
+
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 5000;
 
@@ -26,14 +30,12 @@ function isTargetMessage(msg, botId) {
   );
 }
 
-async function withRetry(fn, skipOnPermission = true) {
+async function withRetry(fn) {
   for (let i = 0; i < MAX_RETRIES; i++) {
     try {
       return await fn();
     } catch (err) {
-      if (skipOnPermission && (err.code === 50013 || err.code === 50001 || err.httpStatus === 403)) {
-        return null;
-      }
+      if (err.code === 50013 || err.code === 50001 || err.httpStatus === 403) return null;
       const isRateLimit = err.httpStatus === 429 || err.code === 'RateLimitError';
       if (isRateLimit && i < MAX_RETRIES - 1) {
         await new Promise((r) => setTimeout(r, RETRY_DELAY * (i + 1)));
@@ -44,16 +46,20 @@ async function withRetry(fn, skipOnPermission = true) {
   }
 }
 
-async function processChannel(channel, botId) {
+async function processChannel(channel, botId, onBlock, totalSoFar) {
   let deleted = 0;
   const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
   try {
     let lastId = null;
+    let blockNum = 0;
 
     while (true) {
+      blockNum++;
+      channel.messages.cache.clear();
+
       const messages = await withRetry(async () => {
-        const options = { limit: 100 };
+        const options = { limit: BLOCK_SIZE, cache: false };
         if (lastId) options.before = lastId;
         return channel.messages.fetch(options);
       });
@@ -75,33 +81,38 @@ async function processChannel(channel, botId) {
           }
         }
 
-        if (recent.length > 0) {
-          const bulkOk = await withRetry(() => channel.bulkDelete(recent));
-          if (bulkOk !== null) {
-            deleted += recent.length;
+        for (let i = 0; i < recent.length; i += DELETE_BATCH) {
+          const batch = recent.slice(i, i + DELETE_BATCH);
+          const ok = await withRetry(() => channel.bulkDelete(batch));
+          if (ok !== null) {
+            deleted += batch.length;
+            if (onBlock) onBlock(deleted, blockNum, channel.name, totalSoFar);
+            await new Promise((r) => setTimeout(r, 800));
           } else {
-            for (const msg of recent) {
-              const ok = await withRetry(() => msg.delete().then(() => true));
-              if (ok) deleted++;
-              await new Promise((r) => setTimeout(r, 200));
+            for (const msg of batch) {
+              const ok2 = await withRetry(() => msg.delete().then(() => true));
+              if (ok2) deleted++;
+              await new Promise((r) => setTimeout(r, 300));
             }
+            if (onBlock) onBlock(deleted, blockNum, channel.name, totalSoFar);
           }
         }
 
         for (const msg of old) {
           const ok = await withRetry(() => msg.delete().then(() => true));
           if (ok) deleted++;
-          await new Promise((r) => setTimeout(r, 200));
+          await new Promise((r) => setTimeout(r, 300));
         }
+        if (old.length > 0 && onBlock) onBlock(deleted, blockNum, channel.name, totalSoFar);
       }
 
       lastId = messages.last()?.id;
-      if (messages.size < 100) break;
+      if (messages.size < BLOCK_SIZE) break;
 
-      await new Promise((r) => setTimeout(r, 150));
+      await new Promise((r) => setTimeout(r, DELAY_BETWEEN_BLOCKS));
     }
   } catch {
-    // Sem permissão ou outro erro — ignora
+    // Sem permissão — ignora
   }
 
   return deleted;
@@ -144,7 +155,7 @@ const setupApagarMsgBotModule = function (client) {
 
           const botId = client.user?.id || BOT_ID;
           const statusMsg = await message.channel.send(
-            '**🧹 Buscando canais e threads em todos os servidores...**'
+            '**🧹 Buscando canais...**'
           );
 
           const channels = [];
@@ -169,23 +180,29 @@ const setupApagarMsgBotModule = function (client) {
           }
 
           await statusMsg.edit(
-            `**🧹 Varrendo ${channels.length} canais/threads...**`
+            `**🧹 ${channels.length} canais. Processando bloco a bloco...**`
           ).catch(() => {});
 
           let totalDeleted = 0;
 
-          for (let i = 0; i < channels.length; i += CONCURRENCY) {
-            const batch = channels.slice(i, i + CONCURRENCY);
-            const results = await Promise.all(
-              batch.map((ch) => processChannel(ch, botId))
-            );
-            totalDeleted += results.reduce((a, b) => a + b, 0);
+          for (const channel of channels) {
+            const deleted = await processChannel(channel, botId, (del, block, name, getTotal) => {
+              statusMsg.edit(
+                `**🧹 Bloco ${block} em #${name}**\n` +
+                `Neste canal: ${del} | Total: ${getTotal() + del}`
+              ).catch(() => {});
+            }, () => totalDeleted);
 
-            if (i > 0 && i % (CONCURRENCY * 3) === 0) {
+            totalDeleted += deleted;
+
+            if (deleted > 0) {
               await statusMsg.edit(
-                `**🧹 Varrendo... ${totalDeleted} removida(s) até agora.**`
+                `**🧹 Canal #${channel.name}: ${deleted} removida(s)**\n` +
+                `Total até agora: ${totalDeleted}`
               ).catch(() => {});
             }
+
+            await new Promise((r) => setTimeout(r, 500));
           }
 
           await statusMsg.delete().catch(() => {});

@@ -31,79 +31,17 @@ const ROLE_REAGENDAR_ID      = process.env.ROLE_REAGENDAR_ID;
 const CATEGORIA_AGENDADOS_ID = process.env.CATEGORIA_AGENDADOS_ID;
 
 // ============================================================
-// CONFIG DINÂMICA — canal Discord como banco de dados
-// Para atualizar: poste uma nova mensagem JSON neste canal.
+// AGENDA FIXA
+// Formato: { dia: { 'HH:MM': capacidade_maxima } }
+// Quinta-feira não aparece (sem atendimentos)
 // ============================================================
-const CONFIG_CHANNEL_ID = '1483578658391326962';
-
-// Valores padrão usados quando o canal de config não estiver acessível
-// ou não contiver um JSON válido.
-const DEFAULT_CONFIG = {
-  agenda: {
-    seg: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 4, '19:00': 4, '20:00': 4, '21:00': 4 },
-    ter: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 2, '19:00': 4, '20:00': 4, '21:00': 4 },
-    qua: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 2, '19:00': 2, '20:00': 2 },
-    // qui: sem atendimentos — não incluído
-    sex: { '17:00': 2, '18:00': 2, '19:00': 4, '20:00': 4, '21:00': 4 },
-  },
-  mensagens: {
-    lembrete:     'No horário agendado é só entrar na call https://discord.com/channels/1046404063287332936/1378780085091565678.\n\nAssim que a gente tiver disponível a gente te puxa. Como o atendimento é a cada hora, então vc pode ser atendido nesse intervalo. Exemplo: Se seu horário é as 19 horas, vc será atendido entre 19:00 até 19:59.\n\nPode ser q n seja atendido exatamente no horário agendado pois podemos estar em outro atendimento.\n\nÉ só aguardar na call que iremos atender assim que puder.',
-    dm_lembrete:  'Faltam 10 minutos para a sua entrevista! No horário agendado é só entrar na call https://discord.com/channels/1046404063287332936/1378780085091565678 e aguardar que iremos te atender assim que puder.',
-    ja_agendado:  '❌ Este canal já possui um agendamento ativo.\nEntre em contato com um Staff nesse mesmo chat solicitando o Reagendamento.',
-    sem_vagas:    '❌ Não há dias ou horários disponíveis para esta semana. Tente agendar na sexta-feira ou fim de semana. Para ser atendido na próxima semana.',
-    boas_vindas:  'Olá! Para agendar sua entrevista escreva `agendamento` aqui.',
-  },
+const AGENDA = {
+  seg: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 4, '19:00': 4, '20:00': 4, '21:00': 4 },
+  ter: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 2, '19:00': 4, '20:00': 4, '21:00': 4 },
+  qua: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 2, '19:00': 2, '20:00': 2 },
+  // qui: sem atendimentos — não incluído
+  sex: { '17:00': 2, '18:00': 2, '19:00': 4, '20:00': 4, '21:00': 4 },
 };
-
-// Config ativa em memória — null = usar DEFAULT_CONFIG
-let cachedConfig = null;
-
-/** Retorna a config ativa (canal) ou os valores padrão. */
-function getConfig() {
-  return cachedConfig ?? DEFAULT_CONFIG;
-}
-
-/** Tenta extrair um objeto JSON do conteúdo de uma mensagem Discord
- *  (aceita JSON puro ou bloco de código ```json ... ```). */
-function extractJSON(content) {
-  try { return JSON.parse(content); } catch {}
-  const m = content.match(/```(?:json)?\s*\n?([\s\S]+?)\n?```/);
-  if (m) { try { return JSON.parse(m[1]); } catch {} }
-  return null;
-}
-
-/** Carrega/recarrega a config a partir do canal CONFIG_CHANNEL_ID.
- *  Lê as últimas 50 mensagens e usa a mais recente com JSON válido. */
-async function loadConfig() {
-  try {
-    const ch = await client.channels.fetch(CONFIG_CHANNEL_ID);
-    if (!ch?.isTextBased()) {
-      console.warn('⚠️  Canal de config inválido — usando padrões.');
-      return;
-    }
-
-    const msgs = await ch.messages.fetch({ limit: 50 });
-    for (const [, msg] of msgs) {
-      const parsed = extractJSON(msg.content);
-      if (!parsed || typeof parsed !== 'object') continue;
-      if (!parsed.agenda && !parsed.mensagens) continue;
-
-      // Merge parcial: campos ausentes herdam o DEFAULT_CONFIG
-      cachedConfig = {
-        agenda:    { ...DEFAULT_CONFIG.agenda,    ...(parsed.agenda    ?? {}) },
-        mensagens: { ...DEFAULT_CONFIG.mensagens, ...(parsed.mensagens ?? {}) },
-      };
-      console.log(`✅ Config carregada do canal (msg ${msg.id}).`);
-      return;
-    }
-
-    console.warn('⚠️  Nenhuma config válida no canal — usando padrões.');
-    cachedConfig = null;
-  } catch (e) {
-    console.error('❌ Erro ao carregar config:', e.message);
-    cachedConfig = null;
-  }
-}
 
 // ============================================================
 // CONSTANTES
@@ -133,23 +71,12 @@ const confirmandoSlot = new Set();
 // Evita enviar a mensagem mais de uma vez caso o intervalo dispare no mesmo janela.
 const lembreteEnviado = new Set();
 
-// Mapeamento de channelId → userId para envio de DM no lembrete.
-// Preenchido quando o candidato confirma o agendamento nesta sessão.
-// Para canais agendados antes do bot iniciar, usa fallback via histórico do canal.
-const agendadoPorUsuario = new Map();
-
-// IDs dos canais que já receberam (ou foram verificados para) a mensagem de boas-vindas.
-const boasVindasEnviado = new Set();
-
 // ============================================================
 // HELPERS
 // ============================================================
 const fmtTime = (t) => t.replace(':', 'h'); // '10:00' → '10h00'
 
 const isAgendado = (name) => RE_AGENDADO.test(name);
-
-// Retorna true se o canal está no formato de espera (prefixo-nome, sem agendamento).
-const isCanalEspera = (name) => name.includes('-') && !isAgendado(name);
 
 function parseAgendado(name) {
   const m = name.match(RE_AGENDADO);
@@ -201,10 +128,9 @@ function slotsDisponiveis(guild) {
   const ocupados = slotsOcupados(guild);
   const result = {};
 
-  const agenda = getConfig().agenda;
   for (const dia of diasDisponiveis()) {
-    if (!agenda[dia]) continue;
-    const livres = Object.entries(agenda[dia])
+    if (!AGENDA[dia]) continue;
+    const livres = Object.entries(AGENDA[dia])
       .filter(([hora, cap]) => {
         const key = `${dia}_${fmtTime(hora)}`;
         return cap - (ocupados[key] || 0) > 0;
@@ -223,34 +149,6 @@ const prefixoDoCanal = (name) => name.split('-')[0];
 async function sendTemp(channel, content, ms = 15_000) {
   const msg = await channel.send({ content });
   setTimeout(() => msg.delete().catch(() => {}), ms);
-}
-
-/**
- * Varre os canais existentes do servidor e envia a mensagem de boas-vindas
- * nos que estão no formato de espera e ainda não tiveram interação de player
- * com a role ROLE_REAGENDAR_ID. Executado uma vez na inicialização.
- */
-async function scanBoasVindas() {
-  let enviados = 0;
-  for (const [, guild] of client.guilds.cache) {
-    for (const [, ch] of guild.channels.cache) {
-      if (!ch.isTextBased() || !isCanalEspera(ch.name)) continue;
-      if (boasVindasEnviado.has(ch.id)) continue;
-      boasVindasEnviado.add(ch.id); // marca antes do await para evitar duplicata
-      try {
-        const msgs = await ch.messages.fetch({ limit: 50 });
-        // Se algum player com a role já interagiu, não envia
-        const temInteracao = msgs.some((m) =>
-          m.member?.roles.cache.has(ROLE_REAGENDAR_ID),
-        );
-        if (!temInteracao) {
-          await ch.send(getConfig().mensagens.boas_vindas).catch(() => {});
-          enviados++;
-        }
-      } catch {} // sem permissão de leitura no canal — ignora
-    }
-  }
-  console.log(`   👋 Scan de boas-vindas: ${enviados} mensagem(ns) enviada(s).`);
 }
 
 // ============================================================
@@ -343,7 +241,13 @@ async function checkReminders() {
 
       const embed = new EmbedBuilder()
         .setTitle('⏰ Lembrete')
-        .setDescription(getConfig().mensagens.lembrete)
+        .setDescription(
+          'No horário agendado é só entrar na call https://discord.com/channels/1046404063287332936/1378780085091565678.\n\n' +
+          'Assim que a gente tiver disponível a gente te puxa. Como o atendimento é a cada hora, então vc pode ser atendido nesse intervalo. ' +
+          'Exemplo: Se seu horário é as 19 horas, vc será atendido entre 19:00 até 19:59.\n\n' +
+          'Pode ser q n seja atendido exatamente no horário agendado pois podemos estar em outro atendimento.\n\n' +
+          'É só aguardar na call que iremos atender assim que puder.',
+        )
         .setColor(0xfee75c)
         .addFields(
           { name: 'Dia',     value: diaLabel,    inline: true },
@@ -351,36 +255,6 @@ async function checkReminders() {
         );
 
       await channel.send({ embeds: [embed] }).catch(() => {});
-
-      // ----- DM para o candidato -----
-      // 1) Tenta usar o mapa preenchido em ag_confirmar (sessão atual)
-      // 2) Fallback: varre o histórico do canal em busca do membro com ROLE_AGENDAMENTO_ID
-      let userId = agendadoPorUsuario.get(channel.id);
-
-      if (!userId) {
-        try {
-          const msgs = await channel.messages.fetch({ limit: 100 });
-          const found = msgs.find(
-            (m) => !m.author.bot && m.member?.roles.cache.has(ROLE_AGENDAMENTO_ID),
-          );
-          if (found) userId = found.author.id;
-        } catch {} // sem permissão de leitura — ignora
-      }
-
-      if (userId) {
-        try {
-          const user = await client.users.fetch(userId);
-          const dmEmbed = new EmbedBuilder()
-            .setTitle('⏰ Lembrete de Entrevista')
-            .setDescription(getConfig().mensagens.dm_lembrete)
-            .setColor(0xfee75c)
-            .addFields(
-              { name: 'Dia',     value: diaLabel,    inline: true },
-              { name: 'Horário', value: horaExibida, inline: true },
-            );
-          await user.send({ embeds: [dmEmbed] });
-        } catch {} // DMs desativados ou usuário não encontrado — ignora
-      }
     }
   }
 }
@@ -494,14 +368,6 @@ client.once('ready', () => {
   console.log(`✅ Bot online: ${client.user.tag} (ID: ${client.user.id})`);
   console.log(`   Servidores: ${client.guilds.cache.map((g) => g.name).join(', ')}`);
 
-  // Carrega config e depois faz scan de boas-vindas nos canais existentes
-  loadConfig()
-    .then(() => {
-      console.log('   📋 Config inicial carregada.');
-      return scanBoasVindas();
-    })
-    .catch(console.error);
-
   // Verifica lembretes a cada 30 segundos
   setInterval(() => { checkReminders().catch(console.error); }, 30_000);
   console.log('   ⏰ Verificação de lembretes iniciada (intervalo: 30s)');
@@ -512,25 +378,6 @@ client.once('ready', () => {
 // ============================================================
 client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
-
-  // ----------------------------------------------------------
-  // CANAL DE CONFIG — recarrega config e valida o JSON postado
-  // ----------------------------------------------------------
-  if (message.channelId === CONFIG_CHANNEL_ID) {
-    const parsed = extractJSON(message.content);
-    if (parsed && typeof parsed === 'object' && (parsed.agenda || parsed.mensagens)) {
-      cachedConfig = {
-        agenda:    { ...DEFAULT_CONFIG.agenda,    ...(parsed.agenda    ?? {}) },
-        mensagens: { ...DEFAULT_CONFIG.mensagens, ...(parsed.mensagens ?? {}) },
-      };
-      console.log(`✅ Config atualizada via canal (msg ${message.id}).`);
-      await message.react('✅').catch(() => {});
-    } else {
-      console.warn('⚠️  Mensagem no canal de config ignorada (JSON inválido ou fora do formato).');
-      await message.react('❌').catch(() => {});
-    }
-    return;
-  }
 
   const cmd     = message.content.trim().toLowerCase();
   const channel = message.channel;
@@ -550,7 +397,7 @@ client.on('messageCreate', async (message) => {
       try { await message.delete(); } catch {}
       await sendTemp(
         channel,
-        `${member} ${getConfig().mensagens.ja_agendado}`,
+        `${member} ❌ Este canal já possui um agendamento ativo.\nEntre em contato com um Staff nesse mesmo chat solicitando o Reagendamento.`,
         15_000,
       );
       return;
@@ -560,7 +407,7 @@ client.on('messageCreate', async (message) => {
 
     const slots = slotsDisponiveis(guild);
     if (!Object.keys(slots).length) {
-      await sendTemp(channel, `${member} ${getConfig().mensagens.sem_vagas}`, 15_000);
+      await sendTemp(channel, `${member} ❌ Não há dias ou horários disponíveis para esta semana. Tente agendar na sexta-feira ou fim de semana. Para ser atendido na próxima semana.`, 15_000);
       return;
     }
 
@@ -778,9 +625,6 @@ client.on('interactionCreate', async (interaction) => {
       await interaction.channel.edit({ name: novoNome, parent: cat ?? CATEGORIA_AGENDADOS_ID });
       pendente.delete(uid);
 
-      // Registra o usuário dono do agendamento para envio de DM no lembrete de 10 min
-      agendadoPorUsuario.set(interaction.channel.id, uid);
-
       const embed = new EmbedBuilder()
         .setTitle('✅ Entrevista Agendada!')
         .setColor(0x57f287)
@@ -814,16 +658,6 @@ client.on('interactionCreate', async (interaction) => {
     pendente.delete(uid);
     return interaction.update({ content: 'Agendamento cancelado.', embeds: [], components: [] });
   }
-});
-
-// ============================================================
-// NOVO CANAL — boas-vindas automáticas
-// ============================================================
-client.on('channelCreate', async (channel) => {
-  if (!channel.isTextBased() || !isCanalEspera(channel.name)) return;
-  if (boasVindasEnviado.has(channel.id)) return;
-  boasVindasEnviado.add(channel.id);
-  await channel.send(getConfig().mensagens.boas_vindas).catch(() => {});
 });
 
 // ============================================================

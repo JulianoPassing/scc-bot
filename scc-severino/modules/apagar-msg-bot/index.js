@@ -1,22 +1,91 @@
 /**
  * Módulo para apagar a mensagem de boas-vindas do agendamento em TODOS os canais/servidores
  * Comando: !apagar-msg-bot
- * Remove a mensagem "Olá! Para agendar sua entrevista escreva `agendamento` aqui." em todo o Discord
+ * Remove "Olá! Para agendar sua entrevista escreva `agendamento` aqui." em todo o Discord
+ * Otimizado: processa vários canais em paralelo para acelerar (322+ msgs)
  */
 
 const BOT_ID = '1413346434102595646';
 
-// Mensagem exata que será apagada (do agendamentos-seg)
-const MSG_BOAS_VINDAS = 'Olá! Para agendar sua entrevista escreva `agendamento` aqui.';
+// Match flexível: mensagem do bot que contém esse texto
+const MSG_MATCH = 'Para agendar sua entrevista escreva';
 
 // IDs dos cargos permitidos (mesmos do limparchat)
 const ALLOWED_ROLES = ['1046404063689977985', '1046404063689977984'];
 
+// Canais processados em paralelo (acelera bastante)
+const CONCURRENCY = 15;
+
 function isTargetMessage(msg) {
   return (
     msg.author?.id === BOT_ID &&
-    msg.content?.trim() === MSG_BOAS_VINDAS
+    msg.content?.includes(MSG_MATCH)
   );
+}
+
+async function processChannel(channel) {
+  let deleted = 0;
+  const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
+
+  try {
+    let lastId = null;
+
+    while (true) {
+      const options = { limit: 100 };
+      if (lastId) options.before = lastId;
+
+      const messages = await channel.messages.fetch(options);
+      if (messages.size === 0) break;
+
+      const toDelete = messages.filter(isTargetMessage);
+
+      if (toDelete.size > 0) {
+        const recent = [];
+        const old = [];
+
+        for (const [, msg] of toDelete) {
+          const age = Date.now() - msg.createdTimestamp;
+          if (age < FOURTEEN_DAYS_MS) {
+            recent.push(msg);
+          } else {
+            old.push(msg);
+          }
+        }
+
+        if (recent.length > 0) {
+          try {
+            await channel.bulkDelete(recent);
+            deleted += recent.length;
+          } catch {
+            for (const msg of recent) {
+              try {
+                await msg.delete();
+                deleted++;
+                await new Promise((r) => setTimeout(r, 250));
+              } catch {}
+            }
+          }
+        }
+
+        for (const msg of old) {
+          try {
+            await msg.delete();
+            deleted++;
+            await new Promise((r) => setTimeout(r, 250));
+          } catch {}
+        }
+      }
+
+      lastId = messages.last()?.id;
+      if (messages.size < 100) break;
+
+      await new Promise((r) => setTimeout(r, 100));
+    }
+  } catch {
+    // Sem permissão — ignora
+  }
+
+  return deleted;
 }
 
 const setupApagarMsgBotModule = function (client) {
@@ -55,75 +124,29 @@ const setupApagarMsgBotModule = function (client) {
           await response.delete().catch(() => {});
 
           const statusMsg = await message.channel.send(
-            '**🧹 Varrendo todos os servidores e canais...**'
+            '**🧹 Varrendo todos os servidores e canais (paralelo)...**'
           );
 
-          let totalDeleted = 0;
-          const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
-
+          const channels = [];
           for (const [, guild] of client.guilds.cache) {
             for (const [, channel] of guild.channels.cache) {
-              if (!channel.isTextBased() || channel.isDMBased()) continue;
-
-              try {
-                let lastId = null;
-
-                while (true) {
-                  const options = { limit: 100 };
-                  if (lastId) options.before = lastId;
-
-                  const messages = await channel.messages.fetch(options);
-                  if (messages.size === 0) break;
-
-                  const toDelete = messages.filter(isTargetMessage);
-
-                  if (toDelete.size > 0) {
-                    const recent = [];
-                    const old = [];
-
-                    for (const [, msg] of toDelete) {
-                      const age = Date.now() - msg.createdTimestamp;
-                      if (age < FOURTEEN_DAYS_MS) {
-                        recent.push(msg);
-                      } else {
-                        old.push(msg);
-                      }
-                    }
-
-                    if (recent.length > 0) {
-                      try {
-                        await channel.bulkDelete(recent);
-                        totalDeleted += recent.length;
-                      } catch {
-                        for (const msg of recent) {
-                          try {
-                            await msg.delete();
-                            totalDeleted++;
-                            await new Promise((r) => setTimeout(r, 350));
-                          } catch {}
-                        }
-                      }
-                    }
-
-                    for (const msg of old) {
-                      try {
-                        await msg.delete();
-                        totalDeleted++;
-                        await new Promise((r) => setTimeout(r, 400));
-                      } catch {}
-                    }
-                  }
-
-                  lastId = messages.last()?.id;
-                  if (messages.size < 100) break;
-
-                  await new Promise((r) => setTimeout(r, 500));
-                }
-              } catch {
-                // Sem permissão no canal — ignora
+              if (channel.isTextBased() && !channel.isDMBased()) {
+                channels.push(channel);
               }
+            }
+          }
 
-              await new Promise((r) => setTimeout(r, 200));
+          let totalDeleted = 0;
+
+          for (let i = 0; i < channels.length; i += CONCURRENCY) {
+            const batch = channels.slice(i, i + CONCURRENCY);
+            const results = await Promise.all(batch.map(processChannel));
+            totalDeleted += results.reduce((a, b) => a + b, 0);
+
+            if (i > 0 && i % (CONCURRENCY * 2) === 0) {
+              await statusMsg.edit(
+                `**🧹 Varrendo... ${totalDeleted} mensagem(ns) removida(s) até agora.**`
+              ).catch(() => {});
             }
           }
 

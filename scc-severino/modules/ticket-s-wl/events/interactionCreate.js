@@ -1,5 +1,21 @@
 import { EmbedBuilder, ModalBuilder, ActionRowBuilder, TextInputBuilder, TextInputStyle, ChannelType, PermissionFlagsBits, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import config from '../config.json' with { type: 'json' };
+import {
+  pendente,
+  isAgendado,
+  parseAgendado,
+  nomeDoCanal,
+  slotsDisponiveis,
+  buildDiaEmbed,
+  buildHorariosEmbed,
+  buildConfirmarEmbed,
+  buildDiaRows,
+  buildHorariosRows,
+  buildConfirmarRows,
+  fmtTime,
+  labelDia,
+  executarConfirmacao,
+} from '../utils/agendamento.js';
 
 const SEGURANCA_CATEGORY_ID = '1378778140528087191';
 
@@ -99,13 +115,96 @@ export const execute = async function(interaction) {
       await interaction.showModal(modal);
       return;
     }
-    
-    // Verificar se é um ticket de segurança (começa com 'seg-' e está em categoria de segurança)
+
+    // ========== HANDLERS DE AGENDAMENTO (ticket de segurança) ==========
     const channelName = interaction.channel?.name;
     const channelCategory = interaction.channel?.parentId;
     const isSecurityCategory = config.securityCategories.includes(channelCategory);
     const isSecurityTicket = channelName && channelName.startsWith('seg-') && isSecurityCategory;
-    
+
+    if (customId && customId.startsWith('ag_') && (interaction.isButton() || interaction.isStringSelectMenu())) {
+      if (!isSecurityTicket) return;
+
+      const uid = user.id;
+      const state = pendente.get(uid);
+      const isOwner = state && state.channelId === interaction.channelId;
+
+      if (!isOwner) {
+        return interaction.reply({ content: 'Apenas o solicitante pode usar este menu.', flags: MessageFlags.Ephemeral });
+      }
+
+      if (interaction.isButton() && customId.startsWith('ag_dia_')) {
+        const dia = customId.replace('ag_dia_', '');
+        const slots = slotsDisponiveis(guild);
+        const horarios = slots[dia];
+        if (!horarios?.length) {
+          return interaction.update({ content: '❌ Não há mais horários para este dia. Escolha outro.', embeds: [], components: [] });
+        }
+        state.dia = dia;
+        pendente.set(uid, state);
+        return interaction.update({
+          embeds: [buildHorariosEmbed(dia, horarios)],
+          components: buildHorariosRows(horarios),
+        });
+      }
+
+      if (interaction.isStringSelectMenu() && customId === 'ag_hora') {
+        const hora = interaction.values[0];
+        const novoNome = `seg-${state.dia}-${fmtTime(hora)}-${state.nome}`;
+        state.hora = hora;
+        pendente.set(uid, state);
+        return interaction.update({
+          embeds: [buildConfirmarEmbed(state.dia, hora, novoNome)],
+          components: buildConfirmarRows(),
+        });
+      }
+
+      if (interaction.isButton() && customId === 'ag_back_dia') {
+        const slots = slotsDisponiveis(guild);
+        if (!Object.keys(slots).length) {
+          return interaction.update({ content: 'Sem horários disponíveis.', embeds: [], components: [] });
+        }
+        state.dia = null;
+        state.hora = null;
+        pendente.set(uid, state);
+        return interaction.update({
+          embeds: [buildDiaEmbed(slots)],
+          components: buildDiaRows(slots),
+        });
+      }
+
+      if (interaction.isButton() && customId === 'ag_back_hora') {
+        const slots = slotsDisponiveis(guild);
+        const horarios = slots[state.dia];
+        if (!horarios?.length) {
+          return interaction.update({ content: '❌ Não há mais horários para este dia.', embeds: [], components: [] });
+        }
+        state.hora = null;
+        pendente.set(uid, state);
+        return interaction.update({
+          embeds: [buildHorariosEmbed(state.dia, horarios)],
+          components: buildHorariosRows(horarios),
+        });
+      }
+
+      if (interaction.isButton() && customId === 'ag_confirmar') {
+        if (!state.dia || !state.hora) {
+          return interaction.update({
+            content: '❌ Sessão expirada. Use `agendamento` para reiniciar.',
+            embeds: [],
+            components: [],
+          });
+        }
+        return executarConfirmacao(interaction, state);
+      }
+
+      if (interaction.isButton() && customId === 'ag_cancelar') {
+        pendente.delete(uid);
+        return interaction.update({ content: 'Agendamento cancelado.', embeds: [], components: [] });
+      }
+    }
+
+    // Verificar se é um ticket de segurança (começa com 'seg-' e está em categoria de segurança)
     console.log('[DEBUG] Canal atual:', channelName, 'Categoria:', channelCategory, 'É categoria de segurança:', isSecurityCategory, 'É ticket de segurança:', isSecurityTicket);
     
     // Se não for um ticket de segurança E não for um modal, ignorar (deixar o módulo ticket processar)
@@ -210,7 +309,8 @@ export const execute = async function(interaction) {
         .setDescription(`Olá <@${user.id}>, obrigado por entrar em contato!\n\nSua solicitação foi registrada e nossa equipe de segurança irá te atender o mais breve possível.\n\n**Motivo:** ${motivo}`)
         .addFields(
           { name: 'Status', value: '⏳ Aguardando atendimento', inline: true },
-          { name: 'Tempo de Resposta', value: 'Até 72h úteis', inline: true }
+          { name: 'Tempo de Resposta', value: 'Até 72h úteis', inline: true },
+          { name: '📅 Agendar Atendimento', value: 'Digite `agendamento` neste canal para agendar um horário de atendimento.', inline: false }
         )
         .setFooter({ text: 'Sistema de Segurança • Confidencialidade garantida' })
         .setTimestamp();

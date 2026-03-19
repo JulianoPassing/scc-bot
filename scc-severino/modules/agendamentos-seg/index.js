@@ -10,7 +10,16 @@
  *   Agendado:    seg-ter-10h00-nomedele
  */
 
-require('dotenv').config();
+import {
+  ActionRowBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  StringSelectMenuBuilder,
+  EmbedBuilder,
+} from 'discord.js';
+
+// Referência ao client (injetado pelo setup)
+let client;
 
 // Captura erros não tratados e envia para o canal de config
 async function logDiscord(msg) {
@@ -21,23 +30,9 @@ async function logDiscord(msg) {
   console.error(msg);
 }
 
-process.on('unhandledRejection', (err) => logDiscord(`❌ unhandledRejection: ${err?.stack ?? err}`));
-process.on('uncaughtException',  (err) => logDiscord(`❌ uncaughtException: ${err?.stack ?? err}`));
-
-const {
-  Client,
-  GatewayIntentBits,
-  ActionRowBuilder,
-  ButtonBuilder,
-  ButtonStyle,
-  StringSelectMenuBuilder,
-  EmbedBuilder,
-} = require('discord.js');
-
 // ============================================================
 // CONFIGURAÇÃO (via .env)
 // ============================================================
-const TOKEN                  = process.env.DISCORD_TOKEN;
 const ROLE_AGENDAMENTO_ID    = process.env.ROLE_AGENDAMENTO_ID;
 const ROLE_REAGENDAR_ID      = process.env.ROLE_REAGENDAR_ID;
 const CATEGORIA_AGENDADOS_ID = process.env.CATEGORIA_AGENDADOS_ID;
@@ -492,18 +487,15 @@ function buildConfirmarRows() {
 }
 
 // ============================================================
-// CLIENT
+// SETUP — recebe o client do main e registra os handlers
 // ============================================================
-const client = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-    GatewayIntentBits.GuildMembers,
-  ],
-});
+export default function setupAgendamentosSegModule(c) {
+  client = c;
 
-client.once('ready', async () => {
+  process.on('unhandledRejection', (err) => logDiscord(`❌ unhandledRejection: ${err?.stack ?? err}`));
+  process.on('uncaughtException',  (err) => logDiscord(`❌ uncaughtException: ${err?.stack ?? err}`));
+
+  client.once('ready', async () => {
   console.log(`✅ Bot online: ${client.user.tag} (ID: ${client.user.id})`);
   console.log(`   Servidores: ${client.guilds.cache.map((g) => g.name).join(', ')}`);
 
@@ -527,12 +519,12 @@ client.once('ready', async () => {
   // Verifica lembretes a cada 30 segundos
   setInterval(() => { checkReminders().catch(console.error); }, 30_000);
   console.log('   ⏰ Verificação de lembretes iniciada (intervalo: 30s)');
-});
+  });
 
-// ============================================================
-// MENSAGENS DE TEXTO
-// ============================================================
-client.on('messageCreate', async (message) => {
+  // ============================================================
+  // MENSAGENS DE TEXTO
+  // ============================================================
+  client.on('messageCreate', async (message) => {
   if (message.author.bot) return;
 
   // ----------------------------------------------------------
@@ -857,22 +849,13 @@ client.on('interactionCreate', async (interaction) => {
   }
 });
 
-// ============================================================
-// NOVO CANAL — boas-vindas automáticas
-// ============================================================
-client.on('channelCreate', async (channel) => {
-  if (!channel.isTextBased() || !isCanalEspera(channel.name)) return;
-  if (boasVindasEnviado.has(channel.id)) return;
-  boasVindasEnviado.add(channel.id);
-  await channel.send(getConfig().mensagens.boas_vindas).catch(() => {});
-});
-
-// ============================================================
-// INICIAR
-// ============================================================
-if (!TOKEN) {
-  console.error('❌ DISCORD_TOKEN não configurado. Crie um arquivo .env com as variáveis necessárias.');
-  process.exit(1);
+  // ============================================================
+  // NOVO CANAL — boas-vindas automáticas
+  // ============================================================
+  client.on('channelCreate', async (channel) => {
+    if (!channel.isTextBased() || !isCanalEspera(channel.name)) return;
+    if (boasVindasEnviado.has(channel.id)) return;
+    boasVindasEnviado.add(channel.id);
+    await channel.send(getConfig().mensagens.boas_vindas).catch(() => {});
+  });
 }
-
-client.login(TOKEN);

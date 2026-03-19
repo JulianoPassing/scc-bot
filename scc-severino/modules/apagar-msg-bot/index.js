@@ -2,7 +2,6 @@
  * Módulo para apagar a mensagem de boas-vindas do agendamento em TODOS os canais/servidores
  * Comando: !apagar-msg-bot
  * Remove "Olá! Para agendar sua entrevista escreva `agendamento` aqui." em todo o Discord
- * Otimizado: processa vários canais em paralelo para acelerar (322+ msgs)
  */
 
 const BOT_ID = '1413346434102595646';
@@ -13,17 +12,39 @@ const MSG_MATCH = 'Para agendar sua entrevista escreva';
 // IDs dos cargos permitidos (mesmos do limparchat)
 const ALLOWED_ROLES = ['1046404063689977985', '1046404063689977984'];
 
-// Canais processados em paralelo (acelera bastante)
-const CONCURRENCY = 15;
+// Canais processados em paralelo
+const CONCURRENCY = 12;
 
-function isTargetMessage(msg) {
+// Retry em caso de rate limit (429)
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 5000;
+
+function isTargetMessage(msg, botId) {
   return (
-    msg.author?.id === BOT_ID &&
+    msg.author?.id === botId &&
     msg.content?.includes(MSG_MATCH)
   );
 }
 
-async function processChannel(channel) {
+async function withRetry(fn, skipOnPermission = true) {
+  for (let i = 0; i < MAX_RETRIES; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (skipOnPermission && (err.code === 50013 || err.code === 50001 || err.httpStatus === 403)) {
+        return null;
+      }
+      const isRateLimit = err.httpStatus === 429 || err.code === 'RateLimitError';
+      if (isRateLimit && i < MAX_RETRIES - 1) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY * (i + 1)));
+        continue;
+      }
+      throw err;
+    }
+  }
+}
+
+async function processChannel(channel, botId) {
   let deleted = 0;
   const FOURTEEN_DAYS_MS = 14 * 24 * 60 * 60 * 1000;
 
@@ -31,13 +52,15 @@ async function processChannel(channel) {
     let lastId = null;
 
     while (true) {
-      const options = { limit: 100 };
-      if (lastId) options.before = lastId;
+      const messages = await withRetry(async () => {
+        const options = { limit: 100 };
+        if (lastId) options.before = lastId;
+        return channel.messages.fetch(options);
+      });
 
-      const messages = await channel.messages.fetch(options);
-      if (messages.size === 0) break;
+      if (!messages || messages.size === 0) break;
 
-      const toDelete = messages.filter(isTargetMessage);
+      const toDelete = messages.filter((m) => isTargetMessage(m, botId));
 
       if (toDelete.size > 0) {
         const recent = [];
@@ -53,36 +76,32 @@ async function processChannel(channel) {
         }
 
         if (recent.length > 0) {
-          try {
-            await channel.bulkDelete(recent);
+          const bulkOk = await withRetry(() => channel.bulkDelete(recent));
+          if (bulkOk !== null) {
             deleted += recent.length;
-          } catch {
+          } else {
             for (const msg of recent) {
-              try {
-                await msg.delete();
-                deleted++;
-                await new Promise((r) => setTimeout(r, 250));
-              } catch {}
+              const ok = await withRetry(() => msg.delete().then(() => true));
+              if (ok) deleted++;
+              await new Promise((r) => setTimeout(r, 200));
             }
           }
         }
 
         for (const msg of old) {
-          try {
-            await msg.delete();
-            deleted++;
-            await new Promise((r) => setTimeout(r, 250));
-          } catch {}
+          const ok = await withRetry(() => msg.delete().then(() => true));
+          if (ok) deleted++;
+          await new Promise((r) => setTimeout(r, 200));
         }
       }
 
       lastId = messages.last()?.id;
       if (messages.size < 100) break;
 
-      await new Promise((r) => setTimeout(r, 100));
+      await new Promise((r) => setTimeout(r, 150));
     }
   } catch {
-    // Sem permissão — ignora
+    // Sem permissão ou outro erro — ignora
   }
 
   return deleted;
@@ -123,29 +142,48 @@ const setupApagarMsgBotModule = function (client) {
           await confirmMessage.delete().catch(() => {});
           await response.delete().catch(() => {});
 
+          const botId = client.user?.id || BOT_ID;
           const statusMsg = await message.channel.send(
-            '**🧹 Varrendo todos os servidores e canais (paralelo)...**'
+            '**🧹 Buscando canais e threads em todos os servidores...**'
           );
 
           const channels = [];
+
           for (const [, guild] of client.guilds.cache) {
-            for (const [, channel] of guild.channels.cache) {
-              if (channel.isTextBased() && !channel.isDMBased()) {
-                channels.push(channel);
+            try {
+              await guild.channels.fetch();
+              const activeThreads = await guild.channels.fetchActiveThreads().catch(() => null);
+
+              for (const [, ch] of guild.channels.cache) {
+                if (ch.isTextBased() && !ch.isDMBased() && !ch.isThread()) {
+                  channels.push(ch);
+                }
               }
-            }
+
+              if (activeThreads?.threads) {
+                for (const [, thread] of activeThreads.threads) {
+                  if (thread.isTextBased()) channels.push(thread);
+                }
+              }
+            } catch {}
           }
+
+          await statusMsg.edit(
+            `**🧹 Varrendo ${channels.length} canais/threads...**`
+          ).catch(() => {});
 
           let totalDeleted = 0;
 
           for (let i = 0; i < channels.length; i += CONCURRENCY) {
             const batch = channels.slice(i, i + CONCURRENCY);
-            const results = await Promise.all(batch.map(processChannel));
+            const results = await Promise.all(
+              batch.map((ch) => processChannel(ch, botId))
+            );
             totalDeleted += results.reduce((a, b) => a + b, 0);
 
-            if (i > 0 && i % (CONCURRENCY * 2) === 0) {
+            if (i > 0 && i % (CONCURRENCY * 3) === 0) {
               await statusMsg.edit(
-                `**🧹 Varrendo... ${totalDeleted} mensagem(ns) removida(s) até agora.**`
+                `**🧹 Varrendo... ${totalDeleted} removida(s) até agora.**`
               ).catch(() => {});
             }
           }

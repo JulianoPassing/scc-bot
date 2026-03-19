@@ -9,7 +9,11 @@ import {
   buildDiaRows,
   getMensagens,
   categoriaAgendadosTemEspaco,
+  updateConfigFromMessage,
+  getConfigStatus,
 } from '../utils/agendamento.js';
+
+const CONFIG_CHANNEL_ID = config.agendamento?.configChannelId || '1483578658391326962';
 
 function extractCreatorIdFromTopic(topic) {
   if (!topic) return null;
@@ -28,7 +32,7 @@ async function sendTemp(channel, content, ms = 15_000) {
 }
 
 export const name = 'messageCreate';
-export const execute = async function (message, client) {
+export const execute = async function (message) {
   if (message.author.bot) return;
 
   const cmd = message.content.trim().toLowerCase();
@@ -37,6 +41,36 @@ export const execute = async function (message, client) {
   const member = message.member;
 
   if (!guild) return;
+
+  // --- CANAL DE CONFIG DO AGENDAMENTO ---
+  if (channel.id === CONFIG_CHANNEL_ID) {
+    if (cmd === '!status') {
+      const uptime = Math.floor(process.uptime());
+      const configStatus = getConfigStatus();
+      const pending = pendente.size;
+      try {
+        await message.reply(
+          `**Agendamento status**\n` +
+          `⏱ Uptime: ${uptime}s\n` +
+          `📋 Config: ${configStatus}\n` +
+          `⏳ Agendamentos pendentes: ${pending}`,
+        );
+      } catch {}
+      return;
+    }
+    // Poste um JSON com agenda e/ou mensagens para atualizar vagas e textos
+    const updated = updateConfigFromMessage(message.content);
+    if (updated) {
+      try {
+        await message.reply('✅ Config de agendamento atualizada!');
+      } catch {}
+    } else {
+      try {
+        await message.reply('❌ JSON inválido ou fora do formato esperado. Use `agenda` e/ou `mensagens`.');
+      } catch {}
+    }
+    return;
+  }
 
   const channelName = channel?.name;
   const channelCategory = channel?.parentId;

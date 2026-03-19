@@ -46,6 +46,74 @@ export const lembreteDM = new Set();
 // channelId → userId para DM no lembrete
 export const agendadoPorUsuario = new Map();
 
+// Config dinâmica do canal — null = usar config.json + defaults
+let cachedConfig = null;
+
+/** Extrai JSON do conteúdo (aceita JSON puro ou bloco ```json ... ```) */
+function extractJSON(content) {
+  try {
+    return JSON.parse(content);
+  } catch {}
+  const m = content.match(/```(?:json)?\s*\n?([\s\S]+?)\n?```/);
+  if (m) {
+    try {
+      return JSON.parse(m[1]);
+    } catch {}
+  }
+  return null;
+}
+
+/** Carrega config do canal CONFIG_CHANNEL_ID. Usa a mensagem mais recente com JSON válido. */
+export async function loadConfig(client) {
+  const channelId = config.agendamento?.configChannelId || '1483578658391326962';
+  try {
+    const ch = await client.channels.fetch(channelId);
+    if (!ch?.isTextBased()) {
+      console.warn('[agendamento] Canal de config inválido — usando padrões.');
+      return;
+    }
+    const msgs = await ch.messages.fetch({ limit: 50 });
+    for (const [, msg] of msgs) {
+      const parsed = extractJSON(msg.content);
+      if (!parsed || typeof parsed !== 'object') continue;
+      if (!parsed.agenda && !parsed.mensagens) continue;
+
+      cachedConfig = {
+        agenda: { ...DEFAULT_AGENDA, ...(parsed.agenda ?? {}) },
+        mensagens: { ...DEFAULT_MENSAGENS, ...(parsed.mensagens ?? {}) },
+      };
+      console.log(`[agendamento] Config carregada do canal (msg ${msg.id}).`);
+      return;
+    }
+    console.warn('[agendamento] Nenhuma config válida no canal — usando padrões.');
+    cachedConfig = null;
+  } catch (e) {
+    console.error('[agendamento] Erro ao carregar config:', e.message);
+    cachedConfig = null;
+  }
+}
+
+/** Atualiza config a partir de uma mensagem (usado quando alguém posta no canal de config) */
+export function updateConfigFromMessage(content) {
+  const parsed = extractJSON(content);
+  if (!parsed || typeof parsed !== 'object') return false;
+  if (!parsed.agenda && !parsed.mensagens) return false;
+
+  cachedConfig = {
+    agenda: { ...DEFAULT_AGENDA, ...(parsed.agenda ?? {}) },
+    mensagens: { ...DEFAULT_MENSAGENS, ...(parsed.mensagens ?? {}) },
+  };
+  return true;
+}
+
+export function getCachedConfig() {
+  return cachedConfig;
+}
+
+export function getConfigStatus() {
+  return cachedConfig ? 'custom (canal)' : 'padrão (config.json)';
+}
+
 // Config padrão (merge com config.json)
 const DEFAULT_AGENDA = {
   seg: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 4, '19:00': 4, '20:00': 4, '21:00': 4 },
@@ -63,10 +131,12 @@ const DEFAULT_MENSAGENS = {
 };
 
 function getAgenda() {
+  if (cachedConfig?.agenda) return cachedConfig.agenda;
   return config.agendamento?.agenda ? { ...DEFAULT_AGENDA, ...config.agendamento.agenda } : DEFAULT_AGENDA;
 }
 
 export function getMensagens() {
+  if (cachedConfig?.mensagens) return cachedConfig.mensagens;
   return config.agendamento?.mensagens ? { ...DEFAULT_MENSAGENS, ...config.agendamento.mensagens } : DEFAULT_MENSAGENS;
 }
 

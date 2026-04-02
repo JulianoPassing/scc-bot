@@ -86,11 +86,11 @@ export default async function(client) {
           new ActionRowBuilder().addComponents(
             new TextInputBuilder()
               .setCustomId('idade')
-              .setLabel('2. Qual sua idade?')
+              .setLabel('2. Qual sua idade real?')
               .setStyle(TextInputStyle.Short)
               .setRequired(true)
               .setMaxLength(2)
-              .setPlaceholder('Digite apenas números, ex: 18')
+              .setPlaceholder('Sua idade real em números, ex: 18')
           ),
           new ActionRowBuilder().addComponents(
             new TextInputBuilder()
@@ -374,7 +374,7 @@ export default async function(client) {
                   { name: 'Respostas', value: respostasDetalhadas, inline: false },
                   { name: 'Acertos', value: `${corretas}/${GABARITO.length}`, inline: true },
                   { name: 'Aprovado', value: aprovado ? 'Sim' : 'Não', inline: true },
-                  { name: 'Idade', value: cache?.idade || 'N/A', inline: false }
+                  { name: 'Idade real', value: cache?.idade || 'N/A', inline: false }
                 )
                 .setTimestamp();
               

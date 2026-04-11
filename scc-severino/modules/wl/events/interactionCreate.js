@@ -70,7 +70,8 @@ export default async function(client) {
         const painel = buildPainelVerificacaoEtaria({ wlFlow: true });
         return interaction.reply({
           content:
-            '🔒 **Verificação etária obrigatória.** Confirme abaixo (18+). **Em seguida o formulário da whitelist abrirá automaticamente.**',
+            '**Whitelist · etapa de idade**\n' +
+              'Conclua a verificação abaixo (**18+**). Após confirmar, o **formulário da whitelist** será aberto automaticamente.',
           embeds: painel.embeds,
           components: painel.components,
           flags: MessageFlags.Ephemeral

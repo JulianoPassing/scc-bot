@@ -240,17 +240,21 @@ export default async function(client) {
             }
           }
           console.log('[WL][DEBUG] Acertos:', corretas, '/', GABARITO.length);
-          // Verificar idade
+          // Verificar idade (mínimo 18 anos — sem tag "lucky" 16–18; só cargo sem idade se < 18)
+          const IDADE_MINIMA_WL = 18;
+          const CARGO_SEM_IDADE = '1146863002864332873';
+          /** Tag antiga 16–18 (lucky); não é mais aplicada — removida se o membro for < 18 na WL */
+          const CARGO_LUCKY_16_18 = '1150870237596622868';
           let aprovado = corretas === GABARITO.length;
-          let idadeNum = parseInt(cache.idade);
-          let cargoMenor16 = '1146863002864332873';
-          let cargo16a18 = '1150870237596622868';
+          let idadeNum = parseInt(cache.idade, 10);
           let cargoAprovado = '1263487190575349892';
           let cargoAntigo = '1046404063308288098';
           let motivoReprovado = '';
-          if (isNaN(idadeNum) || idadeNum < 16) {
+          if (isNaN(idadeNum) || idadeNum < IDADE_MINIMA_WL) {
             aprovado = false;
-            motivoReprovado = 'Idade menor que 16 anos';
+            motivoReprovado = isNaN(idadeNum)
+              ? 'Idade inválida — é obrigatório ter 18 anos ou mais para a whitelist'
+              : 'Idade inferior a 18 anos (mínimo para a whitelist)';
           }
           // Atualizar tentativas e status no JSON
           const db = loadDB();
@@ -268,13 +272,12 @@ export default async function(client) {
               if (member.roles.cache.has(cargoAntigo)) {
                 try { await member.roles.remove(cargoAntigo); } catch {}
               }
-              // 16-18 anos: dois cargos
-              if (idadeNum >= 16 && idadeNum < 18) {
-                await member.roles.add(cargoAprovado);
-                await member.roles.add(cargo16a18);
-              } else if (idadeNum >= 18) {
-                await member.roles.add(cargoAprovado);
-              }
+              try {
+                if (member.roles.cache.has(CARGO_LUCKY_16_18)) {
+                  await member.roles.remove(CARGO_LUCKY_16_18, 'WL 18+ — removendo tag 16–18 (não usada mais)');
+                }
+              } catch (_) {}
+              await member.roles.add(cargoAprovado);
               await interaction.update({
                 embeds: [
                   new EmbedBuilder()
@@ -286,9 +289,16 @@ export default async function(client) {
                 components: []
               });
             } else {
-              // Menor de 16: cargo de reprovado
-              if (idadeNum < 16) {
-                await member.roles.add(cargoMenor16);
+              const falhaIdade = isNaN(idadeNum) || idadeNum < IDADE_MINIMA_WL;
+              if (falhaIdade) {
+                try {
+                  if (member.roles.cache.has(CARGO_LUCKY_16_18)) {
+                    await member.roles.remove(CARGO_LUCKY_16_18, 'WL — menor de 18, removendo tag 16–18');
+                  }
+                } catch (_) {}
+                try {
+                  await member.roles.add(CARGO_SEM_IDADE, 'WL — sem idade mínima (menor de 18 ou idade inválida)');
+                } catch (_) {}
               }
               await interaction.update({
                 embeds: [

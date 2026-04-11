@@ -70,11 +70,11 @@ export function buildModalWlEtapa1() {
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()
           .setCustomId('idade')
-          .setLabel('2. Qual sua idade real?')
+          .setLabel('2. Qual sua idade real? (mín. 18 para WL)')
           .setStyle(TextInputStyle.Short)
           .setRequired(true)
           .setMaxLength(2)
-          .setPlaceholder('Sua idade real em números, ex: 18')
+          .setPlaceholder('Apenas números — mínimo 18 anos')
       ),
       new ActionRowBuilder().addComponents(
         new TextInputBuilder()

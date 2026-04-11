@@ -14,6 +14,7 @@ export async function execute(message, args, client) {
         'Ao clicar em **Iniciar Whitelist**, se ainda não tiver **idade verificada**, abre primeiro a **verificação etária** (18+). Ao **confirmar**, o **formulário da whitelist abre na sequência**, sem precisar clicar de novo.\n\n' +
         'Para fazer parte do nosso servidor de GTA RP, você precisa passar por um formulário de perguntas.\n\n' +
         '⚠️ **IMPORTANTE:**\n' +
+        '• **Idade mínima: 18 anos** (informada no formulário; menores não são aprovados na WL)\n' +
         '• Questões 5 a 12 são obrigatórias\n' +
         '• É necessário acertar TODAS para ser aprovado\n' +
         '• Você tem 2 tentativas com cooldown de 24h\n\n' +

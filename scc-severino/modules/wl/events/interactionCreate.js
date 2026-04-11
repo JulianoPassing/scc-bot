@@ -1,8 +1,14 @@
-import { ModalBuilder, TextInputBuilder, TextInputStyle, ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
+import { ActionRowBuilder, EmbedBuilder, ButtonBuilder, ButtonStyle, MessageFlags } from 'discord.js';
 import fs from 'fs';
 import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import {
+  CARGO_IDADE_VERIFICADA,
+  CARGO_VERIFICACAO_ADICIONAL,
+  buildPainelVerificacaoEtaria
+} from '../verificacaoEtaria.js';
+import { buildModalWlEtapa1, getWlPrecheck } from '../wlForm.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const DATABASE_PATH = path.join(__dirname, '../whitelist.json');
@@ -51,75 +57,32 @@ export default async function(client) {
     // Botão para iniciar whitelist
     if (interaction.isButton() && interaction.customId === 'iniciar_wl') {
       const userId = interaction.user.id;
-      const db = loadDB();
-      const user = db[userId];
-      const now = new Date();
       const member = await interaction.guild.members.fetch(userId);
-      const cargoAprovado = '1263487190575349892';
-      const cargoAntigo = '1046404063308288098';
-      if (user && user.aprovado && member.roles.cache.has(cargoAprovado)) {
-        return interaction.reply({ content: '✅ Você já foi aprovado na whitelist!', flags: MessageFlags.Ephemeral });
-      }
-      // Limite de tentativas/cooldown restaurado, mas sem limite para quem tem o cargo especial
-      if (!member.roles.cache.has('1046404063689977984')) {
-        if (user && user.tentativas >= 2) {
-          const last = new Date(user.last_attempt);
-          const diff = (now - last) / (1000 * 60 * 60);
-          if (diff < 24) {
-            return interaction.reply({ content: `⏳ Você atingiu o limite de tentativas. Tente novamente em <t:${Math.floor((last.getTime() + 24*60*60*1000)/1000)}:R>.`, flags: MessageFlags.Ephemeral });
-          }
+
+      if (!member.roles.cache.has(CARGO_IDADE_VERIFICADA)) {
+        if (member.roles.cache.has(CARGO_VERIFICACAO_ADICIONAL)) {
+          return interaction.reply({
+            content:
+              '⛔ **Verificação adicional pendente.** Sua conta está marcada para revisão e não é possível iniciar a whitelist por aqui até a equipe regularizar. Procure um canal de suporte ou ticket conforme as regras do servidor.',
+            flags: MessageFlags.Ephemeral
+          });
         }
+        const painel = buildPainelVerificacaoEtaria({ wlFlow: true });
+        return interaction.reply({
+          content:
+            '🔒 **Verificação etária obrigatória.** Confirme abaixo (18+). **Em seguida o formulário da whitelist abrirá automaticamente.**',
+          embeds: painel.embeds,
+          components: painel.components,
+          flags: MessageFlags.Ephemeral
+        });
       }
-      // Modal etapa 1: dados pessoais
-      const modal = new ModalBuilder()
-        .setCustomId('modal_wl_etapa1')
-        .setTitle('Whitelist Street Car Club - Dados Pessoais')
-        .addComponents(
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId('nome')
-              .setLabel('1. Seu nome e sobrenome completo?')
-              .setStyle(TextInputStyle.Short)
-              .setRequired(true)
-              .setMaxLength(100)
-          ),
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId('idade')
-              .setLabel('2. Qual sua idade real?')
-              .setStyle(TextInputStyle.Short)
-              .setRequired(true)
-              .setMaxLength(2)
-              .setPlaceholder('Sua idade real em números, ex: 18')
-          ),
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId('motivo')
-              .setLabel('3. Por que quer jogar no Street Car Club?')
-              .setStyle(TextInputStyle.Paragraph)
-              .setRequired(true)
-              .setMaxLength(300)
-          ),
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId('conheceu')
-              .setLabel('4. Como conheceu o servidor?')
-              .setStyle(TextInputStyle.Short)
-              .setRequired(true)
-              .setMaxLength(100)
-          ),
-          new ActionRowBuilder().addComponents(
-            new TextInputBuilder()
-              .setCustomId('historia')
-              .setLabel('5. História do personagem')
-              .setPlaceholder('Digite uma história com no mínimo 700 caracteres')
-              .setStyle(TextInputStyle.Paragraph)
-              .setRequired(true)
-              .setMinLength(700)
-              .setMaxLength(1000)
-          )
-        );
-      await interaction.showModal(modal);
+
+      const pre = getWlPrecheck(member);
+      if (!pre.ok) {
+        return interaction.reply({ content: pre.message, flags: MessageFlags.Ephemeral });
+      }
+
+      await interaction.showModal(buildModalWlEtapa1());
       return;
     }
 

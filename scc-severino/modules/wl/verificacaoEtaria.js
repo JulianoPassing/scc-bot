@@ -4,6 +4,8 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'disc
 export const CARGO_IDADE_VERIFICADA = '1491613865967095868';
 /** Reprovado / suspeito — verificação adicional (staff) */
 export const CARGO_VERIFICACAO_ADICIONAL = '1491622218432516106';
+/** Aplicado junto ao recusar a verificação etária (“Não posso confirmar”) */
+export const CARGO_RECUSA_VERIFICACAO_ETARIA = '1277776569389289562';
 
 /** Azul institucional */
 const COR_AVISO = 0x2563eb;

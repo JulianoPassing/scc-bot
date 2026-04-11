@@ -1,7 +1,8 @@
 import { MessageFlags } from 'discord.js';
 import {
   CARGO_IDADE_VERIFICADA as CARGO_IDADE_OK,
-  CARGO_VERIFICACAO_ADICIONAL
+  CARGO_VERIFICACAO_ADICIONAL,
+  CARGO_RECUSA_VERIFICACAO_ETARIA
 } from '../verificacaoEtaria.js';
 import { buildModalWlEtapa1, getWlPrecheck } from '../wlForm.js';
 
@@ -47,14 +48,18 @@ async function handleAceitarPadrao(interaction) {
     }
 
     await member.roles.add(CARGO_IDADE_OK, 'Verificação etária — confirmação no Discord (etapa 1)');
-    if (member.roles.cache.has(CARGO_VERIFICACAO_ADICIONAL)) {
-      try {
-        await member.roles.remove(
-          CARGO_VERIFICACAO_ADICIONAL,
-          'Confirmou verificação etária — removendo marcação de verificação adicional'
-        );
-      } catch (_) {}
-    }
+    try {
+      await member.roles.remove(
+        CARGO_VERIFICACAO_ADICIONAL,
+        'Confirmou verificação etária — removendo marcação de verificação adicional'
+      );
+    } catch (_) {}
+    try {
+      await member.roles.remove(
+        CARGO_RECUSA_VERIFICACAO_ETARIA,
+        'Confirmou verificação etária — removendo cargo de recusa'
+      );
+    } catch (_) {}
 
     return interaction.editReply({
       content:
@@ -90,6 +95,12 @@ async function handleAceitarWl(interaction) {
         'Confirmou verificação etária — removendo marcação de verificação adicional'
       );
     } catch (_) {}
+    try {
+      await member.roles.remove(
+        CARGO_RECUSA_VERIFICACAO_ETARIA,
+        'Confirmou verificação etária (WL) — removendo cargo de recusa'
+      );
+    } catch (_) {}
 
     const atualizado = await interaction.guild.members.fetch(interaction.user.id, { force: true });
     const pre = getWlPrecheck(atualizado);
@@ -119,7 +130,9 @@ async function handleRecusar(interaction) {
   try {
     const member = await interaction.guild.members.fetch(interaction.user.id);
 
-    if (member.roles.cache.has(CARGO_VERIFICACAO_ADICIONAL)) {
+    const jaAdicional = member.roles.cache.has(CARGO_VERIFICACAO_ADICIONAL);
+    const jaRecusa = member.roles.cache.has(CARGO_RECUSA_VERIFICACAO_ETARIA);
+    if (jaAdicional && jaRecusa) {
       return interaction.editReply({
         content:
           'ℹ️ Sua conta já está marcada para **verificação adicional**. Em caso de dúvida, procure a equipe pelo canal adequado.'
@@ -132,14 +145,22 @@ async function handleRecusar(interaction) {
       } catch (_) {}
     }
 
-    await member.roles.add(
-      CARGO_VERIFICACAO_ADICIONAL,
-      'Verificação etária — não confirmou / verificação adicional'
-    );
+    if (!jaAdicional) {
+      await member.roles.add(
+        CARGO_VERIFICACAO_ADICIONAL,
+        'Verificação etária — não confirmou / verificação adicional'
+      );
+    }
+    if (!jaRecusa) {
+      await member.roles.add(
+        CARGO_RECUSA_VERIFICACAO_ETARIA,
+        'Verificação etária — não confirmou (cargo complementar)'
+      );
+    }
 
     return interaction.editReply({
       content:
-        'Você indicou que **não pode confirmar** a verificação etária. Foi aplicado o cargo de **verificação adicional**. ' +
+        'Você indicou que **não pode confirmar** a verificação etária. Foram aplicados os cargos de **verificação adicional** e o cargo complementar de recusa. ' +
         'Se isso foi um engano, abra um ticket ou fale com a equipe para regularizar seu caso.'
     });
   } catch (err) {

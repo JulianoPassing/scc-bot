@@ -1,4 +1,4 @@
-import { MessageFlags } from 'discord.js';
+import { EmbedBuilder, MessageFlags } from 'discord.js';
 import {
   CARGO_IDADE_VERIFICADA as CARGO_IDADE_OK,
   CARGO_VERIFICACAO_ADICIONAL,
@@ -6,8 +6,59 @@ import {
 } from '../verificacaoEtaria.js';
 import { buildModalWlEtapa1, getWlPrecheck } from '../wlForm.js';
 
+/** Canal de logs — verificação etária / termos */
+const CANAL_LOG_VERIFICACAO_IDADE = '1492629401895178480';
+
 const IDS_ACEITAR = new Set(['verif_idade_aceitar', 'verif_idade_aceitar_wl']);
 const IDS_RECUSAR = new Set(['verif_idade_recusar', 'verif_idade_recusar_wl']);
+
+/**
+ * Log no mesmo padrão visual dos embeds de resultado da WL.
+ * @param {import('discord.js').Guild} guild
+ * @param {import('discord.js').User} user
+ * @param {{ termosAceitos: boolean; idadeVerificada: boolean; fluxoWl: boolean; observacao?: string }} opts
+ */
+async function enviarLogVerificacaoIdade(guild, user, opts) {
+  try {
+    const canal = guild.channels.cache.get(CANAL_LOG_VERIFICACAO_IDADE);
+    if (!canal?.isTextBased()) {
+      console.error('[WL][idadeVerification] Canal de log de idade não encontrado ou não é texto:', CANAL_LOG_VERIFICACAO_IDADE);
+      return;
+    }
+    const { termosAceitos, idadeVerificada, fluxoWl, observacao } = opts;
+    const aprovado = termosAceitos && idadeVerificada;
+    const embed = new EmbedBuilder()
+      .setColor(aprovado ? 0x00ff00 : 0xff0000)
+      .setTitle(aprovado ? '✅ Verificação etária' : '❌ Verificação etária — Termos não aceitos')
+      .setDescription(`**Usuário:** <@${user.id}> (${user.tag})`)
+      .addFields(
+        {
+          name: 'Idade verificada',
+          value: idadeVerificada ? '✅ Sim (cargo aplicado / mantido)' : '❌ Não',
+          inline: true
+        },
+        {
+          name: 'Termos aceitos',
+          value: termosAceitos ? '✅ Sim' : '❌ Não',
+          inline: true
+        },
+        {
+          name: 'Origem',
+          value: fluxoWl ? 'Whitelist (etapa 18+)' : 'Painel de verificação etária',
+          inline: false
+        }
+      )
+      .setFooter({ text: 'Street Car Club • Sistema de Whitelist' })
+      .setTimestamp()
+      .setThumbnail(user.displayAvatarURL({ size: 128 }));
+    if (observacao) {
+      embed.addFields({ name: 'Observação', value: observacao, inline: false });
+    }
+    await canal.send({ embeds: [embed] });
+  } catch (err) {
+    console.error('[WL][idadeVerification] Erro ao enviar log de verificação de idade:', err);
+  }
+}
 
 export default async function (client) {
   client.on('interactionCreate', async (interaction) => {
@@ -42,6 +93,12 @@ async function handleAceitarPadrao(interaction) {
     const member = await interaction.guild.members.fetch(interaction.user.id);
 
     if (member.roles.cache.has(CARGO_IDADE_OK)) {
+      await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
+        termosAceitos: true,
+        idadeVerificada: true,
+        fluxoWl: false,
+        observacao: 'Usuário já possuía o cargo de idade verificada; confirmou novamente os termos.'
+      });
       return interaction.editReply({
         content: '✅ Você já possui o cargo de **idade verificada** neste servidor.'
       });
@@ -60,6 +117,12 @@ async function handleAceitarPadrao(interaction) {
         'Confirmou verificação etária — removendo cargo de recusa'
       );
     } catch (_) {}
+
+    await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
+      termosAceitos: true,
+      idadeVerificada: true,
+      fluxoWl: false
+    });
 
     return interaction.editReply({
       content:
@@ -105,8 +168,21 @@ async function handleAceitarWl(interaction) {
     const atualizado = await interaction.guild.members.fetch(interaction.user.id, { force: true });
     const pre = getWlPrecheck(atualizado);
     if (!pre.ok) {
+      await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
+        termosAceitos: true,
+        idadeVerificada: true,
+        fluxoWl: true,
+        observacao:
+          'Termos aceitos e cargo de idade OK; o pré-check da whitelist impediu abrir o formulário (ex.: cooldown ou já aprovado).'
+      });
       return interaction.reply({ content: pre.message, flags: MessageFlags.Ephemeral });
     }
+
+    await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
+      termosAceitos: true,
+      idadeVerificada: true,
+      fluxoWl: true
+    });
 
     return interaction.showModal(buildModalWlEtapa1());
   } catch (err) {
@@ -132,7 +208,14 @@ async function handleRecusar(interaction) {
 
     const jaAdicional = member.roles.cache.has(CARGO_VERIFICACAO_ADICIONAL);
     const jaRecusa = member.roles.cache.has(CARGO_RECUSA_VERIFICACAO_ETARIA);
+    const fluxoWl = interaction.customId === 'verif_idade_recusar_wl';
     if (jaAdicional && jaRecusa) {
+      await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
+        termosAceitos: false,
+        idadeVerificada: false,
+        fluxoWl,
+        observacao: 'Clicou em não confirmar, mas a conta já estava com verificação adicional e cargo de recusa.'
+      });
       return interaction.editReply({
         content:
           'ℹ️ Sua conta já está marcada para **verificação adicional**. Em caso de dúvida, procure a equipe pelo canal adequado.'
@@ -157,6 +240,12 @@ async function handleRecusar(interaction) {
         'Verificação etária — não confirmou (cargo complementar)'
       );
     }
+
+    await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
+      termosAceitos: false,
+      idadeVerificada: false,
+      fluxoWl
+    });
 
     return interaction.editReply({
       content:

@@ -118,8 +118,7 @@ export default {
 
       const label = `${channel.name} (\`${channel.id}\`)`;
 
-      await channel.permissionOverwrites.fetch().catch(() => {});
-
+      // discord.js 14: não há permissionOverwrites.fetch(); cache vem do guild.channels.fetch() acima.
       const ovMorador = channel.permissionOverwrites.cache.get(ROLE_MORADOR_ID);
 
       if (ovMorador) {
@@ -190,7 +189,9 @@ export default {
       try {
         if (ovIdade) {
           await channel.permissionOverwrites.delete(ROLE_IDADE_VERIFICADA_ID, REASON);
-          await channel.permissionOverwrites.fetch().catch(() => {});
+          if (typeof channel.fetch === 'function') {
+            await channel.fetch().catch(() => {});
+          }
         }
 
         const i0 = channel.permissionsFor(idadeRole);

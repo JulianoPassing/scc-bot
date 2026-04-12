@@ -11,5 +11,11 @@ export const ROLE_MORADOR_ID = '1317086939555434557';
  */
 export const ROLE_IDADE_VERIFICADA_ID = '1492688339558600806';
 
-/** Intervalo entre edições (ms) para aliviar rate limit */
+/** Intervalo entre chamadas à API de permissões (ms) */
 export const DELAY_MS = 400;
+
+/**
+ * A cada quantos canais a mensagem de progresso é atualizada (1 = todos; 5 = menos edições).
+ * No comando: `5` ou `cada5` nos argumentos força atualizar de 5 em 5.
+ */
+export const PROGRESS_EDIT_EVERY = 1;

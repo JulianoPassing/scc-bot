@@ -7,7 +7,8 @@ import {
   GUILD_ID,
   ROLE_MORADOR_ID,
   ROLE_IDADE_VERIFICADA_ID,
-  DELAY_MS
+  DELAY_MS,
+  PROGRESS_EDIT_EVERY
 } from '../config.js';
 
 function sleep(ms) {
@@ -73,6 +74,12 @@ function buildOverwriteToMatchEffective(mTarget, iBaseline) {
   return { allow, deny };
 }
 
+function fmtCanal(channel) {
+  const nome = String(channel?.name ?? '?').replace(/`/g, "'").slice(0, 90);
+  const id = channel?.id ?? '?';
+  return `\`${nome}\` · \`${id}\``;
+}
+
 export default {
   name: 'clonar-permissoes-idade',
   description:
@@ -111,11 +118,15 @@ export default {
       );
     }
 
-    const dryRun = args[0]?.toLowerCase() === 'dry' || args[0]?.toLowerCase() === 'simular';
+    const dryRun = args.some((a) => ['dry', 'simular'].includes(String(a).toLowerCase()));
+    const progressEvery = args.some((a) => ['5', 'cada5'].includes(String(a).toLowerCase()))
+      ? 5
+      : PROGRESS_EDIT_EVERY;
 
     await message.guild.channels.fetch().catch(() => {});
 
     const list = sortCategoriesFirst([...message.guild.channels.cache.values()]);
+    const totalLista = list.length;
 
     let copiadosExplicito = 0;
     let copiadosDaCategoria = 0;
@@ -126,24 +137,32 @@ export default {
 
     const statusMsg = await message.reply(
       dryRun
-        ? '🔍 **Simulação** — categorias primeiro; Morador no canal **ou** na categoria pai; depois alinhamento por efeito…'
-        : '⏳ Copiando e verificando overwrites (canal + herança da categoria)…'
+        ? '🔍 **Simulação** — iniciando contagem de canais…'
+        : '⏳ **Aplicando** — iniciando (canal + herança da categoria)…'
     );
 
-    let totalMutacoes = 0;
-
-    async function tickProgress() {
-      totalMutacoes++;
-      if (totalMutacoes % 5 === 0) {
-        await statusMsg
-          .edit(
-            `⏳ Direto **${copiadosExplicito}** · via categoria **${copiadosDaCategoria}** · efeito **${sincronizadosEfeito}** · limpezas **${removidosRedundantes}**…`
-          )
-          .catch(() => {});
-      }
+    async function editarProgresso(done, channel) {
+      const cabeca = dryRun ? '🔍 **Simulação em andamento**' : '⏳ **Aplicando permissões**';
+      const bloco = [
+        cabeca,
+        '',
+        `**${done}** de **${totalLista}** ${totalLista === 1 ? 'canal' : 'canais'}`,
+        `📍 ${fmtCanal(channel)}`,
+        '',
+        `— direto **${copiadosExplicito}** · categoria **${copiadosDaCategoria}** · efeito **${sincronizadosEfeito}** · limpezas **${removidosRedundantes}** · sem ação **${semAcao}**`,
+        '',
+        progressEvery > 1
+          ? `_Atualizando esta mensagem a cada **${progressEvery}** canais (use sem \`5\`/\`cada5\` para cada canal)._`
+          : '_Atualizando a cada canal._'
+      ].join('\n');
+      await statusMsg.edit({ content: bloco }).catch(() => {});
     }
 
-    for (const channel of list) {
+    for (let idx = 0; idx < list.length; idx++) {
+      const channel = list[idx];
+      const done = idx + 1;
+
+      try {
       if (!channel.permissionOverwrites) {
         semAcao++;
         continue;
@@ -190,7 +209,6 @@ export default {
           } else {
             if (origem === 'canal') copiadosExplicito++;
             else copiadosDaCategoria++;
-            await tickProgress();
           }
         } catch (e) {
           falhas.push({ label, erro: e?.message || String(e) });
@@ -225,7 +243,6 @@ export default {
           try {
             await channel.permissionOverwrites.delete(ROLE_IDADE_VERIFICADA_ID, REASON);
             removidosRedundantes++;
-            await tickProgress();
             await sleep(DELAY_MS);
           } catch (e) {
             falhas.push({ label, erro: e?.message || String(e) });
@@ -260,7 +277,6 @@ export default {
 
         if (built.allow.bitfield === 0n && built.deny.bitfield === 0n) {
           sincronizadosEfeito++;
-          await tickProgress();
           await sleep(DELAY_MS);
           continue;
         }
@@ -281,12 +297,16 @@ export default {
         }
 
         sincronizadosEfeito++;
-        await tickProgress();
       } catch (e) {
         falhas.push({ label, erro: e?.message || String(e) });
       }
 
       await sleep(DELAY_MS);
+      } finally {
+        if (done % progressEvery === 0 || done === totalLista) {
+          await editarProgresso(done, channel);
+        }
+      }
     }
 
     const totalCopias = copiadosExplicito + copiadosDaCategoria;
@@ -322,7 +342,11 @@ export default {
     }
 
     if (dryRun) {
-      linhas.push('', 'Para aplicar: `!clonar-permissoes-idade` (sem `dry`).');
+      linhas.push(
+        '',
+        'Para aplicar: `!clonar-permissoes-idade` (sem `dry`).',
+        'Progresso na mensagem **a cada 5 canais** (menos edições): acrescente `5` ou `cada5` (ex.: `!clonar-permissoes-idade dry 5`).'
+      );
     }
 
     await statusMsg.edit(linhas.join('\n')).catch(() => {

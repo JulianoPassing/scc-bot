@@ -5,9 +5,7 @@ import {
   ROLE_IDADE_VERIFICADA_ID,
   TESTE_MORADOR_IDADE_CANAL_ID
 } from '../config.js';
-
-const REASON =
-  'Teste: Morador → Idade verificada no canal ' + TESTE_MORADOR_IDADE_CANAL_ID;
+import { putRoleChannelOverwrite } from '../utils/putRoleOverwrite.js';
 
 const ALL_PERM_BITS = Object.values(PermissionFlagsBits).filter(
   (v) => typeof v === 'bigint' || typeof v === 'number'
@@ -51,10 +49,20 @@ function buildOverwriteToMatchEffective(mTarget, iBaseline) {
   return { allow, deny };
 }
 
+function listarOverwritesCargo(channel) {
+  const linhas = [];
+  for (const [, ow] of channel.permissionOverwrites.cache) {
+    if (ow.type === OverwriteType.Role) {
+      linhas.push(`• cargo \`${ow.id}\` — allow \`${ow.allow.bitfield}\` deny \`${ow.deny.bitfield}\``);
+    }
+  }
+  return linhas.length ? linhas.join('\n') : '_Nenhuma linha de **cargo** neste canal (só @everyone/membro)._';
+}
+
 export default {
   name: 'teste-morador-para-idade',
-  description: 'Teste: Morador → Idade verificada só no canal configurado.',
-  async execute(message) {
+  description: 'Teste: Morador → Idade verificada (REST + canal opcional).',
+  async execute(message, args) {
     if (!message.guild) {
       return message.reply('❌ Use no servidor.');
     }
@@ -64,6 +72,9 @@ export default {
     if (!message.member.permissions.has(PermissionFlagsBits.Administrator)) {
       return message.reply('❌ Só administradores.');
     }
+
+    const canalIdArg = args.find((a) => /^\d{17,20}$/.test(String(a)));
+    const canalAlvoId = canalIdArg ?? TESTE_MORADOR_IDADE_CANAL_ID;
 
     const botMember =
       message.guild.members.me ??
@@ -90,40 +101,91 @@ export default {
     await message.guild.roles.fetch(ROLE_MORADOR_ID).catch(() => {});
     await message.guild.roles.fetch(ROLE_IDADE_VERIFICADA_ID).catch(() => {});
 
-    let channel = await message.guild.channels.fetch(TESTE_MORADOR_IDADE_CANAL_ID).catch(() => null);
+    let channel = await message.guild.channels.fetch(canalAlvoId).catch(() => null);
     if (!channel?.permissionOverwrites) {
-      return message.reply(`❌ Canal \`${TESTE_MORADOR_IDADE_CANAL_ID}\` não encontrado.`);
+      return message.reply(
+        `❌ Canal \`${canalAlvoId}\` não encontrado.\n` +
+          `**Dica:** clique com o botão direito no canal → **Copiar ID** e use: \`!teste-morador-para-idade <id>\`\n` +
+          `(Padrão no config: \`${TESTE_MORADOR_IDADE_CANAL_ID}\`)`
+      );
     }
 
     if (channel.parentId) {
       await message.guild.channels.fetch(channel.parentId).catch(() => {});
-      channel = (await message.guild.channels.fetch(TESTE_MORADOR_IDADE_CANAL_ID).catch(() => null)) ?? channel;
+      channel = (await message.guild.channels.fetch(canalAlvoId).catch(() => null)) ?? channel;
     }
 
+    const REASON =
+      'Teste REST: Morador → Idade verificada | canal ' + channel.id;
+
+    const aplicar = async (allow, deny, modo) => {
+      await putRoleChannelOverwrite(
+        message.client,
+        channel.id,
+        ROLE_IDADE_VERIFICADA_ID,
+        allow,
+        deny,
+        REASON
+      );
+      if (typeof channel.fetch === 'function') {
+        channel = (await channel.fetch().catch(() => null)) ?? channel;
+      }
+      const ver = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
+      const ok =
+        ver && ver.allow.bitfield === allow.bitfield && ver.deny.bitfield === deny.bitfield;
+      const mF = channel.permissionsFor(moradorRole);
+      const iF = channel.permissionsFor(idadeRole);
+      const efeitoIgual = mF && iF && mF.bitfield === iF.bitfield;
+
+      return message.reply(
+        [
+          ok ? '✅ **Permissão gravada via API (REST)**' : '⚠️ REST ok — confira cache',
+          '',
+          `**Canal:** ${channel.name} · \`${channel.id}\``,
+          canalIdArg ? '' : `_Usando ID padrão do config. Se não for este canal, passe o ID após o comando._`,
+          `**Modo:** ${modo}`,
+          '',
+          `Morador (origem): \`${ROLE_MORADOR_ID}\` · Idade (destino): \`${ROLE_IDADE_VERIFICADA_ID}\``,
+          `Allow: \`${allow.bitfield}\` · Deny: \`${deny.bitfield}\``,
+          '',
+          efeitoIgual
+            ? '✅ `permissionsFor` Morador = Idade neste canal.'
+            : '⚠️ Efeito pode diferir se os **cargos** tiverem permissões gerais diferentes no servidor.',
+          '',
+          ok
+            ? 'Abra **Permissões avançadas** do **Idade verificada** neste canal — deve bater com o Morador.'
+            : 'Se a UI continuar em “/”, confira se o **cargo do bot** está acima do Idade.'
+        ]
+          .filter(Boolean)
+          .join('\n')
+      );
+    };
+
     let resolved = resolveMoradorOverwrite(channel, message.guild);
-    let metodo = 'overwrite';
 
     if (!resolved) {
       const m = channel.permissionsFor(moradorRole);
       const iAntes = channel.permissionsFor(idadeRole);
+
       if (!m || !iAntes) {
-        const idsCanal = [...channel.permissionOverwrites.cache.keys()].slice(0, 12);
         return message.reply(
-          `❌ Sem linha do Morador na API neste canal/categoria e \`permissionsFor\` falhou.\n` +
-            `IDs de overwrite **neste** canal (amostra): ${idsCanal.map((id) => `\`${id}\``).join(', ') || 'nenhum'}`
+          `❌ Sem overwrite do Morador (\`${ROLE_MORADOR_ID}\`) neste canal nem na categoria.\n\n` +
+            `**Overwrites de cargo neste canal:**\n${listarOverwritesCargo(channel)}\n\n` +
+            `Confira se o ID do **Morador** no servidor é mesmo \`${ROLE_MORADOR_ID}\` (Modo desenvolvedor).`
         );
       }
 
       if (m.has(PermissionFlagsBits.Administrator)) {
         return message.reply(
-          '❌ O Morador resolve com **Administrator** aqui — não dá para igualar só com overwrite de canal.'
+          '❌ Morador com **Administrator** aqui — não dá para igualar só com overwrite de canal.'
         );
       }
 
       if (m.bitfield === iAntes.bitfield) {
         return message.reply(
-          'ℹ️ **Já está igual** (permissão efetiva): Morador e Idade verificada têm o mesmo efeito neste canal, sem precisar de linha extra.\n' +
-            `Se a UI parecer diferente, pode ser só exibição; confira se ambos veem o canal da mesma forma.`
+          `ℹ️ **Efeito já igual** (sem linha explícita necessária).\n` +
+            `Canal: \`${channel.id}\`\n\n` +
+            `**Overwrites de cargo neste canal:**\n${listarOverwritesCargo(channel)}`
         );
       }
 
@@ -137,93 +199,29 @@ export default {
 
         const i0 = channel.permissionsFor(idadeRole);
         if (!i0) {
-          return message.reply('❌ Baseline do Idade após limpar overwrite inválido.');
+          return message.reply('❌ Baseline Idade inválido após limpar overwrite.');
         }
 
         const built = buildOverwriteToMatchEffective(m, i0);
         if (built.allow.bitfield === 0n && built.deny.bitfield === 0n) {
-          return message.reply(
-            'ℹ️ Depois de limpar overwrite do Idade, o efeito já bate com o Morador — **nada a gravar**.'
-          );
+          return message.reply('ℹ️ Nada a gravar após recalcular.');
         }
 
-        await channel.permissionOverwrites.edit(
-          ROLE_IDADE_VERIFICADA_ID,
-          { allow: built.allow, deny: built.deny },
-          { type: OverwriteType.Role, reason: REASON }
-        );
-        metodo = 'permissão efetiva (Morador sem linha explícita na API)';
-        resolved = null;
+        return await aplicar(built.allow, built.deny, 'permissão efetiva (sem linha do Morador na API)');
       } catch (e) {
-        return message.reply(`❌ Erro no modo efetivo: ${e?.message || e}`);
+        return message.reply(`❌ ${e?.message || e}`);
       }
     }
 
-    if (resolved) {
-      const { ov, origem } = resolved;
-      const { allow, deny } = allowDenyFromOverwrite(ov);
+    const { ov, origem } = resolved;
+    const { allow, deny } = allowDenyFromOverwrite(ov);
 
-      try {
-        await channel.permissionOverwrites.edit(
-          ROLE_IDADE_VERIFICADA_ID,
-          { allow, deny },
-          { type: OverwriteType.Role, reason: REASON }
-        );
-
-        let ver = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
-        let ok =
-          ver && ver.allow.bitfield === allow.bitfield && ver.deny.bitfield === deny.bitfield;
-        if (!ok && typeof channel.fetch === 'function') {
-          await channel.fetch().catch(() => {});
-          ver = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
-          ok =
-            ver && ver.allow.bitfield === allow.bitfield && ver.deny.bitfield === deny.bitfield;
-        }
-
-        const mF = channel.permissionsFor(moradorRole);
-        const iF = channel.permissionsFor(idadeRole);
-        const efeitoIgual = mF && iF && mF.bitfield === iF.bitfield;
-
-        const linhas = [
-          ok ? '✅ **Overwrite copiado**' : '⚠️ Edit enviado — confira no Discord',
-          '',
-          `**Modo:** linha do Morador na API (**${origem}**)`,
-          `Canal: ${channel} (\`${channel.id}\`)`,
-          '',
-          `Allow: \`${allow.bitfield.toString()}\` · Deny: \`${deny.bitfield.toString()}\``,
-          '',
-          efeitoIgual
-            ? '✅ `permissionsFor` Morador **=** Idade neste canal.'
-            : '⚠️ `permissionsFor` ainda pode diferir (permissões **gerais** dos cargos no servidor).',
-          '',
-          ok
-            ? 'Idade verificada recebeu o **mesmo** allow/deny do Morador (origem acima).'
-            : 'Se não aparecer na UI: suba o **cargo do bot** acima do Idade e tente de novo.'
-        ];
-
-        return message.reply(linhas.join('\n'));
-      } catch (e) {
-        return message.reply(`❌ Erro ao aplicar overwrite: ${e?.message || e}`);
-      }
+    try {
+      return await aplicar(allow, deny, `cópia do Morador (**${origem}**) via REST`);
+    } catch (e) {
+      return message.reply(
+        `❌ Erro REST: ${e?.message || e}\n\n**Overwrites de cargo neste canal:**\n${listarOverwritesCargo(channel)}`
+      );
     }
-
-    const mF = channel.permissionsFor(moradorRole);
-    const iF = channel.permissionsFor(idadeRole);
-    const efeitoIgual = mF && iF && mF.bitfield === iF.bitfield;
-
-    const linhas = [
-      '✅ **Ajuste por permissão efetiva**',
-      '',
-      `**Modo:** ${metodo}`,
-      `Canal: ${channel} (\`${channel.id}\`)`,
-      '',
-      efeitoIgual
-        ? '✅ `permissionsFor` Morador **=** Idade neste canal.'
-        : '⚠️ Ainda há diferença de efeito — veja permissões **gerais** dos dois cargos (fora do canal).',
-      '',
-      'Abra **Configurações do canal → Permissões → Idade verificada** e confira se bate com o Morador.'
-    ];
-
-    return message.reply(linhas.join('\n'));
   }
 };

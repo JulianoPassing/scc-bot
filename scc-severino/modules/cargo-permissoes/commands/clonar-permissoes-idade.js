@@ -1,8 +1,7 @@
 import {
   PermissionFlagsBits,
   PermissionsBitField,
-  ChannelType,
-  OverwriteType
+  ChannelType
 } from 'discord.js';
 import {
   GUILD_ID,
@@ -11,6 +10,7 @@ import {
   DELAY_MS,
   PROGRESS_EDIT_EVERY
 } from '../config.js';
+import { putRoleChannelOverwrite } from '../utils/putRoleOverwrite.js';
 
 function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
@@ -186,11 +186,17 @@ export default {
         }
 
         try {
-          await channel.permissionOverwrites.edit(
+          await putRoleChannelOverwrite(
+            client,
+            channel.id,
             ROLE_IDADE_VERIFICADA_ID,
-            { allow, deny },
-            { type: OverwriteType.Role, reason: REASON }
+            allow,
+            deny,
+            REASON
           );
+          if (typeof channel.fetch === 'function') {
+            await channel.fetch().catch(() => {});
+          }
 
           let verificado =
             channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
@@ -285,11 +291,17 @@ export default {
           continue;
         }
 
-        await channel.permissionOverwrites.edit(
+        await putRoleChannelOverwrite(
+          client,
+          channel.id,
           ROLE_IDADE_VERIFICADA_ID,
-          { allow: built.allow, deny: built.deny },
-          { type: OverwriteType.Role, reason: REASON }
+          built.allow,
+          built.deny,
+          REASON
         );
+        if (typeof channel.fetch === 'function') {
+          await channel.fetch().catch(() => {});
+        }
 
         const check = channel.permissionsFor(idadeRole);
         if (check && check.bitfield !== m.bitfield) {

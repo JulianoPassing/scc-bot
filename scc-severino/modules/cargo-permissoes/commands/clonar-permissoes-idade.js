@@ -2,6 +2,7 @@ import {
   PermissionFlagsBits,
   ChannelType
 } from 'discord.js';
+import { Routes } from 'discord-api-types/v10';
 import {
   GUILD_ID,
   ROLE_MORADOR_ID,
@@ -35,6 +36,10 @@ function fmtCanal(channel) {
   const nome = String(channel?.name ?? '?').replace(/`/g, "'").slice(0, 90);
   const id = channel?.id ?? '?';
   return `\`${nome}\` · \`${id}\``;
+}
+
+async function deleteRoleOverwriteStrict(client, channelId, roleId, reason) {
+  await client.rest.delete(Routes.channelPermission(channelId, roleId), { reason });
 }
 
 export default {
@@ -117,7 +122,7 @@ export default {
     }
 
     for (let idx = 0; idx < list.length; idx++) {
-      const channel = list[idx];
+      let channel = list[idx];
       const done = idx + 1;
 
       try {
@@ -127,6 +132,11 @@ export default {
       }
 
       const label = `${channel.name} (\`${channel.id}\`)`;
+
+      if (typeof channel.fetch === 'function') {
+        channel = (await channel.fetch().catch(() => null)) ?? channel;
+      }
+
       const ovMorador = channel.permissionOverwrites.cache.get(ROLE_MORADOR_ID);
       const ovIdade = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
       if (ovMorador) {
@@ -178,7 +188,7 @@ export default {
       }
 
       try {
-        await channel.permissionOverwrites.delete(ROLE_IDADE_VERIFICADA_ID, REASON);
+        await deleteRoleOverwriteStrict(client, channel.id, ROLE_IDADE_VERIFICADA_ID, REASON);
         if (typeof channel.fetch === 'function') {
           await channel.fetch().catch(() => {});
         }

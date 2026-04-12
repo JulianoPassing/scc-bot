@@ -1,4 +1,8 @@
-import { PermissionFlagsBits } from 'discord.js';
+import {
+  PermissionFlagsBits,
+  PermissionsBitField,
+  ChannelType
+} from 'discord.js';
 import {
   GUILD_ID,
   ROLE_MORADOR_ID,
@@ -11,19 +15,43 @@ function sleep(ms) {
 }
 
 const REASON =
-  'Espelhar permissões de canal/categoria: Morador (1317086939555434557) → Idade verificada (1492688339558600806)';
+  'Espelhar permissões: Morador (1317086939555434557) → Idade verificada (1492688339558600806)';
+
+/** Todos os bits de permissão conhecidos (para comparar efeito canal a canal). */
+const ALL_PERM_BITS = Object.values(PermissionFlagsBits).filter(
+  (v) => typeof v === 'bigint' || typeof v === 'number'
+);
+
+function sortCategoriesFirst(channels) {
+  const cats = channels.filter((c) => c.type === ChannelType.GuildCategory);
+  const rest = channels.filter((c) => c.type !== ChannelType.GuildCategory);
+  const byPos = (a, b) => (a.rawPosition ?? 0) - (b.rawPosition ?? 0);
+  cats.sort(byPos);
+  rest.sort(byPos);
+  return [...cats, ...rest];
+}
 
 /**
- * Percorre **todas** as categorias e canais do guild.
- * - Onde o Morador tem overwrite: Idade recebe o **mesmo** allow/deny.
- * - Onde o Morador **não** tem overwrite mas o Idade tem: remove a linha do Idade
- *   (fica igual ao Morador: só herança / @everyone / permissões globais do cargo).
- * Assim o **padrão** do Morador nos canais fica espelhado no Idade em todo o servidor.
+ * Com o Morador **sem** linha neste canal, ajusta o Idade para `permissionsFor` ficar igual ao do Morador
+ * (resolve o caso em que o Morador herdou da categoria e o cliente mostra ✅/❌ no filho).
  */
+function buildOverwriteToMatchEffective(mTarget, iBaseline) {
+  const allow = new PermissionsBitField();
+  const deny = new PermissionsBitField();
+  for (const bit of ALL_PERM_BITS) {
+    const want = mTarget.has(bit);
+    const have = iBaseline.has(bit);
+    if (want === have) continue;
+    if (want) allow.add(bit);
+    else deny.add(bit);
+  }
+  return { allow, deny };
+}
+
 export default {
   name: 'clonar-permissoes-idade',
   description:
-    'Espelha o padrão de overwrites do Morador no Idade verificada (todas as categorias e canais).',
+    'Iguala permissões do Idade verificada às do Morador em todo o servidor (explícitas + efeito efetivo por canal).',
   async execute(message, args, client) {
     if (!message.guild) {
       return message.reply('❌ Use este comando dentro do servidor.');
@@ -55,22 +83,32 @@ export default {
 
     await message.guild.channels.fetch().catch(() => {});
 
-    const list = [...message.guild.channels.cache.values()].sort(
-      (a, b) => (a.rawPosition ?? 0) - (b.rawPosition ?? 0)
-    );
+    const list = sortCategoriesFirst([...message.guild.channels.cache.values()]);
 
-    let copiados = 0;
-    let removidos = 0;
+    let copiadosExplicito = 0;
+    let sincronizadosEfeito = 0;
+    let removidosRedundantes = 0;
     let semAcao = 0;
     const falhas = [];
 
     const statusMsg = await message.reply(
       dryRun
-        ? '🔍 **Simulação** — verificando **todas as categorias e canais** frente ao padrão do Morador…'
-        : '⏳ Ajustando Idade verificada para **coincidir com o Morador** em cada categoria e canal…'
+        ? '🔍 **Simulação** — categorias primeiro, depois canais; cópia explícita + alinhamento por permissão efetiva…'
+        : '⏳ Igualando Idade ao Morador (**overwrite idêntico** ou **mesmo efeito** ver/ler/escrever)…'
     );
 
     let totalMutacoes = 0;
+
+    async function tickProgress() {
+      totalMutacoes++;
+      if (totalMutacoes % 5 === 0) {
+        await statusMsg
+          .edit(
+            `⏳ **${copiadosExplicito}** cópias explícitas · **${sincronizadosEfeito}** ajustes por efeito · **${removidosRedundantes}** limpezas…`
+          )
+          .catch(() => {});
+      }
+    }
 
     for (const channel of list) {
       if (!channel.permissionOverwrites) {
@@ -78,33 +116,28 @@ export default {
         continue;
       }
 
-      const ovMorador = channel.permissionOverwrites.cache.get(ROLE_MORADOR_ID);
-      const ovIdade = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
       const label = `${channel.name} (\`${channel.id}\`)`;
+
+      await channel.permissionOverwrites.fetch().catch(() => {});
+
+      const ovMorador = channel.permissionOverwrites.cache.get(ROLE_MORADOR_ID);
 
       if (ovMorador) {
         if (dryRun) {
-          copiados++;
+          copiadosExplicito++;
           continue;
         }
         try {
           await channel.permissionOverwrites.edit(
             ROLE_IDADE_VERIFICADA_ID,
             {
-              allow: ovMorador.allow,
-              deny: ovMorador.deny
+              allow: new PermissionsBitField(ovMorador.allow),
+              deny: new PermissionsBitField(ovMorador.deny)
             },
             REASON
           );
-          copiados++;
-          totalMutacoes++;
-          if (totalMutacoes % 5 === 0) {
-            await statusMsg
-              .edit(
-                `⏳ **${copiados}** cópias · **${removidos}** linhas do Idade removidas (Morador sem linha)…`
-              )
-              .catch(() => {});
-          }
+          copiadosExplicito++;
+          await tickProgress();
         } catch (e) {
           falhas.push({ label, erro: e?.message || String(e) });
         }
@@ -112,54 +145,118 @@ export default {
         continue;
       }
 
-      if (ovIdade) {
-        if (dryRun) {
-          removidos++;
+      const m = channel.permissionsFor(moradorRole);
+      const iCur = channel.permissionsFor(idadeRole);
+      if (!m || !iCur) {
+        falhas.push({ label, erro: 'permissionsFor retornou vazio' });
+        continue;
+      }
+
+      if (m.has(PermissionFlagsBits.Administrator)) {
+        falhas.push({
+          label,
+          erro: 'Morador resolve com Administrator aqui — não dá para espelhar só por overwrite; alinhe cargos no servidor.'
+        });
+        continue;
+      }
+
+      const ovIdade = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
+
+      if (m.bitfield === iCur.bitfield) {
+        if (ovIdade) {
+          if (dryRun) {
+            removidosRedundantes++;
+            continue;
+          }
+          try {
+            await channel.permissionOverwrites.delete(ROLE_IDADE_VERIFICADA_ID, REASON);
+            removidosRedundantes++;
+            await tickProgress();
+            await sleep(DELAY_MS);
+          } catch (e) {
+            falhas.push({ label, erro: e?.message || String(e) });
+          }
+        } else {
+          semAcao++;
+        }
+        continue;
+      }
+
+      if (dryRun) {
+        sincronizadosEfeito++;
+        continue;
+      }
+
+      try {
+        if (ovIdade) {
+          await channel.permissionOverwrites.delete(ROLE_IDADE_VERIFICADA_ID, REASON);
+          await channel.permissionOverwrites.fetch().catch(() => {});
+        }
+
+        const i0 = channel.permissionsFor(idadeRole);
+        if (!i0) {
+          falhas.push({ label, erro: 'baseline Idade após delete inválido' });
+          await sleep(DELAY_MS);
           continue;
         }
-        try {
-          await channel.permissionOverwrites.delete(ROLE_IDADE_VERIFICADA_ID, REASON);
-          removidos++;
-          totalMutacoes++;
-          if (totalMutacoes % 5 === 0) {
-            await statusMsg
-              .edit(
-                `⏳ **${copiados}** cópias · **${removidos}** linhas do Idade removidas (Morador sem linha)…`
-              )
-              .catch(() => {});
-          }
-        } catch (e) {
-          falhas.push({ label, erro: e?.message || String(e) });
+
+        const { allow, deny } = buildOverwriteToMatchEffective(m, i0);
+
+        if (allow.bitfield === 0n && deny.bitfield === 0n) {
+          sincronizadosEfeito++;
+          await tickProgress();
+          await sleep(DELAY_MS);
+          continue;
         }
-        await sleep(DELAY_MS);
-        continue;
+
+        await channel.permissionOverwrites.edit(
+          ROLE_IDADE_VERIFICADA_ID,
+          { allow, deny },
+          REASON
+        );
+
+        const check = channel.permissionsFor(idadeRole);
+        if (check && check.bitfield !== m.bitfield) {
+          falhas.push({
+            label,
+            erro:
+              'Após aplicar overwrite, efeito ainda difere do Morador (conflito de hierarquia ou permissões globais dos cargos).'
+          });
+        }
+
+        sincronizadosEfeito++;
+        await tickProgress();
+      } catch (e) {
+        falhas.push({ label, erro: e?.message || String(e) });
       }
 
-      semAcao++;
+      await sleep(DELAY_MS);
     }
 
     const linhas = [
       dryRun
         ? [
-            '🔍 **Simulação concluída** (padrão Morador → Idade nos canais):',
-            `• Locais onde **copiaria** allow/deny do Morador: **${copiados}**`,
-            `• Locais onde **removeria** overwrite extra do Idade (Morador sem linha): **${removidos}**`,
-            `• Locais já alinhados (nenhum dos dois com linha): **${semAcao}**`
+            '🔍 **Simulação**',
+            `• **${copiadosExplicito}** locais: copiaria overwrite explícito do Morador (✅/❌/herdar iguais).`,
+            `• **${sincronizadosEfeito}** locais: alinharia **permissão efetiva** (Morador sem linha neste canal — ex.: herdou da categoria).`,
+            `• **${removidosRedundantes}** locais: removeria linha extra do Idade (efeito já batia).`,
+            `• **${semAcao}** locais: sem mudança.`
           ].join('\n')
         : [
-            '✅ **Concluído.** Idade verificada espelha o **mesmo esquema de overwrites** do Morador:',
-            `• **${copiados}** local(is): allow/deny **idênticos** aos do Morador`,
-            `• **${removidos}** local(is): overwrite do Idade **removido** (como no Morador: só herança)`,
-            `• **${semAcao}** local(is): já iguais (sem linha em ambos)`
+            '✅ **Concluído**',
+            `• **${copiadosExplicito}** — overwrite do Idade = **mesmo allow/deny** do Morador naquele canal/categoria.`,
+            `• **${sincronizadosEfeito}** — permissões **efetivas** do Idade ajustadas para bater com o Morador (ver, gerenciar, enviar mensagens, voz, etc.).`,
+            `• **${removidosRedundantes}** — linha do Idade removida por ser redundante.`,
+            `• **${semAcao}** — já estavam iguais.`
           ].join('\n'),
       '',
-      '_Permissões **globais** do cargo (tela Cargos do servidor) não são alteradas por este comando._'
+      '_**Permissões gerais do cargo** (edição do cargo em si, fora dos canais) não são alteradas — se os cargos forem diferentes no servidor, alguns canais podem continuar divergindo._'
     ];
 
     if (falhas.length) {
-      linhas.push(`❌ Falhas (**${falhas.length}**):`);
-      falhas.slice(0, 15).forEach((f) => linhas.push(`• ${f.label}: ${f.erro}`));
-      if (falhas.length > 15) linhas.push(`… e mais ${falhas.length - 15}.`);
+      linhas.push(`❌ Avisos/falhas (**${falhas.length}**):`);
+      falhas.slice(0, 12).forEach((f) => linhas.push(`• ${f.label}: ${f.erro}`));
+      if (falhas.length > 12) linhas.push(`… e mais ${falhas.length - 12}.`);
     }
 
     if (dryRun) {

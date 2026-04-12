@@ -96,6 +96,7 @@ const modules = [
   'auto-atendimento',
   'avaliacoes',
   'batebapo',
+  'cargo-permissoes',
   'blacklist',
   'boost',
   'drogas',

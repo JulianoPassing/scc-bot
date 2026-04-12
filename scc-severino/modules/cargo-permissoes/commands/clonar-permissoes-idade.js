@@ -10,16 +10,20 @@ function sleep(ms) {
   return new Promise((r) => setTimeout(r, ms));
 }
 
+const REASON =
+  'Espelhar permissões de canal/categoria: Morador (1317086939555434557) → Idade verificada (1492688339558600806)';
+
 /**
- * Percorre **todos** os canais do servidor (categorias, texto, voz, anúncio, fórum, palco, etc.).
- * Onde o Morador (`1317086939555434557`) tem overwrite explícito, aplica no Idade verificada
- * (`1492688339558600806`) o **mesmo** `allow` e `deny` (bit a bit).
- * Não chama delete em overwrites; onde o Morador não tem linha, o Idade **não é mexido**.
+ * Percorre **todas** as categorias e canais do guild.
+ * - Onde o Morador tem overwrite: Idade recebe o **mesmo** allow/deny.
+ * - Onde o Morador **não** tem overwrite mas o Idade tem: remove a linha do Idade
+ *   (fica igual ao Morador: só herança / @everyone / permissões globais do cargo).
+ * Assim o **padrão** do Morador nos canais fica espelhado no Idade em todo o servidor.
  */
 export default {
   name: 'clonar-permissoes-idade',
   description:
-    'Copia overwrites do Morador para Idade verificada em todas as categorias e canais (só onde o Morador tem linha).',
+    'Espelha o padrão de overwrites do Morador no Idade verificada (todas as categorias e canais).',
   async execute(message, args, client) {
     if (!message.guild) {
       return message.reply('❌ Use este comando dentro do servidor.');
@@ -55,62 +59,101 @@ export default {
       (a, b) => (a.rawPosition ?? 0) - (b.rawPosition ?? 0)
     );
 
-    let aplicados = 0;
-    let ignorados = 0;
+    let copiados = 0;
+    let removidos = 0;
+    let semAcao = 0;
     const falhas = [];
 
     const statusMsg = await message.reply(
       dryRun
-        ? '🔍 **Simulação** — percorrendo **todas as categorias e canais**; contando onde o Morador tem overwrite…'
-        : '⏳ Copiando **allow/deny idênticos** (Morador → Idade verificada) em **cada categoria e canal** onde o Morador tem linha…'
+        ? '🔍 **Simulação** — verificando **todas as categorias e canais** frente ao padrão do Morador…'
+        : '⏳ Ajustando Idade verificada para **coincidir com o Morador** em cada categoria e canal…'
     );
+
+    let totalMutacoes = 0;
 
     for (const channel of list) {
       if (!channel.permissionOverwrites) {
-        ignorados++;
+        semAcao++;
         continue;
       }
 
       const ovMorador = channel.permissionOverwrites.cache.get(ROLE_MORADOR_ID);
-      if (!ovMorador) {
-        ignorados++;
-        continue;
-      }
-
+      const ovIdade = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
       const label = `${channel.name} (\`${channel.id}\`)`;
 
-      if (dryRun) {
-        aplicados++;
+      if (ovMorador) {
+        if (dryRun) {
+          copiados++;
+          continue;
+        }
+        try {
+          await channel.permissionOverwrites.edit(
+            ROLE_IDADE_VERIFICADA_ID,
+            {
+              allow: ovMorador.allow,
+              deny: ovMorador.deny
+            },
+            REASON
+          );
+          copiados++;
+          totalMutacoes++;
+          if (totalMutacoes % 5 === 0) {
+            await statusMsg
+              .edit(
+                `⏳ **${copiados}** cópias · **${removidos}** linhas do Idade removidas (Morador sem linha)…`
+              )
+              .catch(() => {});
+          }
+        } catch (e) {
+          falhas.push({ label, erro: e?.message || String(e) });
+        }
+        await sleep(DELAY_MS);
         continue;
       }
 
-      try {
-        await channel.permissionOverwrites.edit(
-          ROLE_IDADE_VERIFICADA_ID,
-          {
-            allow: ovMorador.allow,
-            deny: ovMorador.deny
-          },
-          'Clonar overwrites Morador → Idade verificada (!clonar-permissoes-idade)'
-        );
-        aplicados++;
-        if (aplicados % 5 === 0) {
-          await statusMsg
-            .edit(`⏳ Já copiados **${aplicados}** overwrites (categorias + canais)…`)
-            .catch(() => {});
+      if (ovIdade) {
+        if (dryRun) {
+          removidos++;
+          continue;
         }
-      } catch (e) {
-        falhas.push({ label, erro: e?.message || String(e) });
+        try {
+          await channel.permissionOverwrites.delete(ROLE_IDADE_VERIFICADA_ID, REASON);
+          removidos++;
+          totalMutacoes++;
+          if (totalMutacoes % 5 === 0) {
+            await statusMsg
+              .edit(
+                `⏳ **${copiados}** cópias · **${removidos}** linhas do Idade removidas (Morador sem linha)…`
+              )
+              .catch(() => {});
+          }
+        } catch (e) {
+          falhas.push({ label, erro: e?.message || String(e) });
+        }
+        await sleep(DELAY_MS);
+        continue;
       }
 
-      await sleep(DELAY_MS);
+      semAcao++;
     }
 
     const linhas = [
       dryRun
-        ? `🔍 **Simulação** — locais (categoria ou canal) onde o Morador tem overwrite: **${aplicados}**.`
-        : `✅ **Concluído.** Em **${aplicados}** local(is), o Idade verificada ficou com **allow/deny iguais** aos do Morador.`,
-      `ℹ️ **${ignorados}** locais sem linha do Morador — **não alterados** (nada removido do Idade; só herança/@everyone).`
+        ? [
+            '🔍 **Simulação concluída** (padrão Morador → Idade nos canais):',
+            `• Locais onde **copiaria** allow/deny do Morador: **${copiados}**`,
+            `• Locais onde **removeria** overwrite extra do Idade (Morador sem linha): **${removidos}**`,
+            `• Locais já alinhados (nenhum dos dois com linha): **${semAcao}**`
+          ].join('\n')
+        : [
+            '✅ **Concluído.** Idade verificada espelha o **mesmo esquema de overwrites** do Morador:',
+            `• **${copiados}** local(is): allow/deny **idênticos** aos do Morador`,
+            `• **${removidos}** local(is): overwrite do Idade **removido** (como no Morador: só herança)`,
+            `• **${semAcao}** local(is): já iguais (sem linha em ambos)`
+          ].join('\n'),
+      '',
+      '_Permissões **globais** do cargo (tela Cargos do servidor) não são alteradas por este comando._'
     ];
 
     if (falhas.length) {
@@ -120,10 +163,7 @@ export default {
     }
 
     if (dryRun) {
-      linhas.push(
-        '',
-        'Para aplicar de verdade, rode: `!clonar-permissoes-idade` (sem `dry`).'
-      );
+      linhas.push('', 'Para aplicar: `!clonar-permissoes-idade` (sem `dry`).');
     }
 
     await statusMsg.edit(linhas.join('\n')).catch(() => {

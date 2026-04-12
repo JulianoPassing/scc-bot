@@ -18,4 +18,7 @@ export const DELAY_MS = 400;
  * A cada quantos canais a mensagem de progresso é atualizada (1 = todos; 5 = menos edições).
  * No comando: `5` ou `cada5` nos argumentos força atualizar de 5 em 5.
  */
-export const PROGRESS_EDIT_EVERY = 1;
+export const PROGRESS_EDIT_EVERY = 5;
+
+/** Canal de origem do teste `!clonar-canal-teste` — copia todos os overwrites deste canal */
+export const TEST_CANAL_ORIGEM_ID = '1046404065690652745';

@@ -58,7 +58,7 @@ const setupBateBapoModule = function(client) {
     
     // Resposta para "connect" (inclui em qualquer parte)
     if (message.content.toLowerCase().includes('connect')) {
-      await message.reply('Segue connect do servidor, cole no F8.\n```connect 96vylk```');
+      await message.reply('Segue connect do servidor, cole no F8.\n```connect jogar.streetcarclub.com.br```');
     }
     
     // Resposta para "fila" (inclui em qualquer parte)

@@ -1,4 +1,5 @@
 import { PermissionFlagsBits, PermissionsBitField, OverwriteType } from 'discord.js';
+import { Routes } from 'discord-api-types/v10';
 import {
   GUILD_ID,
   ROLE_MORADOR_ID,
@@ -57,6 +58,18 @@ function listarOverwritesCargo(channel) {
     }
   }
   return linhas.length ? linhas.join('\n') : '_Nenhuma linha de **cargo** neste canal (só @everyone/membro)._';
+}
+
+async function getRawRoleOverwriteFromApi(client, channelId, roleId) {
+  const rawChannel = await client.rest.get(Routes.channel(channelId));
+  const roleLine = rawChannel?.permission_overwrites?.find(
+    (ow) => String(ow.id) === String(roleId) && Number(ow.type) === Number(OverwriteType.Role)
+  );
+  if (!roleLine) return null;
+  return {
+    allow: String(roleLine.allow ?? '0'),
+    deny: String(roleLine.deny ?? '0')
+  };
 }
 
 export default {
@@ -119,6 +132,15 @@ export default {
       'Teste REST: Morador → Idade verificada | canal ' + channel.id;
 
     const aplicar = async (allow, deny, modo) => {
+      const targetAllow = allow.bitfield.toString();
+      const targetDeny = deny.bitfield.toString();
+
+      const rawAntesIdade = await getRawRoleOverwriteFromApi(
+        message.client,
+        channel.id,
+        ROLE_IDADE_VERIFICADA_ID
+      ).catch(() => null);
+
       await putRoleChannelOverwrite(
         message.client,
         channel.id,
@@ -130,31 +152,57 @@ export default {
       if (typeof channel.fetch === 'function') {
         channel = (await channel.fetch().catch(() => null)) ?? channel;
       }
+
+      const rawDepoisIdade = await getRawRoleOverwriteFromApi(
+        message.client,
+        channel.id,
+        ROLE_IDADE_VERIFICADA_ID
+      ).catch(() => null);
+      const rawDepoisMorador = await getRawRoleOverwriteFromApi(
+        message.client,
+        channel.id,
+        ROLE_MORADOR_ID
+      ).catch(() => null);
+
       const ver = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
-      const ok =
-        ver && ver.allow.bitfield === allow.bitfield && ver.deny.bitfield === deny.bitfield;
+      const okCache =
+        ver &&
+        ver.allow.bitfield.toString() === targetAllow &&
+        ver.deny.bitfield.toString() === targetDeny;
+      const okApi =
+        rawDepoisIdade &&
+        rawDepoisIdade.allow === targetAllow &&
+        rawDepoisIdade.deny === targetDeny;
       const mF = channel.permissionsFor(moradorRole);
       const iF = channel.permissionsFor(idadeRole);
       const efeitoIgual = mF && iF && mF.bitfield === iF.bitfield;
 
       return message.reply(
         [
-          ok ? '✅ **Permissão gravada via API (REST)**' : '⚠️ REST ok — confira cache',
+          okApi
+            ? '✅ **Permissão gravada via API (REST) e confirmada no canal**'
+            : '⚠️ **REST executado**, mas a leitura da API não confirmou os mesmos bits.',
           '',
           `**Canal:** ${channel.name} · \`${channel.id}\``,
           canalIdArg ? '' : `_Usando ID padrão do config. Se não for este canal, passe o ID após o comando._`,
           `**Modo:** ${modo}`,
           '',
-          `Morador (origem): \`${ROLE_MORADOR_ID}\` · Idade (destino): \`${ROLE_IDADE_VERIFICADA_ID}\``,
-          `Allow: \`${allow.bitfield}\` · Deny: \`${deny.bitfield}\``,
+          `Morador (origem): \`${moradorRole.name}\` · \`${ROLE_MORADOR_ID}\``,
+          `Idade (destino): \`${idadeRole.name}\` · \`${ROLE_IDADE_VERIFICADA_ID}\``,
+          `Alvo gravado: allow \`${targetAllow}\` · deny \`${targetDeny}\``,
+          '',
+          `API antes (Idade): allow \`${rawAntesIdade?.allow ?? 'sem linha'}\` · deny \`${rawAntesIdade?.deny ?? 'sem linha'}\``,
+          `API depois (Idade): allow \`${rawDepoisIdade?.allow ?? 'sem linha'}\` · deny \`${rawDepoisIdade?.deny ?? 'sem linha'}\``,
+          `API depois (Morador): allow \`${rawDepoisMorador?.allow ?? 'sem linha'}\` · deny \`${rawDepoisMorador?.deny ?? 'sem linha'}\``,
+          `Confirmação cache discord.js: ${okCache ? 'ok' : 'diferente'}`,
           '',
           efeitoIgual
             ? '✅ `permissionsFor` Morador = Idade neste canal.'
             : '⚠️ Efeito pode diferir se os **cargos** tiverem permissões gerais diferentes no servidor.',
           '',
-          ok
-            ? 'Abra **Permissões avançadas** do **Idade verificada** neste canal — deve bater com o Morador.'
-            : 'Se a UI continuar em “/”, confira se o **cargo do bot** está acima do Idade.'
+          okApi
+            ? 'Se a UI ainda mostrar diferente, revise se você abriu o mesmo cargo/mesmo canal.'
+            : 'Se a API continuar sem confirmar, envie essa resposta completa para eu ajustar o fluxo.'
         ]
           .filter(Boolean)
           .join('\n')

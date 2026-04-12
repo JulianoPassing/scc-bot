@@ -1,4 +1,4 @@
-import { PermissionFlagsBits, PermissionsBitField } from 'discord.js';
+import { PermissionFlagsBits, PermissionsBitField, OverwriteType } from 'discord.js';
 import { GUILD_ID, TEST_CANAL_ORIGEM_ID, DELAY_MS } from '../config.js';
 
 function sleep(ms) {
@@ -68,13 +68,15 @@ export default {
       for (const [, ow] of origem.permissionOverwrites.cache) {
         const id = ow.id;
         try {
+          const tipo =
+            typeof ow.type === 'number' ? ow.type : OverwriteType.Role;
           await destino.permissionOverwrites.edit(
             id,
             {
               allow: new PermissionsBitField(ow.allow),
               deny: new PermissionsBitField(ow.deny)
             },
-            REASON
+            { type: tipo, reason: REASON }
           );
           aplicadas++;
         } catch (e) {

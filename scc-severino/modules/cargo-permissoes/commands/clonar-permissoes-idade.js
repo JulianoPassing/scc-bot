@@ -1,7 +1,8 @@
 import {
   PermissionFlagsBits,
   PermissionsBitField,
-  ChannelType
+  ChannelType,
+  OverwriteType
 } from 'discord.js';
 import {
   GUILD_ID,
@@ -111,6 +112,9 @@ export default {
       return message.reply(`❌ Cargo Idade verificada não encontrado (\`${ROLE_IDADE_VERIFICADA_ID}\`).`);
     }
 
+    await message.guild.roles.fetch(ROLE_MORADOR_ID).catch(() => {});
+    await message.guild.roles.fetch(ROLE_IDADE_VERIFICADA_ID).catch(() => {});
+
     if (botMember.roles.highest.position <= idadeRole.position) {
       return message.reply(
         '❌ O **cargo do bot** precisa estar **acima** do cargo **Idade verificada** na hierarquia do servidor. ' +
@@ -185,7 +189,7 @@ export default {
           await channel.permissionOverwrites.edit(
             ROLE_IDADE_VERIFICADA_ID,
             { allow, deny },
-            REASON
+            { type: OverwriteType.Role, reason: REASON }
           );
 
           let verificado =
@@ -284,7 +288,7 @@ export default {
         await channel.permissionOverwrites.edit(
           ROLE_IDADE_VERIFICADA_ID,
           { allow: built.allow, deny: built.deny },
-          REASON
+          { type: OverwriteType.Role, reason: REASON }
         );
 
         const check = channel.permissionsFor(idadeRole);

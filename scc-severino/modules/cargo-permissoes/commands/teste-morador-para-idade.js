@@ -1,4 +1,4 @@
-import { PermissionFlagsBits, PermissionsBitField } from 'discord.js';
+import { PermissionFlagsBits, PermissionsBitField, OverwriteType } from 'discord.js';
 import {
   GUILD_ID,
   ROLE_MORADOR_ID,
@@ -87,6 +87,9 @@ export default {
       return message.reply(`❌ Cargo Morador não encontrado (\`${ROLE_MORADOR_ID}\`).`);
     }
 
+    await message.guild.roles.fetch(ROLE_MORADOR_ID).catch(() => {});
+    await message.guild.roles.fetch(ROLE_IDADE_VERIFICADA_ID).catch(() => {});
+
     let channel = await message.guild.channels.fetch(TESTE_MORADOR_IDADE_CANAL_ID).catch(() => null);
     if (!channel?.permissionOverwrites) {
       return message.reply(`❌ Canal \`${TESTE_MORADOR_IDADE_CANAL_ID}\` não encontrado.`);
@@ -147,7 +150,7 @@ export default {
         await channel.permissionOverwrites.edit(
           ROLE_IDADE_VERIFICADA_ID,
           { allow: built.allow, deny: built.deny },
-          REASON
+          { type: OverwriteType.Role, reason: REASON }
         );
         metodo = 'permissão efetiva (Morador sem linha explícita na API)';
         resolved = null;
@@ -164,7 +167,7 @@ export default {
         await channel.permissionOverwrites.edit(
           ROLE_IDADE_VERIFICADA_ID,
           { allow, deny },
-          REASON
+          { type: OverwriteType.Role, reason: REASON }
         );
 
         let ver = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);

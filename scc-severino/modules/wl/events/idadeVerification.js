@@ -93,12 +93,6 @@ async function handleAceitarPadrao(interaction) {
     const member = await interaction.guild.members.fetch(interaction.user.id);
 
     if (member.roles.cache.has(CARGO_IDADE_OK)) {
-      await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
-        termosAceitos: true,
-        idadeVerificada: true,
-        fluxoWl: false,
-        observacao: 'Usuário já possuía o cargo de idade verificada; confirmou novamente os termos.'
-      });
       return interaction.editReply({
         content: '✅ Você já possui o cargo de **idade verificada** neste servidor.'
       });
@@ -149,7 +143,9 @@ async function handleAceitarWl(interaction) {
       });
     }
 
-    if (!member.roles.cache.has(CARGO_IDADE_OK)) {
+    const jaTinhaIdadeVerificada = member.roles.cache.has(CARGO_IDADE_OK);
+
+    if (!jaTinhaIdadeVerificada) {
       await member.roles.add(CARGO_IDADE_OK, 'Verificação etária — confirmação no Discord (WL)');
     }
     try {
@@ -168,21 +164,25 @@ async function handleAceitarWl(interaction) {
     const atualizado = await interaction.guild.members.fetch(interaction.user.id, { force: true });
     const pre = getWlPrecheck(atualizado);
     if (!pre.ok) {
-      await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
-        termosAceitos: true,
-        idadeVerificada: true,
-        fluxoWl: true,
-        observacao:
-          'Termos aceitos e cargo de idade OK; o pré-check da whitelist impediu abrir o formulário (ex.: cooldown ou já aprovado).'
-      });
+      if (!jaTinhaIdadeVerificada) {
+        await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
+          termosAceitos: true,
+          idadeVerificada: true,
+          fluxoWl: true,
+          observacao:
+            'Termos aceitos e cargo de idade OK; o pré-check da whitelist impediu abrir o formulário (ex.: cooldown ou já aprovado).'
+        });
+      }
       return interaction.reply({ content: pre.message, flags: MessageFlags.Ephemeral });
     }
 
-    await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
-      termosAceitos: true,
-      idadeVerificada: true,
-      fluxoWl: true
-    });
+    if (!jaTinhaIdadeVerificada) {
+      await enviarLogVerificacaoIdade(interaction.guild, interaction.user, {
+        termosAceitos: true,
+        idadeVerificada: true,
+        fluxoWl: true
+      });
+    }
 
     return interaction.showModal(buildModalWlEtapa1());
   } catch (err) {

@@ -22,3 +22,6 @@ export const PROGRESS_EDIT_EVERY = 5;
 
 /** Canal de origem do teste `!clonar-canal-teste` — copia todos os overwrites deste canal */
 export const TEST_CANAL_ORIGEM_ID = '1046404065690652745';
+
+/** Canal do teste `!teste-morador-para-idade` — só Morador → Idade verificada neste canal */
+export const TESTE_MORADOR_IDADE_CANAL_ID = '1046404065690652745';

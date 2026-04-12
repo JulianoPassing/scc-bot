@@ -32,9 +32,34 @@ function sortCategoriesFirst(channels) {
 }
 
 /**
- * Com o Morador **sem** linha neste canal, ajusta o Idade para `permissionsFor` ficar igual ao do Morador
- * (resolve o caso em que o Morador herdou da categoria e o cliente mostra ✅/❌ no filho).
+ * Overwrite do Morador que vale para este canal: linha **neste** canal ou, se não houver,
+ * a linha na **categoria pai** (é o que a UI do Discord costuma mostrar como ✅/❌ no filho).
  */
+function resolveMoradorOverwrite(channel, guild) {
+  const direct = channel.permissionOverwrites?.cache?.get(ROLE_MORADOR_ID);
+  if (direct) return { ov: direct, origem: 'canal' };
+
+  const parentId = channel.parentId;
+  if (!parentId) return null;
+  const parent = channel.parent ?? guild.channels.cache.get(parentId);
+  if (!parent?.permissionOverwrites) return null;
+  const naCategoria = parent.permissionOverwrites.cache.get(ROLE_MORADOR_ID);
+  if (!naCategoria) return null;
+  return { ov: naCategoria, origem: 'categoria' };
+}
+
+function allowDenyFromOverwrite(ov) {
+  const allowBf =
+    ov.allow instanceof PermissionsBitField
+      ? ov.allow
+      : new PermissionsBitField(ov.allow?.bitfield ?? ov.allow ?? 0n);
+  const denyBf =
+    ov.deny instanceof PermissionsBitField
+      ? ov.deny
+      : new PermissionsBitField(ov.deny?.bitfield ?? ov.deny ?? 0n);
+  return { allow: allowBf, deny: denyBf };
+}
+
 function buildOverwriteToMatchEffective(mTarget, iBaseline) {
   const allow = new PermissionsBitField();
   const deny = new PermissionsBitField();
@@ -51,7 +76,7 @@ function buildOverwriteToMatchEffective(mTarget, iBaseline) {
 export default {
   name: 'clonar-permissoes-idade',
   description:
-    'Iguala permissões do Idade verificada às do Morador em todo o servidor (explícitas + efeito efetivo por canal).',
+    'Iguala permissões do Idade verificada às do Morador em todo o servidor (explícitas + categoria + efeito).',
   async execute(message, args, client) {
     if (!message.guild) {
       return message.reply('❌ Use este comando dentro do servidor.');
@@ -79,6 +104,13 @@ export default {
       return message.reply(`❌ Cargo Idade verificada não encontrado (\`${ROLE_IDADE_VERIFICADA_ID}\`).`);
     }
 
+    if (botMember.roles.highest.position <= idadeRole.position) {
+      return message.reply(
+        '❌ O **cargo do bot** precisa estar **acima** do cargo **Idade verificada** na hierarquia do servidor. ' +
+          'Sem isso o Discord bloqueia aplicar overwrites nesse cargo. Suba o cargo do bot nas configurações do servidor.'
+      );
+    }
+
     const dryRun = args[0]?.toLowerCase() === 'dry' || args[0]?.toLowerCase() === 'simular';
 
     await message.guild.channels.fetch().catch(() => {});
@@ -86,6 +118,7 @@ export default {
     const list = sortCategoriesFirst([...message.guild.channels.cache.values()]);
 
     let copiadosExplicito = 0;
+    let copiadosDaCategoria = 0;
     let sincronizadosEfeito = 0;
     let removidosRedundantes = 0;
     let semAcao = 0;
@@ -93,8 +126,8 @@ export default {
 
     const statusMsg = await message.reply(
       dryRun
-        ? '🔍 **Simulação** — categorias primeiro, depois canais; cópia explícita + alinhamento por permissão efetiva…'
-        : '⏳ Igualando Idade ao Morador (**overwrite idêntico** ou **mesmo efeito** ver/ler/escrever)…'
+        ? '🔍 **Simulação** — categorias primeiro; Morador no canal **ou** na categoria pai; depois alinhamento por efeito…'
+        : '⏳ Copiando e verificando overwrites (canal + herança da categoria)…'
     );
 
     let totalMutacoes = 0;
@@ -104,7 +137,7 @@ export default {
       if (totalMutacoes % 5 === 0) {
         await statusMsg
           .edit(
-            `⏳ **${copiadosExplicito}** cópias explícitas · **${sincronizadosEfeito}** ajustes por efeito · **${removidosRedundantes}** limpezas…`
+            `⏳ Direto **${copiadosExplicito}** · via categoria **${copiadosDaCategoria}** · efeito **${sincronizadosEfeito}** · limpezas **${removidosRedundantes}**…`
           )
           .catch(() => {});
       }
@@ -117,26 +150,48 @@ export default {
       }
 
       const label = `${channel.name} (\`${channel.id}\`)`;
+      const resolved = resolveMoradorOverwrite(channel, message.guild);
 
-      // discord.js 14: não há permissionOverwrites.fetch(); cache vem do guild.channels.fetch() acima.
-      const ovMorador = channel.permissionOverwrites.cache.get(ROLE_MORADOR_ID);
+      if (resolved) {
+        const { ov, origem } = resolved;
+        const { allow, deny } = allowDenyFromOverwrite(ov);
 
-      if (ovMorador) {
         if (dryRun) {
-          copiadosExplicito++;
+          if (origem === 'canal') copiadosExplicito++;
+          else copiadosDaCategoria++;
           continue;
         }
+
         try {
           await channel.permissionOverwrites.edit(
             ROLE_IDADE_VERIFICADA_ID,
-            {
-              allow: new PermissionsBitField(ovMorador.allow),
-              deny: new PermissionsBitField(ovMorador.deny)
-            },
+            { allow, deny },
             REASON
           );
-          copiadosExplicito++;
-          await tickProgress();
+
+          let verificado =
+            channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
+          let aOk = verificado && verificado.allow.bitfield === allow.bitfield;
+          let dOk = verificado && verificado.deny.bitfield === deny.bitfield;
+          if (!verificado || !aOk || !dOk) {
+            if (typeof channel.fetch === 'function') {
+              await channel.fetch().catch(() => {});
+            }
+            verificado = channel.permissionOverwrites.cache.get(ROLE_IDADE_VERIFICADA_ID);
+            aOk = verificado && verificado.allow.bitfield === allow.bitfield;
+            dOk = verificado && verificado.deny.bitfield === deny.bitfield;
+          }
+          if (!verificado || !aOk || !dOk) {
+            falhas.push({
+              label,
+              erro:
+                'Não foi possível confirmar allow/deny após o edit (suba o **cargo do bot** acima do **Idade verificada** ou confira **Gerenciar canais**).'
+            });
+          } else {
+            if (origem === 'canal') copiadosExplicito++;
+            else copiadosDaCategoria++;
+            await tickProgress();
+          }
         } catch (e) {
           falhas.push({ label, erro: e?.message || String(e) });
         }
@@ -201,9 +256,9 @@ export default {
           continue;
         }
 
-        const { allow, deny } = buildOverwriteToMatchEffective(m, i0);
+        const built = buildOverwriteToMatchEffective(m, i0);
 
-        if (allow.bitfield === 0n && deny.bitfield === 0n) {
+        if (built.allow.bitfield === 0n && built.deny.bitfield === 0n) {
           sincronizadosEfeito++;
           await tickProgress();
           await sleep(DELAY_MS);
@@ -212,7 +267,7 @@ export default {
 
         await channel.permissionOverwrites.edit(
           ROLE_IDADE_VERIFICADA_ID,
-          { allow, deny },
+          { allow: built.allow, deny: built.deny },
           REASON
         );
 
@@ -221,7 +276,7 @@ export default {
           falhas.push({
             label,
             erro:
-              'Após aplicar overwrite, efeito ainda difere do Morador (conflito de hierarquia ou permissões globais dos cargos).'
+              'Após aplicar overwrite, efeito ainda difere do Morador (permissões globais dos cargos ou hierarquia).'
           });
         }
 
@@ -234,30 +289,36 @@ export default {
       await sleep(DELAY_MS);
     }
 
+    const totalCopias = copiadosExplicito + copiadosDaCategoria;
+
     const linhas = [
       dryRun
         ? [
             '🔍 **Simulação**',
-            `• **${copiadosExplicito}** locais: copiaria overwrite explícito do Morador (✅/❌/herdar iguais).`,
-            `• **${sincronizadosEfeito}** locais: alinharia **permissão efetiva** (Morador sem linha neste canal — ex.: herdou da categoria).`,
-            `• **${removidosRedundantes}** locais: removeria linha extra do Idade (efeito já batia).`,
+            `• **${copiadosExplicito}** locais: Morador tem linha **neste** canal → copiar allow/deny no Idade aqui.`,
+            `• **${copiadosDaCategoria}** locais: Morador só na **categoria** → copiar o **mesmo** allow/deny no Idade **neste canal** (igual à UI que você vê).`,
+            `• **${sincronizadosEfeito}** locais: alinhamento por **permissão efetiva** (sem linha do Morador em canal nem categoria).`,
+            `• **${removidosRedundantes}** locais: remover linha extra do Idade.`,
             `• **${semAcao}** locais: sem mudança.`
           ].join('\n')
         : [
             '✅ **Concluído**',
-            `• **${copiadosExplicito}** — overwrite do Idade = **mesmo allow/deny** do Morador naquele canal/categoria.`,
-            `• **${sincronizadosEfeito}** — permissões **efetivas** do Idade ajustadas para bater com o Morador (ver, gerenciar, enviar mensagens, voz, etc.).`,
-            `• **${removidosRedundantes}** — linha do Idade removida por ser redundante.`,
-            `• **${semAcao}** — já estavam iguais.`
+            `• **${copiadosExplicito}** — cópia da linha do Morador **no próprio** canal/categoria.`,
+            `• **${copiadosDaCategoria}** — cópia da linha do Morador da **categoria** aplicada no **canal filho** (Idade com mesmos ✅/❌).`,
+            `• **${sincronizadosEfeito}** — ajuste por efeito (ver/ler/escrever, etc.).`,
+            `• **${removidosRedundantes}** — linhas redundantes do Idade removidas.`,
+            `• **${semAcao}** — já ok.`,
+            '',
+            `**Total de locais com overwrite do Idade definido/replicado:** ${totalCopias + sincronizadosEfeito} (cópias ${totalCopias} + efeito ${sincronizadosEfeito}).`
           ].join('\n'),
       '',
-      '_**Permissões gerais do cargo** (edição do cargo em si, fora dos canais) não são alteradas — se os cargos forem diferentes no servidor, alguns canais podem continuar divergindo._'
+      '_**Permissões gerais do cargo** (fora dos canais) não são alteradas._'
     ];
 
     if (falhas.length) {
       linhas.push(`❌ Avisos/falhas (**${falhas.length}**):`);
-      falhas.slice(0, 12).forEach((f) => linhas.push(`• ${f.label}: ${f.erro}`));
-      if (falhas.length > 12) linhas.push(`… e mais ${falhas.length - 12}.`);
+      falhas.slice(0, 15).forEach((f) => linhas.push(`• ${f.label}: ${f.erro}`));
+      if (falhas.length > 15) linhas.push(`… e mais ${falhas.length - 15}.`);
     }
 
     if (dryRun) {

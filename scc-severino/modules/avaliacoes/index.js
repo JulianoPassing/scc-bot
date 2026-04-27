@@ -1054,6 +1054,7 @@ const setupAvaliacaoModule = function(client) {
             const rate = parseInt(rateStr, 10);
             const tipoAtendimento = interaction.fields.getTextInputValue('tipoAtendimentoInput').toLowerCase();
             const justificativa = interaction.fields.getTextInputValue('justificativaInput');
+            await interaction.deferReply({ flags: MessageFlags.Ephemeral });
             if (!votes.has(staffId)) { votes.set(staffId, { total: 0, count: 0, panelMessageId: null, panelChannelId: null }); }
             const ratingData = votes.get(staffId);
             ratingData.total += rate;
@@ -1077,7 +1078,7 @@ const setupAvaliacaoModule = function(client) {
                     await panelToUpdate.edit({ embeds: [updatedEmbed] });
                 } catch (error) { }
             }
-            await interaction.reply({ content: '✅ Sua avaliação foi enviada com sucesso!', flags: MessageFlags.Ephemeral });
+            await interaction.editReply({ content: '✅ Sua avaliação foi enviada com sucesso!' });
         }
     });
 };

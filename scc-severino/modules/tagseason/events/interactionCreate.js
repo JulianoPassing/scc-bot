@@ -10,7 +10,7 @@ export const execute = async function(interaction) {
       // Verificar se é o botão de resgatar tag da temporada
       if (customId === 'resgatar_tag_season') {
         const member = await guild.members.fetch(user.id);
-        const roleId = '1406086032989880350';
+        const roleId = '1514769357190860872';
 
         // Verificar se o usuário já tem o cargo
         if (member.roles.cache.has(roleId)) {

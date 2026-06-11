@@ -15,7 +15,7 @@ Este módulo permite que os usuários resgatem tags comemorativas da temporada a
 - **Canal de uso**: `1406085682639671468`
 
 ### Cargos
-- **Cargo da tag**: `1406086032989880350`
+- **Cargo da tag**: `1514769357190860872`
 
 ## Comandos
 

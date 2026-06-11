@@ -26,7 +26,7 @@ export const execute = async function(interaction) {
           await member.roles.add(roleId);
           
           await interaction.reply({ 
-            content: '🎉 Parabéns! Você resgatou com sucesso sua Tag da Temporada 04! 🏆', 
+            content: '🎉 Parabéns! Você resgatou com sucesso sua Tag da Temporada 05! Obrigado por fazer parte do SCC! 🏆', 
             flags: MessageFlags.Ephemeral 
           });
         } catch (error) {

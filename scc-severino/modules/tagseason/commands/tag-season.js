@@ -2,7 +2,7 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'disc
 
 export const data = {
   name: 'tag-season',
-  description: 'Cria o painel para resgatar a tag da temporada 04.'
+  description: 'Cria o painel para resgatar a tag da Temporada 05.'
 };
 
 export async function execute(message, args, client) {
@@ -14,9 +14,13 @@ export async function execute(message, args, client) {
 
   const embed = new EmbedBuilder()
     .setColor('#FFD700')
-    .setTitle('🏆 Tag da Temporada 04 🏆')
-    .setDescription('🏆 A Temporada 04 do SCC foi inesquecível! 🏆\n\nPara celebrar suas conquistas, resgate agora sua Tag comemorativa. Basta clicar no botão resgatar e ela será sua!')
-    .setFooter({ text: 'StreetCarClub • Temporada 04 | ™ Street CarClub © All rights reserved', iconURL: null })
+    .setTitle('🏆 Tag da Temporada 05 🏆')
+    .setDescription(
+      '🏆 A Temporada 05 do SCC foi inesquecível! 🏆\n\n' +
+      'Agradecemos a **todos os players** que fizeram parte desta jornada e ajudaram a construir essa história.\n\n' +
+      'Para celebrar suas conquistas, resgate agora sua Tag comemorativa. Basta clicar no botão **Resgatar** e ela será sua!'
+    )
+    .setFooter({ text: 'StreetCarClub • Temporada 05 | ™ Street CarClub © All rights reserved', iconURL: null })
     .setTimestamp();
 
   const row = new ActionRowBuilder().addComponents(

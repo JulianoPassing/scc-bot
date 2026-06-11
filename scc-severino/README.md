@@ -70,7 +70,7 @@ Comandos processados pelo handler global em `index.js` (`client.commands`) ou po
 | `!liberar @usuário [nome]` | liberacao | Libera usuário (nickname + cargos) | Canal de liberação |
 | `!teste-liberacao` | liberacao | Testa o módulo de liberação | — |
 | `!painel-autoatendimento` | auto-atendimento | Cria painel de auto-atendimento | Servidor/canal configurados |
-| `!tag-season` | tagseason | Painel tag temporada 04 | Canal específico |
+| `!tag-season` | tagseason | Painel tag Temporada 05 | Canal específico |
 | `!sistema-ticket` | sistema-ticket | Painel do sistema de tickets web | — |
 | `!setup-armageddon` | setup-discord | Cria estrutura completa do servidor Armageddon | Usuário autorizado + permissões do bot |
 | `!clonar-permissoes-idade` | cargo-permissoes | Espelha overwrites Morador → Idade verificada | Admin / servidor configurado |

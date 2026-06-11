@@ -20,7 +20,7 @@ Este módulo permite que os usuários resgatem tags comemorativas da temporada a
 ## Comandos
 
 ### `!tag-season`
-Cria o painel para resgatar a tag da temporada 04.
+Cria o painel para resgatar a tag da Temporada 05.
 
 **Uso**: `!tag-season`
 **Canal**: Apenas no canal configurado
@@ -50,11 +50,11 @@ tagseason/
 ## Mensagens
 
 ### Painel Principal
-🏆 A Temporada 04 do SCC foi inesquecível! 🏆
+🏆 A Temporada 05 do SCC foi inesquecível! 🏆
 
-Para celebrar suas conquistas, resgate agora sua Tag comemorativa. Basta clicar no botão resgatar e ela será sua!
+Agradecemos a todos os players que fizeram parte desta jornada. Para celebrar suas conquistas, resgate agora sua Tag comemorativa. Basta clicar no botão Resgatar e ela será sua!
 
 ### Respostas
-- **Sucesso**: 🎉 Parabéns! Você resgatou com sucesso sua Tag da Temporada 04! 🏆
+- **Sucesso**: 🎉 Parabéns! Você resgatou com sucesso sua Tag da Temporada 05! Obrigado por fazer parte do SCC! 🏆
 - **Já possui**: ❌ Você já possui esta tag da temporada!
 - **Erro**: ❌ Ocorreu um erro ao adicionar a tag. Entre em contato com a equipe.

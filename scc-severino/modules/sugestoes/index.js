@@ -2,7 +2,7 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'disc
 import fs from 'fs';
 import path from 'path';
 
-const SUGGESTION_CHANNEL_ID = '1395117926402756669';
+const SUGGESTION_CHANNEL_ID = '1515838215968526446';
 const VOTES_CHANNEL_ID = '1395118049115246825';
 const VOTES_FILE = './modules/sugestoes/votes.json';
 

@@ -47,7 +47,7 @@ O módulo agora salva automaticamente todos os votos em um arquivo JSON para per
 - ✅ **Recuperação de dados**: Sistema recupera votos mesmo se mensagens foram deletadas
 
 ## Canais Configurados
-- **Canal de Sugestões**: `1395117926402756669`
+- **Canal de Sugestões**: `1515838215968526446`
 - **Canal de Logs**: `1395118049115246825`
 
 ## Comandos Disponíveis

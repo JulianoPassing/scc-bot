@@ -41,7 +41,7 @@ export default {
           '• `!zerar-avaliacoes` - Requer cargo CM ou superior\n' +
           '• Avaliar - Disponível para membros (exceto staff)', inline: false },
         { name: '📋 Hierarquia de Cargos', value: 
-          'CEO → CM → MOD → CRD → SEG → SUP → AJD\n' +
+          'CEO → DEV → CM → MOD → CRD → SEG → MKT → SUP → AJD\n' +
           'Os painéis são criados nesta ordem de hierarquia.', inline: false }
       )
       .setFooter({ text: 'Street Car Club • Sistema de Avaliações de Staff' })

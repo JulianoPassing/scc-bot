@@ -22,16 +22,17 @@ const PANEL_CHANNEL_ID = '1394724080187473950s';
 const AUDIT_CHANNEL_ID = '1394724041671053332';
 const FORBIDDEN_ROLE_ID = '1046404063673192546';
 const ROLE_HIERARCHY = [
-    { name: 'CEO', id: '1385675559325008105' },
     { name: 'CEO', id: '1046404063689977986' },
     { name: 'DEV', id: '1046404063689977984' },
-    { name: 'CM',  id: '1046404063522197521'  },
-    { name: 'MOD',  id: '1226907937117569128'  },
-    { name: 'CRD',  id: '1226903187055972484'  },
+    { name: 'CM', id: '1046404063522197521' },
+    { name: 'MOD', id: '1226907937117569128' },
+    { name: 'CRD', id: '1226903187055972484' },
     { name: 'SEG', id: '1277638402019430501' },
+    { name: 'MKT', id: '1291040312692572201' },
     { name: 'SUP', id: '1046404063673192542' },
     { name: 'AJD', id: '1204393192284229692' }
 ];
+const HIERARCHY_LABEL = 'CEO → DEV → CM → MOD → CRD → SEG → MKT → SUP → AJD';
 const FILE_PATH = path.join(__dirname, 'avaliacoes.json');
 const COOLDOWN = 6 * 60 * 60 * 1000;
 const userCooldown = new Map();
@@ -92,6 +93,14 @@ function getMemberHierarchyLevel(member) {
         }
     }
     return ROLE_HIERARCHY.length;
+}
+
+function compareStaffByHierarchy(a, b) {
+    const levelDiff = getMemberHierarchyLevel(a) - getMemberHierarchyLevel(b);
+    if (levelDiff !== 0) return levelDiff;
+    const nameA = a.displayName || a.user.username || '';
+    const nameB = b.displayName || b.user.username || '';
+    return nameA.localeCompare(nameB, 'pt-BR');
 }
 
 function generateAvaliacoesRelatorio(votes, guild) {
@@ -626,7 +635,7 @@ function generateAvaliacoesRelatorio(votes, guild) {
         <div class="staff-list">
             <h2><i class="fas fa-chart-bar"></i> Avaliações por Staff</h2>
             <div class="hierarchy-info">
-                <strong>Hierarquia de Cargos:</strong> CEO → CM → MOD → CRD → SEG → SUP → AJD
+                <strong>Hierarquia de Cargos:</strong> ${HIERARCHY_LABEL}
             </div>
             ${staffWithVotes.length === 0 ? `
                 <div class="no-data">
@@ -737,7 +746,7 @@ const setupAvaliacaoModule = function(client) {
             await message.guild.members.fetch();
             let staffMembers = message.guild.members.cache.filter(member => member.roles.cache.has(STAFF_ROLE_ID) && !member.user.bot);
             let staffArray = Array.from(staffMembers.values());
-            staffArray.sort((a, b) => getMemberHierarchyLevel(a) - getMemberHierarchyLevel(b));
+            staffArray.sort(compareStaffByHierarchy);
             let created = 0;
             for (const staffMember of staffArray) {
                 const staffId = staffMember.id;
@@ -782,7 +791,7 @@ const setupAvaliacaoModule = function(client) {
             }
             await msg.edit('🔄 Ordenando a equipe por hierarquia...');
             let staffArray = Array.from(staffMembers.values());
-            staffArray.sort((a, b) => getMemberHierarchyLevel(a) - getMemberHierarchyLevel(b));
+            staffArray.sort(compareStaffByHierarchy);
             let created = 0;
             await msg.edit(`🔄 Criando ${staffArray.length} painéis na ordem correta...`);
             for (const staffMember of staffArray) {

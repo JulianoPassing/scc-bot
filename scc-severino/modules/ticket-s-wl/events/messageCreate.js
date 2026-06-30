@@ -4,6 +4,7 @@ import {
   isAgendado,
   parseAgendado,
   nomeDoCanal,
+  prefixoDoCanal,
   slotsDisponiveis,
   buildDiaEmbed,
   buildDiaRows,
@@ -11,6 +12,10 @@ import {
   categoriaAgendadosTemEspaco,
   updateConfigFromMessage,
   getConfigStatus,
+  getRoleAgendamentoId,
+  getRoleReagendarId,
+  lembreteCanal,
+  lembreteDM,
 } from '../utils/agendamento.js';
 
 const CONFIG_CHANNEL_ID = config.agendamento?.configChannelId || '1483578658391326962';
@@ -24,6 +29,12 @@ function extractCreatorIdFromTopic(topic) {
 function isTicketCreator(channel, userId) {
   const creatorId = extractCreatorIdFromTopic(channel.topic);
   return creatorId === userId;
+}
+
+function podeAgendar(member, channel, userId) {
+  const roleAgendamentoId = getRoleAgendamentoId();
+  if (roleAgendamentoId && member?.roles?.cache?.has(roleAgendamentoId)) return true;
+  return isTicketCreator(channel, userId);
 }
 
 async function sendTemp(channel, content, ms = 15_000) {
@@ -53,18 +64,20 @@ export const execute = async function (message) {
           `**Agendamento status**\n` +
           `⏱ Uptime: ${uptime}s\n` +
           `📋 Config: ${configStatus}\n` +
-          `⏳ Agendamentos pendentes: ${pending}`,
+          `⏳ Agendamentos pendentes: ${pending}\n` +
+          `🔁 Lembretes no canal (20 min): ${lembreteCanal.size}\n` +
+          `📩 DMs enviadas (10 min): ${lembreteDM.size}`,
         );
       } catch {}
       return;
     }
-    // Poste um JSON com agenda e/ou mensagens para atualizar vagas e textos
+
     const updated = updateConfigFromMessage(message.content);
     if (updated) {
       try {
         await message.reply('✅ Config de agendamento atualizada!');
       } catch {}
-    } else {
+    } else if (message.content.trim().startsWith('{') || message.content.includes('```')) {
       try {
         await message.reply('❌ JSON inválido ou fora do formato esperado. Use `agenda` e/ou `mensagens`.');
       } catch {}
@@ -81,7 +94,7 @@ export const execute = async function (message) {
 
   // --- AGENDAMENTO ---
   if (cmd === 'agendamento') {
-    if (!isTicketCreator(channel, message.author.id)) {
+    if (!podeAgendar(member, channel, message.author.id)) {
       try {
         await message.delete();
       } catch {}
@@ -111,10 +124,11 @@ export const execute = async function (message) {
       return;
     }
 
+    const prefixo = prefixoDoCanal(channelName);
     const nome = nomeDoCanal(channelName);
     pendente.set(message.author.id, {
       channelId: channel.id,
-      prefixo: 'seg',
+      prefixo,
       nome,
       dia: null,
       hora: null,
@@ -129,8 +143,8 @@ export const execute = async function (message) {
 
   // --- REAGENDAR ---
   else if (cmd === 'reagendar') {
-    const hasStaffRole = member?.roles?.cache?.has(config.staffRoleId);
-    if (!hasStaffRole) {
+    const roleReagendarId = getRoleReagendarId();
+    if (!roleReagendarId || !member?.roles?.cache?.has(roleReagendarId)) {
       try {
         await message.delete();
       } catch {}
@@ -141,7 +155,7 @@ export const execute = async function (message) {
       try {
         await message.delete();
       } catch {}
-      await sendTemp(channel, `${member} ❌ Este ticket não possui agendamento ativo.`, 15_000);
+      await sendTemp(channel, `${member} ❌ Este canal não possui agendamento ativo.`, 15_000);
       return;
     }
 
@@ -155,14 +169,14 @@ export const execute = async function (message) {
       return;
     }
 
-    const novoNome = `seg-${parsed.nome}`;
+    const novoNome = `${parsed.prefixo}-${parsed.nome}`;
     const categoryPadraoId = config.categoryId || '1378778140528087191';
 
     try {
       await channel.edit({ name: novoNome, parent: categoryPadraoId });
       await sendTemp(
         channel,
-        `${member} ✅ Agendamento removido. Canal renomeado para \`#${novoNome}\`.\nO usuário pode usar \`agendamento\` para remarcar.`,
+        `${member} ✅ Agendamento removido. Canal renomeado para \`#${novoNome}\`.\nO candidato pode usar \`agendamento\` para remarcar.`,
         20_000,
       );
     } catch {

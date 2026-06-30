@@ -150,7 +150,8 @@ export const execute = async function(interaction) {
 
       if (interaction.isStringSelectMenu() && customId === 'ag_hora') {
         const hora = interaction.values[0];
-        const novoNome = `seg-${state.dia}-${fmtTime(hora)}-${state.nome}`;
+        const prefixo = state.prefixo || 'seg';
+        const novoNome = `${prefixo}-${state.dia}-${fmtTime(hora)}-${state.nome}`;
         state.hora = hora;
         pendente.set(uid, state);
         return interaction.update({
@@ -310,7 +311,7 @@ export const execute = async function(interaction) {
         .addFields(
           { name: 'Status', value: '⏳ Aguardando atendimento', inline: true },
           { name: 'Tempo de Resposta', value: 'Até 72h úteis', inline: true },
-          { name: '📅 Agendar Atendimento', value: 'Digite `agendamento` neste canal para agendar um horário de atendimento.', inline: false }
+          { name: '📅 Agendar Entrevista', value: 'Digite `agendamento` neste canal para agendar um horário de entrevista.', inline: false }
         )
         .setFooter({ text: 'Sistema de Segurança • Confidencialidade garantida' })
         .setTimestamp();

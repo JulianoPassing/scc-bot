@@ -1,12 +1,10 @@
 /**
- * Módulo de Agendamento de Atendimento - Tickets de Segurança
- * ----------------------------------------------------------
- * Integrado ao ticket-s-wl. Permite ao criador do ticket agendar
- * o atendimento. Apenas tickets de segurança (seg-*).
+ * Bot de Agendamento de Entrevistas - StreetCarClub
+ * Integrado ao ticket-s-wl (tickets de segurança seg-*)
  *
- * Comandos (via texto no canal do ticket):
- *   agendamento  → abre o fluxo de agendamento (criador do ticket)
- *   reagendar    → (staff) reverte o canal para seg-nome
+ * Comandos (texto no canal do ticket):
+ *   agendamento  → (criador do ticket ou roleAgendamentoId) abre o fluxo
+ *   reagendar    → (roleReagendarId ou staff) reverte para prefixo-nome
  *
  * Formato dos canais:
  *   Aguardando:  seg-nomedele
@@ -22,34 +20,64 @@ import {
 } from 'discord.js';
 import config from '../config.json' with { type: 'json' };
 
-// ============================================================
-// CONSTANTES
-// ============================================================
-const DIAS = { seg: 0, ter: 1, qua: 2, sex: 4 };
-const DIAS_PT = { seg: 'Segunda-feira', ter: 'Terça-feira', qua: 'Quarta-feira', sex: 'Sexta-feira' };
-const DIA_PARA_JS = { seg: 1, ter: 2, qua: 3, sex: 5 };
+const CONFIG_CHANNEL_ID = config.agendamento?.configChannelId || '1483578658391326962';
+const CATEGORIA_AGENDADOS_ID = config.agendamento?.categoryAgendadosId || '1378778111856087130';
+const ROLE_AGENDAMENTO_ID = config.agendamento?.roleAgendamentoId || null;
+const ROLE_REAGENDAR_ID = config.agendamento?.roleReagendarId || config.staffRoleId;
 const MAX_CHANNELS_PER_CATEGORY = 50;
 
-// Regex: seg-ter-10h00-username
-const RE_AGENDADO = /^seg-(seg|ter|qua|sex)-(\d{2}h\d{2})-(.+)$/;
+const INFO_DIAS = {
+  seg: { num: 0, js: 1, pt: 'Segunda-feira' },
+  ter: { num: 1, js: 2, pt: 'Terça-feira' },
+  qua: { num: 2, js: 3, pt: 'Quarta-feira' },
+  qui: { num: 3, js: 4, pt: 'Quinta-feira' },
+  sex: { num: 4, js: 5, pt: 'Sexta-feira' },
+  sab: { num: 5, js: 6, pt: 'Sábado' },
+  dom: { num: 6, js: 0, pt: 'Domingo' },
+};
 
-// Estado de agendamento em andamento: Map<userId, state>
+// prefixo-dia-HHhMM-nome  ex: seg-ter-10h00-joao
+const RE_AGENDADO = /^([a-z0-9]+)-([a-z]{3})-(\d{2}h\d{2})-(.+)$/;
+
 export const pendente = new Map();
-
-// Lock de confirmação para evitar race condition
 const confirmandoSlot = new Set();
-
-// IDs dos canais que já receberam lembretes
 export const lembreteCanal = new Set();
 export const lembreteDM = new Set();
-
-// channelId → userId para DM no lembrete
 export const agendadoPorUsuario = new Map();
 
-// Config dinâmica do canal — null = usar config.json + defaults
 let cachedConfig = null;
 
-/** Extrai JSON do conteúdo (aceita JSON puro ou bloco ```json ... ```) */
+const DEFAULT_AGENDA = {
+  seg: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 4, '19:00': 4, '20:00': 4, '21:00': 4 },
+  ter: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 2, '19:00': 4, '20:00': 4, '21:00': 4 },
+  qua: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 2, '19:00': 2, '20:00': 2 },
+  sex: { '17:00': 2, '18:00': 2, '19:00': 4, '20:00': 4, '21:00': 4 },
+};
+
+const DEFAULT_MENSAGENS = {
+  lembrete:
+    'No horário agendado é só entrar na call https://discord.com/channels/1046404063287332936/1378780085091565678.\n\n' +
+    'Assim que a gente tiver disponível a gente te puxa. Como o atendimento é a cada hora, então vc pode ser atendido nesse intervalo. Exemplo: Se seu horário é as 19 horas, vc será atendido entre 19:00 até 19:59.\n\n' +
+    'Pode ser q n seja atendido exatamente no horário agendado pois podemos estar em outro atendimento.\n\n' +
+    'É só aguardar na call que iremos atender assim que puder.',
+  dm_lembrete:
+    'Faltam 10 minutos para a sua entrevista! No horário agendado é só entrar na call https://discord.com/channels/1046404063287332936/1378780085091565678 e aguardar que iremos te atender assim que puder.',
+  ja_agendado:
+    '❌ Este canal já possui um agendamento ativo.\nEntre em contato com um Staff nesse mesmo chat solicitando o Reagendamento.',
+  sem_vagas:
+    '❌ Não há dias ou horários disponíveis para esta semana. Tente agendar na sexta-feira ou fim de semana. Para ser atendido na próxima semana.',
+  categoria_cheia:
+    '❌ A categoria de tickets agendados está cheia (máx. 50 canais). Tente novamente mais tarde.',
+};
+
+function getConfig() {
+  const agenda = cachedConfig?.agenda
+    ?? (config.agendamento?.agenda ? { ...DEFAULT_AGENDA, ...config.agendamento.agenda } : DEFAULT_AGENDA);
+  const mensagens = cachedConfig?.mensagens
+    ?? (config.agendamento?.mensagens ? { ...DEFAULT_MENSAGENS, ...config.agendamento.mensagens } : DEFAULT_MENSAGENS);
+  return { agenda, mensagens };
+}
+
 function extractJSON(content) {
   try {
     return JSON.parse(content);
@@ -63,15 +91,14 @@ function extractJSON(content) {
   return null;
 }
 
-/** Carrega config do canal CONFIG_CHANNEL_ID. Usa a mensagem mais recente com JSON válido. */
 export async function loadConfig(client) {
-  const channelId = config.agendamento?.configChannelId || '1483578658391326962';
   try {
-    const ch = await client.channels.fetch(channelId);
+    const ch = await client.channels.fetch(CONFIG_CHANNEL_ID);
     if (!ch?.isTextBased()) {
       console.warn('[agendamento] Canal de config inválido — usando padrões.');
       return;
     }
+
     const msgs = await ch.messages.fetch({ limit: 50 });
     for (const [, msg] of msgs) {
       const parsed = extractJSON(msg.content);
@@ -85,6 +112,7 @@ export async function loadConfig(client) {
       console.log(`[agendamento] Config carregada do canal (msg ${msg.id}).`);
       return;
     }
+
     console.warn('[agendamento] Nenhuma config válida no canal — usando padrões.');
     cachedConfig = null;
   } catch (e) {
@@ -93,7 +121,6 @@ export async function loadConfig(client) {
   }
 }
 
-/** Atualiza config a partir de uma mensagem (usado quando alguém posta no canal de config) */
 export function updateConfigFromMessage(content) {
   const parsed = extractJSON(content);
   if (!parsed || typeof parsed !== 'object') return false;
@@ -111,38 +138,21 @@ export function getCachedConfig() {
 }
 
 export function getConfigStatus() {
-  return cachedConfig ? 'custom (canal)' : 'padrão (config.json)';
-}
-
-// Config padrão (merge com config.json)
-const DEFAULT_AGENDA = {
-  seg: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 4, '19:00': 4, '20:00': 4, '21:00': 4 },
-  ter: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 2, '19:00': 4, '20:00': 4, '21:00': 4 },
-  qua: { '10:00': 2, '12:00': 2, '13:00': 2, '17:00': 2, '18:00': 2, '19:00': 2, '20:00': 2 },
-  sex: { '17:00': 2, '18:00': 2, '19:00': 4, '20:00': 4, '21:00': 4 },
-};
-
-const DEFAULT_MENSAGENS = {
-  lembrete: 'No horário agendado é só entrar na call e aguardar. Assim que a equipe tiver disponível irá te atender.',
-  dm_lembrete: 'Faltam 10 minutos para o seu atendimento agendado! Entre na call no horário e aguarde.',
-  ja_agendado: '❌ Este ticket já possui um agendamento ativo. Entre em contato com a Staff solicitando Reagendamento.',
-  sem_vagas: '❌ Não há dias ou horários disponíveis para esta semana. Tente agendar na sexta-feira ou fim de semana.',
-  categoria_cheia: '❌ A categoria de tickets agendados está cheia (máx. 50 canais). Tente novamente mais tarde.',
-};
-
-function getAgenda() {
-  if (cachedConfig?.agenda) return cachedConfig.agenda;
-  return config.agendamento?.agenda ? { ...DEFAULT_AGENDA, ...config.agendamento.agenda } : DEFAULT_AGENDA;
+  return cachedConfig ? '✅ custom (canal)' : '⚠️ padrão (config.json)';
 }
 
 export function getMensagens() {
-  if (cachedConfig?.mensagens) return cachedConfig.mensagens;
-  return config.agendamento?.mensagens ? { ...DEFAULT_MENSAGENS, ...config.agendamento.mensagens } : DEFAULT_MENSAGENS;
+  return getConfig().mensagens;
 }
 
-// ============================================================
-// HELPERS
-// ============================================================
+export function getRoleAgendamentoId() {
+  return ROLE_AGENDAMENTO_ID;
+}
+
+export function getRoleReagendarId() {
+  return ROLE_REAGENDAR_ID;
+}
+
 export const fmtTime = (t) => t.replace(':', 'h');
 
 export function isAgendado(name) {
@@ -151,27 +161,37 @@ export function isAgendado(name) {
 
 export function parseAgendado(name) {
   const m = name.match(RE_AGENDADO);
-  return m ? { dia: m[1], hora: m[2], nome: m[3] } : null;
+  return m ? { prefixo: m[1], dia: m[2], hora: m[3], nome: m[4] } : null;
 }
 
 export function nomeDoCanal(name) {
   if (isAgendado(name)) return parseAgendado(name).nome;
-  return name.replace(/^seg-/, '');
+  const parts = name.split('-');
+  return parts.length > 1 ? parts.slice(1).join('-') : name.replace(/^seg-/, '');
+}
+
+export function prefixoDoCanal(name) {
+  if (isAgendado(name)) return parseAgendado(name).prefixo;
+  return name.split('-')[0];
+}
+
+function getDiasAtivos() {
+  const agenda = getConfig().agenda || {};
+  return Object.keys(agenda).filter((dia) => INFO_DIAS[dia]);
 }
 
 function isProximaSemana() {
   const jsDay = new Date().getDay();
   const hojeNum = jsDay === 0 ? 6 : jsDay - 1;
-  return !Object.values(DIAS).some((n) => n > hojeNum);
+  return !getDiasAtivos().some((dia) => INFO_DIAS[dia].num > hojeNum);
 }
 
 function diasDisponiveis() {
   const jsDay = new Date().getDay();
   const hojeNum = jsDay === 0 ? 6 : jsDay - 1;
-  const diasAtual = Object.entries(DIAS)
-    .filter(([, n]) => n > hojeNum)
-    .map(([d]) => d);
-  return diasAtual.length ? diasAtual : Object.keys(DIAS);
+  const diasAtivos = getDiasAtivos();
+  const diasAtual = diasAtivos.filter((dia) => INFO_DIAS[dia].num > hojeNum);
+  return diasAtual.length ? diasAtual : diasAtivos;
 }
 
 export function slotsOcupados(guild) {
@@ -179,7 +199,7 @@ export function slotsOcupados(guild) {
   for (const [, ch] of guild.channels.cache) {
     const m = ch.name.match(RE_AGENDADO);
     if (m) {
-      const key = `${m[1]}_${m[2]}`;
+      const key = `${m[2]}_${m[3]}`;
       ocupados[key] = (ocupados[key] || 0) + 1;
     }
   }
@@ -189,7 +209,7 @@ export function slotsOcupados(guild) {
 export function slotsDisponiveis(guild) {
   const ocupados = slotsOcupados(guild);
   const result = {};
-  const agenda = getAgenda();
+  const agenda = getConfig().agenda;
 
   for (const dia of diasDisponiveis()) {
     if (!agenda[dia]) continue;
@@ -205,24 +225,28 @@ export function slotsDisponiveis(guild) {
 }
 
 export function labelDia(dia) {
-  if (!isProximaSemana()) return DIAS_PT[dia];
-  const targetJSDay = DIA_PARA_JS[dia];
+  const info = INFO_DIAS[dia];
+  if (!info) return dia;
+  if (!isProximaSemana()) return info.pt;
+
+  const targetJSDay = info.js;
   const now = new Date();
   let diff = targetJSDay - now.getDay();
   if (diff <= 0) diff += 7;
+
   const date = new Date(now);
   date.setDate(now.getDate() + diff);
   const dd = String(date.getDate()).padStart(2, '0');
   const mo = String(date.getMonth() + 1).padStart(2, '0');
-  return `${DIAS_PT[dia]} (${dd}/${mo})`;
+  return `${info.pt} (${dd}/${mo})`;
 }
 
 function getAppointmentDate(dia, horaFmt) {
-  const targetJSDay = DIA_PARA_JS[dia];
-  if (targetJSDay === undefined) return null;
+  const info = INFO_DIAS[dia];
+  if (!info) return null;
   const [hh, mm] = horaFmt.split('h').map(Number);
   const now = new Date();
-  let diff = targetJSDay - now.getDay();
+  let diff = info.js - now.getDay();
   if (diff < 0) diff += 7;
   const target = new Date(now);
   target.setDate(now.getDate() + diff);
@@ -230,24 +254,20 @@ function getAppointmentDate(dia, horaFmt) {
   return target > now ? target : null;
 }
 
-/** Verifica se a categoria de agendados tem espaço */
 export function categoriaAgendadosTemEspaco(guild) {
-  const catId = config.agendamento?.categoryAgendadosId || '1378778111856087130';
-  const category = guild.channels.cache.get(catId);
+  const category = guild.channels.cache.get(CATEGORIA_AGENDADOS_ID);
   if (!category || category.type !== 4) return false;
-  const children = guild.channels.cache.filter((ch) => ch.parentId === catId);
+  const children = guild.channels.cache.filter((ch) => ch.parentId === CATEGORIA_AGENDADOS_ID);
   return children.size < MAX_CHANNELS_PER_CATEGORY;
 }
 
-// ============================================================
-// LEMBRETES
-// ============================================================
 export async function checkReminders(client) {
   const mensagens = getMensagens();
 
   for (const [, guild] of client.guilds.cache) {
     for (const [, channel] of guild.channels.cache) {
       if (!channel.isTextBased()) continue;
+
       const parsed = parseAgendado(channel.name);
       if (!parsed) continue;
 
@@ -258,12 +278,12 @@ export async function checkReminders(client) {
       const horaExibida = parsed.hora.replace('h', ':');
       const ddR = String(appointmentDate.getDate()).padStart(2, '0');
       const moR = String(appointmentDate.getMonth() + 1).padStart(2, '0');
-      const diaLabel = `${DIAS_PT[parsed.dia]} (${ddR}/${moR})`;
+      const diaLabel = `${INFO_DIAS[parsed.dia]?.pt || parsed.dia} (${ddR}/${moR})`;
 
       if (!lembreteCanal.has(channel.id) && secUntil >= 1170 && secUntil <= 1230) {
         lembreteCanal.add(channel.id);
         const embed = new EmbedBuilder()
-          .setTitle('⏰ Lembrete de Atendimento')
+          .setTitle('⏰ Lembrete')
           .setDescription(mensagens.lembrete)
           .setColor(0xfee75c)
           .addFields(
@@ -275,26 +295,29 @@ export async function checkReminders(client) {
 
       if (!lembreteDM.has(channel.id) && secUntil >= 570 && secUntil <= 630) {
         lembreteDM.add(channel.id);
+
         let userId = agendadoPorUsuario.get(channel.id);
+
         if (!userId) {
+          const topicMatch = channel.topic?.match(/creatorId\s*=\s*(\d{17,19})/i);
+          if (topicMatch) userId = topicMatch[1];
+        }
+
+        if (!userId && ROLE_AGENDAMENTO_ID) {
           try {
             const msgs = await channel.messages.fetch({ limit: 100 });
-            const topicMatch = channel.topic?.match(/creatorId\s*=\s*(\d{17,19})/i);
-            if (topicMatch) userId = topicMatch[1];
-            if (!userId) {
-              const found = msgs.find((m) => !m.author.bot && m.content?.includes('abriu um ticket'));
-              if (found) {
-                const match = found.content.match(/<@!?([0-9]+)>/);
-                if (match) userId = match[1];
-              }
-            }
+            const found = msgs.find(
+              (m) => !m.author.bot && m.member?.roles.cache.has(ROLE_AGENDAMENTO_ID),
+            );
+            if (found) userId = found.author.id;
           } catch {}
         }
+
         if (userId) {
           try {
             const user = await client.users.fetch(userId);
             const dmEmbed = new EmbedBuilder()
-              .setTitle('⏰ Lembrete de Atendimento')
+              .setTitle('⏰ Lembrete de Entrevista')
               .setDescription(mensagens.dm_lembrete)
               .setColor(0xfee75c)
               .addFields(
@@ -309,17 +332,13 @@ export async function checkReminders(client) {
   }
 }
 
-// ============================================================
-// BUILDERS
-// ============================================================
 export function buildDiaEmbed(slots) {
-  const mensagens = getMensagens();
   return new EmbedBuilder()
-    .setTitle('📅 Agendar Atendimento do Ticket')
+    .setTitle('📅 Agendar Entrevista')
     .setDescription(
       isProximaSemana()
-        ? 'Não há mais vagas esta semana. Selecione o **dia** da **próxima semana**:'
-        : 'Selecione o **dia** desejado para seu atendimento:',
+        ? 'Não há mais vagas esta semana. Selecione o **dia** desejado da **próxima semana**:'
+        : 'Selecione o **dia** desejado para sua entrevista:',
     )
     .setColor(0x5865f2)
     .addFields(
@@ -335,7 +354,7 @@ export function buildHorariosEmbed(dia, horarios) {
   const horariosFormatados = horarios.map((h, i) => `${i + 1}. \`${h}\``).join('\n');
   return new EmbedBuilder()
     .setTitle(`🕐 Horários — ${labelDia(dia)}`)
-    .setDescription(`Selecione o horário:\n\n${horariosFormatados}`)
+    .setDescription(`Selecione o horário desejado:\n\n${horariosFormatados}`)
     .setColor(0x5865f2);
 }
 
@@ -348,7 +367,7 @@ export function buildConfirmarEmbed(dia, hora, novoNome) {
       { name: 'Horário', value: hora, inline: true },
       { name: 'Novo canal', value: `\`#${novoNome}\``, inline: false },
     )
-    .setFooter({ text: 'Confirme ou cancele abaixo.' });
+    .setFooter({ text: 'Confirme ou cancele o agendamento abaixo.' });
 }
 
 export function buildDiaRows(slots) {
@@ -394,15 +413,12 @@ export function buildConfirmarRows() {
   ];
 }
 
-// ============================================================
-// CONFIRMAR AGENDAMENTO (lógica central)
-// ============================================================
 export async function executarConfirmacao(interaction, state) {
   const slotKey = `${state.dia}_${fmtTime(state.hora)}`;
 
   if (confirmandoSlot.has(slotKey)) {
     return interaction.update({
-      content: '⏳ Outro ticket está confirmando este horário. Aguarde e tente novamente com `agendamento`.',
+      content: '⏳ Outro candidato está confirmando este horário agora. Aguarde um momento e tente novamente com `agendamento`.',
       embeds: [],
       components: [],
     });
@@ -417,17 +433,11 @@ export async function executarConfirmacao(interaction, state) {
     if (!horarios.includes(state.hora)) {
       pendente.delete(interaction.user.id);
       return interaction.editReply({
-        content: '❌ Este horário não está mais disponível. Use `agendamento` para reiniciar.',
+        content: '❌ Este horário não está mais disponível. Reinicie com `agendamento`.',
         embeds: [],
         components: [],
       });
     }
-
-    const nome = nomeDoCanal(interaction.channel.name);
-    const novoNome = `seg-${state.dia}-${fmtTime(state.hora)}-${nome}`;
-
-    const categoryAgendadosId = config.agendamento?.categoryAgendadosId || '1378778111856087130';
-    const categoryPadraoId = config.categoryId || '1378778140528087191';
 
     if (!categoriaAgendadosTemEspaco(interaction.guild)) {
       pendente.delete(interaction.user.id);
@@ -438,16 +448,19 @@ export async function executarConfirmacao(interaction, state) {
       });
     }
 
+    const prefixo = state.prefixo || prefixoDoCanal(interaction.channel.name);
+    const novoNome = `${prefixo}-${state.dia}-${fmtTime(state.hora)}-${state.nome}`;
+
     await interaction.channel.edit({
       name: novoNome,
-      parent: categoryAgendadosId,
+      parent: CATEGORIA_AGENDADOS_ID,
     });
 
     pendente.delete(interaction.user.id);
     agendadoPorUsuario.set(interaction.channel.id, interaction.user.id);
 
     const embed = new EmbedBuilder()
-      .setTitle('✅ Atendimento Agendado!')
+      .setTitle('✅ Entrevista Agendada!')
       .setColor(0x57f287)
       .addFields(
         { name: 'Dia', value: labelDia(state.dia), inline: true },
@@ -456,7 +469,7 @@ export async function executarConfirmacao(interaction, state) {
       );
 
     return interaction.editReply({ content: '', embeds: [embed], components: [] });
-  } catch (err) {
+  } catch {
     pendente.delete(interaction.user.id);
     return interaction.editReply({
       content: '❌ O bot não tem permissão para renomear/mover este canal.',

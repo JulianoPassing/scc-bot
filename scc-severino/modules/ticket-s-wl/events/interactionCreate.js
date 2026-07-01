@@ -138,7 +138,11 @@ export const execute = async function(interaction) {
         const slots = slotsDisponiveis(guild);
         const horarios = slots[dia];
         if (!horarios?.length) {
-          return interaction.update({ content: '❌ Não há mais horários para este dia. Escolha outro.', embeds: [], components: [] });
+          return interaction.update({
+            content: '❌ Não há mais horários disponíveis para este dia.\nRetorne para a seleção de dia e escolha outro.',
+            embeds: [],
+            components: [],
+          });
         }
         state.dia = dia;
         pendente.set(uid, state);
@@ -178,7 +182,11 @@ export const execute = async function(interaction) {
         const slots = slotsDisponiveis(guild);
         const horarios = slots[state.dia];
         if (!horarios?.length) {
-          return interaction.update({ content: '❌ Não há mais horários para este dia.', embeds: [], components: [] });
+          return interaction.update({
+            content: '❌ Não há mais horários disponíveis para este dia.',
+            embeds: [],
+            components: [],
+          });
         }
         state.hora = null;
         pendente.set(uid, state);

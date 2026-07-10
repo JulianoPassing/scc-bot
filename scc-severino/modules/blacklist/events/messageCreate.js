@@ -2,6 +2,9 @@ import { config } from '../config.js';
 
 export const name = 'messageCreate';
 export const execute = async function(message) {
+  // Ignorar bots (evita loop na própria resposta)
+  if (message.author.bot) return;
+
   // Verificar se a mensagem é do servidor e canal configurados
   if (message.guild?.id !== config.ilegalGuildId) return;
   if (message.channel.id !== config.monitorChannelId) return;
@@ -17,14 +20,16 @@ export const execute = async function(message) {
       return;
     }
     
-    // Verificar cada usuário mencionado
-    for (const [userId, user] of message.mentions.users) {
-      // Verificar se o usuário tem o cargo de blacklist no servidor principal
+    // Verificar cada usuário mencionado — responde só uma vez
+    for (const [userId] of message.mentions.users) {
       const member = await mainGuild.members.fetch(userId).catch(() => null);
       
       if (member && member.roles.cache.has(config.blacklistRoleId)) {
-        // Responder à mensagem que o usuário está em blacklist
-        await message.reply(config.blacklistMessage);
+        await message.reply({
+          content: config.blacklistMessage,
+          allowedMentions: { repliedUser: false }
+        });
+        break;
       }
     }
   } catch (error) {

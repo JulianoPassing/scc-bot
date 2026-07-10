@@ -5,6 +5,9 @@ export const config = {
   
   // ID do canal onde o bot deve monitorar menções
   monitorChannelId: '1515000143957721098', // Canal que verifica msgs enviadas pelo player
+
+  // Canal do servidor principal onde "." dispara verificação do autor
+  dotCheckChannelId: '1046404065690652745',
   
   // ID do cargo de blacklist
   blacklistRoleId: '1412754856690581515', // Cargo de blacklist

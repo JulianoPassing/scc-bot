@@ -2,7 +2,10 @@ import { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } from 'disc
 import fs from 'fs';
 import path from 'path';
 
-const SUGGESTION_CHANNEL_ID = '1515838215968526446';
+const SUGGESTION_CHANNEL_IDS = new Set([
+  '1515838215968526446',
+  '1528545254490378420',
+]);
 const VOTES_CHANNEL_ID = '1395118049115246825';
 const VOTES_FILE = './modules/sugestoes/votes.json';
 
@@ -46,35 +49,37 @@ const loadVotes = () => {
 // Função para atualizar botões com votos carregados
 const updateButtonsWithVotes = async (client) => {
   try {
-    const suggestionChannel = client.channels.cache.get(SUGGESTION_CHANNEL_ID);
-    if (!suggestionChannel) return;
+    for (const channelId of SUGGESTION_CHANNEL_IDS) {
+      const suggestionChannel = client.channels.cache.get(channelId);
+      if (!suggestionChannel) continue;
 
-    const messages = await suggestionChannel.messages.fetch({ limit: 100 });
-    
-    for (const [messageId, message] of messages) {
-      if (votos.has(messageId) && message.components.length > 0) {
-        const voto = votos.get(messageId);
-        const totalVotos = voto.yes.size + voto.no.size;
-        const porcentagemSim = totalVotos > 0 ? Math.round((voto.yes.size / totalVotos) * 100) : 0;
-        const porcentagemNao = totalVotos > 0 ? Math.round((voto.no.size / totalVotos) * 100) : 0;
-        
-        const row = new ActionRowBuilder().addComponents(
-          new ButtonBuilder()
-            .setCustomId('vote_yes')
-            .setLabel(`👍 (${voto.yes.size}) - ${porcentagemSim}%`)
-            .setStyle(ButtonStyle.Success)
-            .setEmoji('✅'),
-          new ButtonBuilder()
-            .setCustomId('vote_no')
-            .setLabel(`👎 (${voto.no.size}) - ${porcentagemNao}%`)
-            .setStyle(ButtonStyle.Danger)
-            .setEmoji('❌')
-        );
-        
-        try {
-          await message.edit({ components: [row] });
-        } catch (error) {
-          console.error(`Erro ao atualizar botões da mensagem ${messageId}:`, error);
+      const messages = await suggestionChannel.messages.fetch({ limit: 100 });
+
+      for (const [messageId, message] of messages) {
+        if (votos.has(messageId) && message.components.length > 0) {
+          const voto = votos.get(messageId);
+          const totalVotos = voto.yes.size + voto.no.size;
+          const porcentagemSim = totalVotos > 0 ? Math.round((voto.yes.size / totalVotos) * 100) : 0;
+          const porcentagemNao = totalVotos > 0 ? Math.round((voto.no.size / totalVotos) * 100) : 0;
+
+          const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+              .setCustomId('vote_yes')
+              .setLabel(`👍 (${voto.yes.size}) - ${porcentagemSim}%`)
+              .setStyle(ButtonStyle.Success)
+              .setEmoji('✅'),
+            new ButtonBuilder()
+              .setCustomId('vote_no')
+              .setLabel(`👎 (${voto.no.size}) - ${porcentagemNao}%`)
+              .setStyle(ButtonStyle.Danger)
+              .setEmoji('❌')
+          );
+
+          try {
+            await message.edit({ components: [row] });
+          } catch (error) {
+            console.error(`Erro ao atualizar botões da mensagem ${messageId}:`, error);
+          }
         }
       }
     }
@@ -94,7 +99,7 @@ const setupSugestoesModule = function(client) {
 
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
-    if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
+    if (!SUGGESTION_CHANNEL_IDS.has(message.channel.id)) return;
     try {
       const conteudo = message.content;
       await message.delete();
@@ -148,8 +153,8 @@ ${conteudo}
     const { customId, message, user } = interaction;
     if (!['vote_yes', 'vote_no'].includes(customId)) return;
     
-    // Verificar se a mensagem é do canal de sugestões normais
-    if (message.channel.id !== SUGGESTION_CHANNEL_ID) return;
+    // Verificar se a mensagem é de um dos canais de sugestões normais
+    if (!SUGGESTION_CHANNEL_IDS.has(message.channel.id)) return;
     
     try {
       if (!votos.has(message.id)) {

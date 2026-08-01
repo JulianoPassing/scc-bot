@@ -89,6 +89,8 @@ const updateButtonsWithVotes = async (client) => {
 };
 
 const setupSugestoesModule = function(client) {
+  console.log(`💡 Módulo sugestoes ativo nos canais: ${[...SUGGESTION_CHANNEL_IDS].join(', ')}`);
+
   // Carregar votos existentes ao inicializar
   loadVotes();
   
@@ -99,10 +101,14 @@ const setupSugestoesModule = function(client) {
 
   client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
-    if (!SUGGESTION_CHANNEL_IDS.has(message.channel.id)) return;
+
+    const channelId = String(message.channelId ?? message.channel?.id ?? '');
+    if (!SUGGESTION_CHANNEL_IDS.has(channelId)) return;
+
+    console.log(`💡 Nova sugestão no canal ${channelId} por ${message.author.tag}: ${message.content}`);
+
     try {
       const conteudo = message.content;
-      await message.delete();
       const embed = new EmbedBuilder()
         .setColor('#EAF207')
         .setAuthor({
@@ -136,17 +142,32 @@ ${conteudo}
           .setStyle(ButtonStyle.Danger)
           .setEmoji('❌')
       );
+
+      // Envia a sugestão primeiro; se o delete falhar, o sistema ainda funciona
       const sentMessage = await message.channel.send({ embeds: [embed], components: [row] });
+
+      try {
+        await message.delete();
+      } catch (deleteError) {
+        console.error(`❌ Sem permissão para apagar mensagem no canal ${channelId}:`, deleteError.message);
+      }
+
       votos.set(sentMessage.id, { yes: new Set(), no: new Set() });
-      saveVotes(); // Salvar após criar nova sugestão
+      saveVotes();
+      console.log(`✅ Sugestão criada: ${sentMessage.id} no canal ${channelId}`);
+
       try {
         await sentMessage.startThread({
           name: `💬 Debate: ${conteudo.substring(0, 50)}${conteudo.length > 50 ? '...' : ''}`,
           autoArchiveDuration: 60,
           reason: 'Tópico de debate criado automaticamente para a sugestão'
         });
-      } catch (threadError) {}
-    } catch (error) {}
+      } catch (threadError) {
+        console.error(`❌ Erro ao criar thread da sugestão ${sentMessage.id}:`, threadError.message);
+      }
+    } catch (error) {
+      console.error(`❌ Erro ao processar sugestão no canal ${channelId}:`, error);
+    }
   });
   client.on('interactionCreate', async (interaction) => {
     if (!interaction.isButton()) return;
@@ -154,7 +175,8 @@ ${conteudo}
     if (!['vote_yes', 'vote_no'].includes(customId)) return;
     
     // Verificar se a mensagem é de um dos canais de sugestões normais
-    if (!SUGGESTION_CHANNEL_IDS.has(message.channel.id)) return;
+    const channelId = String(message.channelId ?? message.channel?.id ?? '');
+    if (!SUGGESTION_CHANNEL_IDS.has(channelId)) return;
     
     try {
       if (!votos.has(message.id)) {

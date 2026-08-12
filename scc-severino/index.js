@@ -43,8 +43,8 @@ const client = new Client({
   messageSweepInterval: 0 // Não limpar cache
 });
 
-// Aumentar limite de listeners para evitar warning de memory leak
-client.setMaxListeners(25);
+// Aumentar limite de listeners (muitos módulos usam messageCreate/interactionCreate)
+client.setMaxListeners(50);
 
 client.commands = new Collection();
 

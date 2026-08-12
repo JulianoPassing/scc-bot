@@ -15,6 +15,7 @@ export const parseLoginEmbed = (embed) => {
   if (/saiu\s+do\s+servidor/i.test(text)) return null;
 
   let discordId = null;
+  let serverId = null;
   let coordenadas = null;
   let playerName = null;
 
@@ -50,6 +51,22 @@ export const parseLoginEmbed = (embed) => {
 
   if (!discordId) return null;
 
+  const serverField = findField(['id do servidor', 'server id', 'servidor']);
+  if (serverField?.value) {
+    const cleaned = String(serverField.value).replace(/[*`]/g, '').trim();
+    if (cleaned && !/^not\s*available$/i.test(cleaned)) serverId = cleaned;
+  }
+
+  if (!serverId) {
+    const serverMatch = text.match(
+      /ID\s+do\s+Servidor\s*[:：]\s*\*{0,2}\s*`?([^`*\n]+)`?/i
+    );
+    if (serverMatch?.[1]) {
+      const cleaned = serverMatch[1].trim();
+      if (cleaned && !/^not\s*available$/i.test(cleaned)) serverId = cleaned;
+    }
+  }
+
   const coordsField = findField(['coordenadas', 'coordinates', 'coords']);
   if (coordsField?.value) {
     coordenadas = String(coordsField.value).replace(/[*`]/g, '').trim();
@@ -63,5 +80,5 @@ export const parseLoginEmbed = (embed) => {
   const playerMatch = text.match(/\[Player\]\s*(.+?)\s+apareceu/i);
   if (playerMatch) playerName = playerMatch[1].trim();
 
-  return { discordId, playerName, coordenadas };
+  return { discordId, serverId, playerName, coordenadas };
 };

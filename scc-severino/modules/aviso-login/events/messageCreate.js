@@ -42,14 +42,12 @@ export async function execute(message) {
           ...(parsed.playerName
             ? [{ name: 'Player', value: parsed.playerName, inline: true }]
             : []),
+          ...(parsed.serverId
+            ? [{ name: 'ID do Servidor', value: `\`${parsed.serverId}\``, inline: true }]
+            : []),
           ...(parsed.coordenadas
             ? [{ name: 'Coordenadas', value: `\`${parsed.coordenadas}\``, inline: true }]
-            : []),
-          {
-            name: 'Log',
-            value: `[Ir para a mensagem](${message.url})`,
-            inline: false,
-          }
+            : [])
         )
         .setFooter({ text: 'SCC • Aviso de Login' })
         .setTimestamp();

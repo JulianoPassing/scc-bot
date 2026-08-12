@@ -8,4 +8,8 @@ export const config = {
   loginGuildId: '1313305951004135434',
   loginChannelId: '1459464917416415316',
   loginWebhookId: '1459464952472539243',
+
+  // TEMPORÁRIO: loga no console + envia resumo no canal de comandos
+  // para cada mensagem lida no canal de login. Desligar depois do teste.
+  debug: true,
 };

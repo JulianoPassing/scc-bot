@@ -1,6 +1,6 @@
 /**
- * Extrai Discord ID, nome do player e coordenadas do embed de login (fm-logs).
- * Aceita fields formais e texto na description (com markdown ** e `).
+ * Extrai Discord ID, nome do player e coordenadas do embed de LOGIN (apareceu).
+ * Ignora logs de saída (saiu do servidor).
  */
 export const parseLoginEmbed = (embed) => {
   if (!embed) return null;
@@ -9,6 +9,10 @@ export const parseLoginEmbed = (embed) => {
   const title = embed.title || '';
   const fields = embed.fields || [];
   const text = `${title}\n${description}`;
+
+  // Só avisa no login ("apareceu"). Ignora logout ("saiu").
+  if (!/apareceu/i.test(text)) return null;
+  if (/saiu\s+do\s+servidor/i.test(text)) return null;
 
   let discordId = null;
   let coordenadas = null;
@@ -31,7 +35,6 @@ export const parseLoginEmbed = (embed) => {
   }
 
   if (!discordId) {
-    // Ex: **Discord ID:** `531132498692800530`
     const fromText = text.match(
       /Discord\s*ID\s*[:：]\s*\*{0,2}\s*`?(\d{15,20}|Not Available)`?/i
     );
@@ -41,7 +44,6 @@ export const parseLoginEmbed = (embed) => {
   }
 
   if (!discordId) {
-    // Fallback: qualquer snowflake após a label Discord ID
     const fallback = text.match(/Discord\s*ID[\s\S]{0,20}?(\d{15,20})/i);
     if (fallback?.[1]) discordId = fallback[1];
   }

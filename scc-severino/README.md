@@ -2,7 +2,7 @@
 
 Bot unificado do SCC. Módulos carregados em `index.js`:
 
-`altnomes` · `apagar-msg-bot` · `setup-discord` · `auto-atendimento` · `avaliacoes` · `batebapo` · `cargo-permissoes` · `blacklist` · `boost` · `drogas` · `instagram` · `liberacao` · `limparchat` · `notificacao-mencoes` · `regras-acoes` · `sistema-ticket` · `streams` · `sugestoes` · `sugestoes-ilegal` · `sugestoes-pm` · `sugestoes-prs` · `tagseason` · `ticket` · `ticket-s-wl` · `wl`
+`altnomes` · `apagar-msg-bot` · `setup-discord` · `auto-atendimento` · `avaliacoes` · `batebapo` · `cargo-permissoes` · `blacklist` · `boost` · `drogas` · `instagram` · `liberacao` · `limparchat` · `notificacao-mencoes` · `regras-acoes` · `relatorio-telagens` · `sistema-ticket` · `streams` · `sugestoes` · `sugestoes-ilegal` · `sugestoes-pm` · `sugestoes-prs` · `tagseason` · `ticket` · `ticket-s-wl` · `wl`
 
 ## Como usar
 1. Instale as dependências:
@@ -80,6 +80,7 @@ Comandos processados pelo handler global em `index.js` (`client.commands`) ou po
 | `!regras-acoes` | regras-acoes | Publica embed de regras de ações no canal #acoes | Admin |
 | `!relatorio-streamers` | streams | Relatório HTML de criadores de conteúdo | Admin + canal autorizado |
 | `!remover-streamer` + IDs | streams | Remove cargo Criador de Conteúdo por Discord ID | Admin + canal autorizado |
+| `!relatorio-telagens` `[7d\|30]` | relatorio-telagens | Relatório HTML de telagens do canal | Staff + canal autorizado |
 
 ### Comandos sem prefixo `!` (por contexto)
 
@@ -259,6 +260,12 @@ Automáticos por mensagem no canal configurado (sem `!` registrado).
 - `!relatorio-streamers` — relatório HTML (canal autorizado, admin)
 - `!remover-streamer` + linhas com Discord ID — remove cargo Criador de Conteúdo
 
+### 🛡️ Relatório de Telagens (`modules/relatorio-telagens`)
+
+- `!relatorio-telagens` — lê o canal de telagens e gera relatório HTML (ranking por staff)
+- `!relatorio-telagens 7d` / `!relatorio-telagens 30` — restringe aos últimos N dias
+- Servidor `1046404063287332936` · canal de telagens `1278430574754791435` · comando no canal `1413517925192695850` · cargo staff
+
 ### 📋 Regras de Ações (`modules/regras-acoes`)
 
 - `!regras-acoes` — publica embed com link das regras no canal #acoes (admin)
@@ -364,6 +371,7 @@ Canal fixo: `1046404065690652745` (membros com cargo staff são ignorados). **N�
 - **Liberação:** `1317096106844225586`
 - **AltNomes:** `1413150739290918962`
 - **Bate-Bapo:** `1046404065690652745`
+- **Telagens:** `1278430574754791435` (leitura) · comando `!relatorio-telagens` em `1413517925192695850`
 
 ---
 

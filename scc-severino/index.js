@@ -106,6 +106,7 @@ const modules = [
   'limparchat',
   'notificacao-mencoes',
   'regras-acoes',
+  'relatorio-telagens',
   'sistema-ticket',
   'streams',
   'sugestoes',

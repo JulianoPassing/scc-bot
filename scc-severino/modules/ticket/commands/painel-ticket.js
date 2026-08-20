@@ -21,7 +21,7 @@ export async function execute(message, args, client) {
       '🏠 **Casas**\nQuestões relacionadas a casas e propriedades\n' +
       '🔍 **Revisão**\nSolicitar revisão de advertências e banimentos\n'
     )
-    .setImage('https://i.imgur.com/kHvmXj6.png')
+    .setImage('https://i.imgur.com/aawPk38.png')
     .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade | ™ Street CarClub © All rights reserved', iconURL: null })
     .setTimestamp();
 

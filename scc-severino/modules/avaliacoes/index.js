@@ -14,6 +14,7 @@ import fs from 'fs';
 import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { withHtmlTimeout, notifyHtmlFailure } from '../_shared/htmlTheme.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const STAFF_ROLE_ID = '1046404063673192546';
@@ -151,7 +152,7 @@ function generateAvaliacoesRelatorio(votes, guild) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatório de Avaliações - Street Car Club</title>
-    <link rel="icon" href="https://i.imgur.com/YULctuK.png" type="image/png">
+    <link rel="icon" href="https://i.imgur.com/WEh0qkj.png" type="image/png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
     
     <style>
@@ -159,9 +160,9 @@ function generateAvaliacoesRelatorio(votes, guild) {
         @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
         :root {
-            --primary-color: #EAF207;
-            --secondary-color: #F4F740;
-            --accent-color: #C6C403;
+            --primary-color: #ff0000;
+            --secondary-color: #ff3333;
+            --accent-color: #cc0000;
             --background-color: #0D0D0D;
             --card-background: linear-gradient(135deg, #0D0D0D 0%, #0D0D0D 100%);
             --text-color: #FFFFFF;
@@ -169,8 +170,8 @@ function generateAvaliacoesRelatorio(votes, guild) {
             --border-color: #30363D;
             --hover-color: #21262D;
             --shadow-color: rgba(0, 0, 0, 0.4);
-            --gradient-primary: linear-gradient(135deg, #EAF207 0%, #F4F740 100%);
-            --gradient-secondary: linear-gradient(135deg, #C6C403 0%, #EAF207 100%);
+            --gradient-primary: linear-gradient(135deg, #ff0000 0%, #ff3333 100%);
+            --gradient-secondary: linear-gradient(135deg, #cc0000 0%, #ff0000 100%);
         }
 
         * {
@@ -209,8 +210,8 @@ function generateAvaliacoesRelatorio(votes, guild) {
         }
 
         @keyframes glow {
-            0%, 100% { box-shadow: 0 0 20px rgba(234, 242, 7, 0.3); }
-            50% { box-shadow: 0 0 30px rgba(234, 242, 7, 0.6); }
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 0, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(255, 0, 0, 0.6); }
         }
 
         @keyframes float {
@@ -240,12 +241,7 @@ function generateAvaliacoesRelatorio(votes, guild) {
 
         body {
             font-family: 'Poppins', sans-serif;
-            background: var(--background-color);
-            background-image: url('https://i.imgur.com/Wf7bGAO.png');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            background-repeat: no-repeat;
+            background-color: var(--background-color);
             color: var(--text-color);
             line-height: 1.7;
             overflow-x: hidden;
@@ -291,10 +287,10 @@ function generateAvaliacoesRelatorio(votes, guild) {
             right: 30px;
             width: 10px;
             height: 10px;
-            background: radial-gradient(circle, #ff4d4d 60%, #ffb347 100%);
+            background: radial-gradient(circle, #ff0000 60%, #ff3333 100%);
             border-radius: 50%;
             transform: translateY(-50%);
-            box-shadow: 0 0 8px 2px #ff4d4d99;
+            box-shadow: 0 0 8px 2px rgba(255, 0, 0, 0.6);
             z-index: 3;
         }
 
@@ -434,9 +430,9 @@ function generateAvaliacoesRelatorio(votes, guild) {
             text-align: center;
             margin-bottom: 30px;
             padding: 20px;
-            background: rgba(234, 242, 7, 0.1);
+            background: rgba(255, 0, 0, 0.1);
             border-radius: 15px;
-            border: 1px solid rgba(234, 242, 7, 0.3);
+            border: 1px solid rgba(255, 0, 0, 0.3);
             color: var(--text-secondary);
             font-size: 1.1em;
         }
@@ -527,14 +523,14 @@ function generateAvaliacoesRelatorio(votes, guild) {
         .stat-item {
             text-align: center;
             padding: 15px;
-            background: rgba(234, 242, 7, 0.1);
+            background: rgba(255, 0, 0, 0.1);
             border-radius: 10px;
-            border: 1px solid rgba(234, 242, 7, 0.2);
+            border: 1px solid rgba(255, 0, 0, 0.2);
             transition: all 0.3s ease;
         }
 
         .stat-item:hover {
-            background: rgba(234, 242, 7, 0.2);
+            background: rgba(255, 0, 0, 0.2);
             transform: translateY(-2px);
         }
 
@@ -607,7 +603,7 @@ function generateAvaliacoesRelatorio(votes, guild) {
     <div class="container">
         <div class="header">
             <div class="logo">
-                <img src="https://i.imgur.com/kHvmXj6.png" alt="Street Car Club Roleplay Logo" />
+                <img src="https://i.imgur.com/aawPk38.png" alt="Street Car Club Roleplay Logo" />
             </div>
             <h1><i class="fas fa-star"></i> Relatório de Avaliações</h1>
             <p>Street Car Club • Gerado em ${formattedDate}</p>
@@ -813,38 +809,32 @@ const setupAvaliacaoModule = function(client) {
         if (message.content === '!relatorio-avaliacoes') {
             if (!message.member.roles.cache.has(ADMIN_ROLE_ID)) return message.reply('❌ Você não tem permissão para usar este comando.');
             
+            let processingMsg = null;
             try {
-                const processingMsg = await message.reply('🔄 Gerando relatório de avaliações...');
-                
-                // Verificar se há avaliações
+                processingMsg = await message.reply('🔄 Gerando relatório de avaliações...');
+
+                await withHtmlTimeout(async () => {
                 const hasVotes = Array.from(votes.values()).some(data => data.count > 0);
                 if (!hasVotes) {
-                    return processingMsg.edit('❌ Nenhuma avaliação encontrada para gerar o relatório.');
+                    await processingMsg.edit('❌ Nenhuma avaliação encontrada para gerar o relatório.');
+                    return;
                 }
                 
-                // Gerar nome do arquivo com timestamp
                 const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
                 const filename = `relatorio-avaliacoes-${timestamp}.html`;
                 
-                // Buscar todos os membros do servidor antes de gerar o relatório
                 try {
                     await message.guild.members.fetch();
                 } catch (error) {
                     console.error('Erro ao buscar membros:', error);
                 }
                 
-                // Gerar HTML do relatório
                 const html = generateAvaliacoesRelatorio(votes, message.guild);
-                
-                // Salvar arquivo
                 const filePath = saveRelatorio(html, filename);
-                
-                // Criar attachment
                 const attachment = new AttachmentBuilder(filePath, { name: filename });
                 
-                // Embed de sucesso
                 const successEmbed = new EmbedBuilder()
-                    .setColor(0x00FF00)
+                    .setColor(0xFF0000)
                     .setTitle('📊 Relatório de Avaliações Gerado!')
                     .setDescription('O relatório HTML foi gerado com sucesso e está anexado abaixo.')
                     .addFields(
@@ -855,14 +845,12 @@ const setupAvaliacaoModule = function(client) {
                     .setFooter({ text: 'Street Car Club • Sistema de Avaliações' })
                     .setTimestamp();
                 
-                // Enviar relatório
                 await processingMsg.edit({ 
                     content: '✅ Relatório gerado com sucesso!',
                     embeds: [successEmbed],
                     files: [attachment]
                 });
                 
-                // Deletar arquivo temporário após 5 segundos
                 setTimeout(() => {
                     try {
                         if (fs.existsSync(filePath)) {
@@ -872,10 +860,10 @@ const setupAvaliacaoModule = function(client) {
                         console.error('Erro ao deletar arquivo temporário:', error);
                     }
                 }, 5000);
+                });
                 
             } catch (error) {
-                console.error('Erro no comando relatorio-avaliacoes:', error);
-                await message.reply('❌ Erro ao gerar o relatório. Verifique os logs para mais detalhes.');
+                await notifyHtmlFailure({ processingMsg, message, error });
             }
         }
         if (message.content === '!debug-avaliacoes') {

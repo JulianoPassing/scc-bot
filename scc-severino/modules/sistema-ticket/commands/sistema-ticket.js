@@ -37,10 +37,10 @@ Tickets tem prazo de resposta de até 72hrs uteis
 4. Descreva seu problema ou solicitação
 5. Nossa equipe responderá o mais rápido possível`)
     .setColor(0xEAF207) // Amarelo
-    .setThumbnail('https://i.imgur.com/kHvmXj6.png')
+    .setThumbnail('https://i.imgur.com/aawPk38.png')
     .setFooter({ 
       text: 'StreetCarClub • Atendimento de Qualidade',
-      iconURL: 'https://i.imgur.com/kHvmXj6.png'
+      iconURL: 'https://i.imgur.com/aawPk38.png'
     })
     .setTimestamp();
 

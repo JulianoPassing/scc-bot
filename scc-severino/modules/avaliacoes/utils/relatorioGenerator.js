@@ -63,7 +63,7 @@ export function generateAvaliacoesRelatorio(votes, guild) {
         }
 
         .header {
-            background: linear-gradient(135deg, #EAF207 0%, #FFD700 100%);
+            background: linear-gradient(135deg, #ff0000 0%, #ff3333 100%);
             padding: 30px;
             text-align: center;
             color: #333;
@@ -104,7 +104,7 @@ export function generateAvaliacoesRelatorio(votes, guild) {
         .stat-number {
             font-size: 2.5em;
             font-weight: bold;
-            color: #EAF207;
+            color: #ff0000;
             margin-bottom: 10px;
         }
 
@@ -132,7 +132,7 @@ export function generateAvaliacoesRelatorio(votes, guild) {
             border-radius: 15px;
             padding: 25px;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            border-left: 5px solid #EAF207;
+            border-left: 5px solid #ff0000;
             transition: all 0.3s ease;
         }
 
@@ -170,7 +170,7 @@ export function generateAvaliacoesRelatorio(votes, guild) {
         .rating-number {
             font-size: 1.3em;
             font-weight: bold;
-            color: #EAF207;
+            color: #ff0000;
         }
 
         .staff-stats {
@@ -244,6 +244,7 @@ export function generateAvaliacoesRelatorio(votes, guild) {
 <body>
     <div class="container">
         <div class="header">
+            <img src="https://i.imgur.com/aawPk38.png" alt="Street Car Club Roleplay Logo" style="max-width:220px;height:auto;margin-bottom:12px;" />
             <h1>⭐ Relatório de Avaliações</h1>
             <p>Street Car Club • Gerado em ${formattedDate}</p>
         </div>

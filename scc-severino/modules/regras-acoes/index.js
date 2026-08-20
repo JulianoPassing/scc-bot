@@ -33,7 +33,7 @@ const setupRegrasAcoesModule = function (client) {
       const embed = new EmbedBuilder()
         .setAuthor({
           name: 'Street Car Club Roleplay',
-          iconURL: 'https://i.imgur.com/YULctuK.png',
+          iconURL: 'https://i.imgur.com/WEh0qkj.png',
           url: REGRAS_SITE_URL
         })
         .setTitle('🎯 Regras de Ações – PvP/PvE')
@@ -44,7 +44,7 @@ const setupRegrasAcoesModule = function (client) {
         )
         .setColor(0xEAF207)
         .setImage('https://i.imgur.com/Wf7bGAO.png')
-        .setThumbnail('https://i.imgur.com/YULctuK.png')
+        .setThumbnail('https://i.imgur.com/WEh0qkj.png')
         .setFooter({ text: 'Street Car Club Roleplay • Regras oficiais • Clique no título para abrir o site' })
         .setTimestamp();
 

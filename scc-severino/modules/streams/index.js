@@ -3,6 +3,7 @@ import fs from 'fs';
 import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
+import { withHtmlTimeout, notifyHtmlFailure } from '../_shared/htmlTheme.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -218,33 +219,29 @@ function generateStreamersRelatorio(streamersData, guild) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Relatório de Streamers - Street Car Club</title>
-  <link rel="icon" href="https://i.imgur.com/YULctuK.png" type="image/png">
+  <link rel="icon" href="https://i.imgur.com/WEh0qkj.png" type="image/png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
 
     :root {
-      --primary-color: #EAF207;
-      --secondary-color: #F4F740;
-      --accent-color: #C6C403;
+      --primary-color: #ff0000;
+      --secondary-color: #ff3333;
+      --accent-color: #cc0000;
       --background-color: #0D0D0D;
       --card-background: linear-gradient(135deg, #0D0D0D 0%, #0D0D0D 100%);
       --text-color: #FFFFFF;
       --text-secondary: #B0B0B0;
       --border-color: #30363D;
       --shadow-color: rgba(0, 0, 0, 0.4);
-      --gradient-primary: linear-gradient(135deg, #EAF207 0%, #F4F740 100%);
+      --gradient-primary: linear-gradient(135deg, #ff0000 0%, #ff3333 100%);
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       font-family: 'Poppins', sans-serif;
-      background: var(--background-color);
-      background-image: url('https://i.imgur.com/Wf7bGAO.png');
-      background-size: cover;
-      background-position: center;
-      background-attachment: fixed;
+      background-color: var(--background-color);
       color: var(--text-color);
       line-height: 1.7;
       min-height: 100vh;
@@ -331,9 +328,9 @@ function generateStreamersRelatorio(streamersData, guild) {
     .info {
       margin: 20px 30px;
       padding: 20px;
-      background: rgba(234, 242, 7, 0.1);
+      background: rgba(255, 0, 0, 0.1);
       border-radius: 15px;
-      border: 1px solid rgba(234, 242, 7, 0.3);
+      border: 1px solid rgba(255, 0, 0, 0.3);
     }
 
     .info strong { color: var(--primary-color); font-weight: 600; }
@@ -431,7 +428,7 @@ function generateStreamersRelatorio(streamersData, guild) {
     .streamer-messages h4 i { margin-right: 8px; color: var(--primary-color); }
 
     .msg-item {
-      background: rgba(234, 242, 7, 0.05);
+      background: rgba(255, 0, 0, 0.05);
       margin: 10px 0;
       padding: 15px;
       border-radius: 10px;
@@ -506,7 +503,7 @@ function generateStreamersRelatorio(streamersData, guild) {
   <div class="container">
     <div class="header">
       <div class="logo">
-        <img src="https://i.imgur.com/kHvmXj6.png" alt="Street Car Club Roleplay Logo" />
+        <img src="https://i.imgur.com/aawPk38.png" alt="Street Car Club Roleplay Logo" />
       </div>
       <h1><i class="fas fa-broadcast-tower"></i> Relatório de Criadores de Conteúdo</h1>
       <p>Street Car Club • Canal de Streams • ${formattedDate}</p>
@@ -694,95 +691,98 @@ const setupStreamsModule = function (client) {
     }
 
     // ========== COMANDO !relatorio-streamers ==========
+    let processingMsg = null;
     try {
-      const processingMsg = await message.reply('🔄 Gerando relatório de criadores de conteúdo...');
+      processingMsg = await message.reply('🔄 Gerando relatório de criadores de conteúdo...');
 
-      const guild = message.guild;
-      const streamsChannel = await guild.channels.fetch(STREAMS_CHANNEL_ID).catch(() => null);
-      if (!streamsChannel) {
-        return processingMsg.edit('❌ Canal de streams não encontrado.').catch(() => {});
-      }
+      await withHtmlTimeout(async () => {
+        const guild = message.guild;
+        const streamsChannel = await guild.channels.fetch(STREAMS_CHANNEL_ID).catch(() => null);
+        if (!streamsChannel) {
+          await processingMsg.edit('❌ Canal de streams não encontrado.');
+          return;
+        }
 
-      await guild.members.fetch();
-      const criadores = guild.members.cache.filter(
-        m => m.roles.cache.has(CRIADOR_CONTEUDO_ROLE_ID) && !m.user.bot
-      );
+        await guild.members.fetch();
+        const criadores = guild.members.cache.filter(
+          m => m.roles.cache.has(CRIADOR_CONTEUDO_ROLE_ID) && !m.user.bot
+        );
 
-      if (criadores.size === 0) {
-        return processingMsg.edit('❌ Nenhum membro com o cargo Criador de Conteúdo encontrado.').catch(() => {});
-      }
+        if (criadores.size === 0) {
+          await processingMsg.edit('❌ Nenhum membro com o cargo Criador de Conteúdo encontrado.');
+          return;
+        }
 
-      await processingMsg.edit('🔄 Buscando mensagens do canal de streams (isso pode levar um momento)...').catch(() => {});
+        await processingMsg.edit('🔄 Buscando mensagens do canal de streams (isso pode levar um momento)...').catch(() => {});
 
-      const allMessages = await fetchAllChannelMessages(streamsChannel);
+        const allMessages = await fetchAllChannelMessages(streamsChannel);
 
-      const streamersData = criadores.map(member => {
-        const userMessages = allMessages.filter(m => m.author.id === member.id);
-        const statusData = calculateStatus(userMessages);
-        return {
-          member,
-          messages: userMessages,
-          status: statusData.status,
-          statusData
-        };
+        const streamersData = criadores.map(member => {
+          const userMessages = allMessages.filter(m => m.author.id === member.id);
+          const statusData = calculateStatus(userMessages);
+          return {
+            member,
+            messages: userMessages,
+            status: statusData.status,
+            statusData
+          };
+        });
+
+        streamersData.sort((a, b) => {
+          const order = { ATIVO: 0, 'POUCO ATIVO': 1, INATIVO: 2, INEXISTENTE: 3 };
+          const diff = (order[a.status] ?? 4) - (order[b.status] ?? 4);
+          if (diff !== 0) return diff;
+          return (a.statusData.diasDesdeUltima ?? 9999) - (b.statusData.diasDesdeUltima ?? 9999);
+        });
+
+        const html = generateStreamersRelatorio(streamersData, guild);
+
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+        const filename = `relatorio-streamers-${timestamp}.html`;
+
+        const relatoriosDir = path.join(__dirname, 'relatorios');
+        if (!fs.existsSync(relatoriosDir)) {
+          fs.mkdirSync(relatoriosDir, { recursive: true });
+        }
+        const filePath = path.join(relatoriosDir, filename);
+        fs.writeFileSync(filePath, html, 'utf-8');
+
+        const attachment = new AttachmentBuilder(filePath, { name: filename });
+
+        const ativos = streamersData.filter(s => s.status === 'ATIVO').length;
+        const poucoAtivos = streamersData.filter(s => s.status === 'POUCO ATIVO').length;
+        const inativos = streamersData.filter(s => s.status === 'INATIVO').length;
+        const inexistentes = streamersData.filter(s => s.status === 'INEXISTENTE').length;
+
+        const successEmbed = new EmbedBuilder()
+          .setColor(0xFF0000)
+          .setTitle('📊 Relatório de Criadores de Conteúdo')
+          .setDescription(`📁 \`${filename}\`\n📅 <t:${Math.floor(Date.now() / 1000)}:F>`)
+          .addFields(
+            { name: '✅ Ativos', value: `\`\`\`${ativos}\`\`\``, inline: true },
+            { name: '🔵 Pouco Ativos', value: `\`\`\`${poucoAtivos}\`\`\``, inline: true },
+            { name: '⚠️ Inativos', value: `\`\`\`${inativos}\`\`\``, inline: true },
+            { name: '❌ Inexistentes', value: `\`\`\`${inexistentes}\`\`\``, inline: true },
+            { name: '👥 Total', value: `\`\`\`${streamersData.length}\`\`\``, inline: true },
+            { name: '\u200b', value: '\u200b', inline: true }
+          )
+          .setFooter({ text: 'Street Car Club • Relatório de Streams' })
+          .setTimestamp();
+
+        await processingMsg.edit({
+          content: '✅ Relatório gerado com sucesso!',
+          embeds: [successEmbed],
+          files: [attachment]
+        });
+
+        setTimeout(() => {
+          try {
+            if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
+          } catch (e) {}
+        }, 10000);
       });
-
-      streamersData.sort((a, b) => {
-        const order = { ATIVO: 0, 'POUCO ATIVO': 1, INATIVO: 2, INEXISTENTE: 3 };
-        const diff = (order[a.status] ?? 4) - (order[b.status] ?? 4);
-        if (diff !== 0) return diff;
-        return (a.statusData.diasDesdeUltima ?? 9999) - (b.statusData.diasDesdeUltima ?? 9999);
-      });
-
-      const html = generateStreamersRelatorio(streamersData, guild);
-
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
-      const filename = `relatorio-streamers-${timestamp}.html`;
-
-      const relatoriosDir = path.join(__dirname, 'relatorios');
-      if (!fs.existsSync(relatoriosDir)) {
-        fs.mkdirSync(relatoriosDir, { recursive: true });
-      }
-      const filePath = path.join(relatoriosDir, filename);
-      fs.writeFileSync(filePath, html, 'utf-8');
-
-      const attachment = new AttachmentBuilder(filePath, { name: filename });
-
-      const ativos = streamersData.filter(s => s.status === 'ATIVO').length;
-      const poucoAtivos = streamersData.filter(s => s.status === 'POUCO ATIVO').length;
-      const inativos = streamersData.filter(s => s.status === 'INATIVO').length;
-      const inexistentes = streamersData.filter(s => s.status === 'INEXISTENTE').length;
-
-      const successEmbed = new EmbedBuilder()
-        .setColor(0xEAF207)
-        .setTitle('📊 Relatório de Criadores de Conteúdo')
-        .setDescription(`📁 \`${filename}\`\n📅 <t:${Math.floor(Date.now() / 1000)}:F>`)
-        .addFields(
-          { name: '✅ Ativos', value: `\`\`\`${ativos}\`\`\``, inline: true },
-          { name: '🔵 Pouco Ativos', value: `\`\`\`${poucoAtivos}\`\`\``, inline: true },
-          { name: '⚠️ Inativos', value: `\`\`\`${inativos}\`\`\``, inline: true },
-          { name: '❌ Inexistentes', value: `\`\`\`${inexistentes}\`\`\``, inline: true },
-          { name: '👥 Total', value: `\`\`\`${streamersData.length}\`\`\``, inline: true },
-          { name: '\u200b', value: '\u200b', inline: true }
-        )
-        .setFooter({ text: 'Street Car Club • Relatório de Streams' })
-        .setTimestamp();
-
-      await processingMsg.edit({
-        content: '✅ Relatório gerado com sucesso!',
-        embeds: [successEmbed],
-        files: [attachment]
-      }).catch(() => {});
-
-      setTimeout(() => {
-        try {
-          if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
-        } catch (e) {}
-      }, 10000);
-
     } catch (error) {
-      console.error('Erro no relatorio-streamers:', error);
-      await message.reply('❌ Erro ao gerar o relatório. Verifique os logs.').catch(() => {});
+      await notifyHtmlFailure({ processingMsg, message, error });
     }
   });
 };

@@ -16,6 +16,7 @@ import {
   labelDia,
   executarConfirmacao,
 } from '../utils/agendamento.js';
+import { withHtmlTimeout, notifyHtmlFailure } from '../../_shared/htmlTheme.js';
 
 const SEGURANCA_CATEGORY_ID = '1378778140528087191';
 
@@ -376,6 +377,8 @@ export const execute = async function(interaction) {
       const user = interaction.user;
       const channel = interaction.channel;
       // Buscar todas as mensagens do canal (transcript completo)
+      try {
+      await withHtmlTimeout(async () => {
       let allMessages = [];
       let lastId;
       while (true) {
@@ -412,33 +415,29 @@ export const execute = async function(interaction) {
       const staffAvatar = user.displayAvatarURL();
       // HTML transcript igual ao ticket normal
       let html = `<!DOCTYPE html><html lang='pt-BR'><head><meta charset='UTF-8'><title>Transcript Ticket Segurança - Street Car Club</title>
-      <link rel="icon" href="https://i.imgur.com/YULctuK.png" type="image/png">
+      <link rel="icon" href="https://i.imgur.com/WEh0qkj.png" type="image/png">
       <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
       <style>
       @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
       
       :root {
-        --primary-color: #EAF207;
-        --secondary-color: #F4F740;
-        --accent-color: #C6C403;
+        --primary-color: #ff0000;
+        --secondary-color: #ff3333;
+        --accent-color: #cc0000;
         --background-color: #0D0D0D;
         --card-background: linear-gradient(135deg, #0D0D0D 0%, #0D0D0D 100%);
         --text-color: #FFFFFF;
         --text-secondary: #B0B0B0;
         --border-color: #30363D;
         --shadow-color: rgba(0, 0, 0, 0.4);
-        --gradient-primary: linear-gradient(135deg, #EAF207 0%, #F4F740 100%);
+        --gradient-primary: linear-gradient(135deg, #ff0000 0%, #ff3333 100%);
       }
       
       * { margin: 0; padding: 0; box-sizing: border-box; }
       
       body {
         font-family: 'Poppins', sans-serif;
-        background: var(--background-color);
-        background-image: url('https://i.imgur.com/Wf7bGAO.png');
-        background-size: cover;
-        background-position: center;
-        background-attachment: fixed;
+        background-color: var(--background-color);
         color: var(--text-color);
         line-height: 1.7;
         min-height: 100vh;
@@ -471,10 +470,10 @@ export const execute = async function(interaction) {
         right: 30px;
         width: 10px;
         height: 10px;
-        background: radial-gradient(circle, #ff4d4d 60%, #ffb347 100%);
+        background: radial-gradient(circle, #ff0000 60%, #ff3333 100%);
         border-radius: 50%;
         transform: translateY(-50%);
-        box-shadow: 0 0 8px 2px #ff4d4d99;
+        box-shadow: 0 0 8px 2px rgba(255, 0, 0, 0.6);
         z-index: 3;
       }
       
@@ -524,9 +523,9 @@ export const execute = async function(interaction) {
       .info {
         margin: 20px 30px;
         padding: 20px;
-        background: rgba(234, 242, 7, 0.1);
+        background: rgba(255, 0, 0, 0.1);
         border-radius: 15px;
-        border: 1px solid rgba(234, 242, 7, 0.3);
+        border: 1px solid rgba(255, 0, 0, 0.3);
       }
       
       .info strong {
@@ -563,7 +562,7 @@ export const execute = async function(interaction) {
       
       .msg.staff {
         border-left: 5px solid var(--primary-color);
-        background: rgba(234, 242, 7, 0.05);
+        background: rgba(255, 0, 0, 0.05);
       }
       
       .msg .meta {
@@ -604,23 +603,23 @@ export const execute = async function(interaction) {
         text-decoration: none;
         display: block;
         padding: 8px 12px;
-        background: rgba(234, 242, 7, 0.1);
+        background: rgba(255, 0, 0, 0.1);
         border-radius: 8px;
         margin: 4px 0;
         transition: all 0.3s ease;
       }
       
       .msg .attachments a:hover {
-        background: rgba(234, 242, 7, 0.2);
+        background: rgba(255, 0, 0, 0.2);
         transform: translateX(5px);
       }
       
       .msg .embed {
-        background: rgba(234, 242, 7, 0.1);
+        background: rgba(255, 0, 0, 0.1);
         padding: 12px 16px;
         border-radius: 10px;
         margin: 12px 0;
-        border: 1px solid rgba(234, 242, 7, 0.3);
+        border: 1px solid rgba(255, 0, 0, 0.3);
       }
       
       .msg .reply {
@@ -629,7 +628,7 @@ export const execute = async function(interaction) {
         font-style: italic;
         margin-bottom: 8px;
         padding: 8px 12px;
-        background: rgba(198, 196, 3, 0.1);
+        background: rgba(204, 0, 0, 0.1);
         border-radius: 8px;
         border-left: 3px solid var(--accent-color);
       }
@@ -652,7 +651,7 @@ export const execute = async function(interaction) {
       <div class="container">
         <div class="header">
           <div class="logo">
-            <img src="https://i.imgur.com/kHvmXj6.png" alt="Street Car Club Roleplay Logo" />
+            <img src="https://i.imgur.com/aawPk38.png" alt="Street Car Club Roleplay Logo" />
           </div>
           <h1><i class="fas fa-shield-alt"></i> Transcript de Segurança</h1>
           <p>Street Car Club • Sistema de Atendimento de Segurança</p>
@@ -728,6 +727,17 @@ export const execute = async function(interaction) {
         const buffer = Buffer.from(html, 'utf-8');
         const attachment = new AttachmentBuilder(buffer, { name: `transcript-${channel.name}.html` });
         await logChannel.send({ embeds: [embed], files: [attachment] });
+      } else {
+        throw new Error('Canal de logs do transcript não encontrado');
+      }
+      });
+      } catch (htmlError) {
+        await notifyHtmlFailure({
+          interaction,
+          error: htmlError,
+          extra: 'Clique novamente em **Fechar ticket**.'
+        });
+        return;
       }
       await interaction.editReply({ content: '✅ Ticket fechado e transcript HTML enviado para a staff!', flags: 64 });
       setTimeout(async () => {

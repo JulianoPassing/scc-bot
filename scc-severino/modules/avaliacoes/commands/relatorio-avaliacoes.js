@@ -4,6 +4,7 @@ import path from 'path';
 import { dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { generateAvaliacoesRelatorio, saveRelatorio } from '../utils/relatorioGenerator.js';
+import { withHtmlTimeout, notifyHtmlFailure } from '../../_shared/htmlTheme.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const FILE_PATH = path.join(__dirname, '..', 'avaliacoes.json');
@@ -22,10 +23,11 @@ export default {
       return message.reply('❌ Você não tem permissão para usar este comando. Apenas administradores podem gerar relatórios.');
     }
 
+    let processingMsg = null;
     try {
-      // Mostrar que está processando
-      const processingMsg = await message.reply('🔄 Gerando relatório de avaliações...');
+      processingMsg = await message.reply('🔄 Gerando relatório de avaliações...');
 
+      await withHtmlTimeout(async () => {
       // Carregar dados das avaliações
       let votes = new Map();
       if (fs.existsSync(FILE_PATH)) {
@@ -90,10 +92,9 @@ export default {
           console.error('Erro ao deletar arquivo temporário:', error);
         }
       }, 5000);
-
+      });
     } catch (error) {
-      console.error('Erro no comando relatorio-avaliacoes:', error);
-      await message.reply('❌ Erro ao gerar o relatório. Verifique os logs para mais detalhes.');
+      await notifyHtmlFailure({ processingMsg, message, error });
     }
   }
 };

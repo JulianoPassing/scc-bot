@@ -78,7 +78,7 @@ export async function execute(message, args, client) {
       { name: 'Assunto', value: 'Ticket aberto pela equipe', inline: false },
       { name: 'Descrição', value: categoria.desc, inline: false }
     )
-    .setImage('https://i.imgur.com/kHvmXj6.png')
+    .setImage('https://i.imgur.com/aawPk38.png')
     .setFooter({ text: 'StreetCarClub • Atendimento de Qualidade | ™ Street CarClub © All rights reserved', iconURL: null })
     .setTimestamp();
 
